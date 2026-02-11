@@ -35,3 +35,10 @@ outputs/
 runs/
 data_output/
 backend/outputs/
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Ground truth / datasets
+backend/ground truth/
