@@ -1,7 +1,7 @@
 # Agent-generated content (CRITICAL)
 .agent/
 .gemini/
-.gsd/
+
 
 # Python
 venv/
