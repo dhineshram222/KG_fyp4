@@ -1,0 +1,204 @@
+============================================================
+LECTURE NOTES (Non-KG Based - Topic Modeling)
+============================================================
+
+
+──────────────────────────────────────────────────
+  1. Area Network & Area & Personal Area
+──────────────────────────────────────────────────
+  Keywords: area network, area, personal area, network, personal
+
+  • So this is called as personal area network.
+  • So this is all about personal area network.
+  • Now next, the next one is advantages of personal area network.
+  • So metropolitane area network is larger than personal area network and local area network.
+  • See, this personal area network is flexible.
+  • So this is called as metropolitane area network.
+  • This is called as metropolitane area network.
+  • So this is called as metropolitane area network.
+
+  [Diagram: slide_007_diagram_1.png]
+
+
+──────────────────────────────────────────────────
+  2. Local & Local Area & Area
+──────────────────────────────────────────────────
+  Keywords: local, local area, area, area network, area networks
+
+  • Now, the next is local area network.
+  • We will see local area network first.
+  • And there are two local area networks.
+  • And that too in a wired local area network.
+  • One local area network is in New Delhi and other local area network is in Chennai.
+  • In other words, there are two local area networks.
+  • Local Area Network (LAN)
+2.
+  • So there is a no privacy in local area network.
+
+  [Diagram: slide_004_diagram_1.png]
+
+
+──────────────────────────────────────────────────
+  3. Computers & Connected & Computers Connected
+──────────────────────────────────────────────────
+  Keywords: computers, connected, computers connected, connected network, branches
+
+  • So all this 20 computers are connected to in one network.
+  • 20 computers are connected to the one network.
+  • And this is possible only if these computers are somehow connected with each other.
+  • So from that 15 computers, 10 computers are connected in one network.
+  • And the most important thing is, suppose all the 20 computers are connected in one network, okay.
+  • Each of these computers are connected to each other with the help of a switch.
+  • So these two branches are connected with each other in one network.
+  • So this all six branches are connected in one network.
+
+  [Diagram: slide_011_diagram_3.png]
+
+
+──────────────────────────────────────────────────
+  4. Data & Right & Server
+──────────────────────────────────────────────────
+  Keywords: data, right, server, particular, different
+
+  • So all the data stored in single server, right.
+  • See, nowadays different server security threads are there, right.
+  • So they all are dependent on particular system, right.
+  • All the data is stored in a single server computer, if it can be a
+can cause a serious data security threat
+
+3.
+  • The next thing is all the data stored in single server computer, right.
+  • Each and every once everything stored in main server.
+  • But sometimes what happens on a through author's user access those particular data, right.
+  • So particular application or particular software have installed on that server.
+
+  [Diagram: slide_004_diagram_2.png]
+
+
+──────────────────────────────────────────────────
+  5. Computer & Computer Network & Network
+──────────────────────────────────────────────────
+  Keywords: computer, computer network, network, types, features
+
+  • 4M
+
+|, Define Computer Network.
+  • The first defined computer network explain types of computer network with example.
+  • So this is called computer network.
+  • So this is all about computer network types.
+  • So these are the features of computer network.
+  • Features of Computer Network
+
+1.
+  • So this is a basic definition of computer network.
+  • So this is a basic concept of computer network.
+
+  [Diagram: v1_slide_004_diagram_1.png]
+
+
+──────────────────────────────────────────────────
+  6. Cost & High & Low
+──────────────────────────────────────────────────
+  Keywords: cost, high, low, easy, low cost
+
+  • + Transmission speed is very high with very easy maintenance and very low cost.
+  • It is very easy to install low cost and maintenance is required.
+  • It is easy maintenance and low cost is required.
+  • Itneeds easy setup and relatively low cost.
+  • Easy installation, Low cost & maintenances.
+  • Easy installation, Low cost & maintenances.
+  • So initial setup cost is high.
+  • But after that you can maintain all this network, the cost is low.
+
+
+──────────────────────────────────────────────────
+  7. Wide & Wide Area & Area
+──────────────────────────────────────────────────
+  Keywords: wide, wide area, area, area network, network
+
+  • But this is wide area network.
+  • I will say this is a wide wide area network.
+  • Now the next and last type is wide area network.
+  • This is called as wide area network.
+  • And some authors will refer this wide area network to be the internet.
+  • Then in different businesses, governments and educations wide area network is used.
+  • And this is possible only with the help of a wide area network.
+  • Now the disadvantage of wide area network is the most important is security issue, right.
+
+  [Diagram: v1_slide_007_diagram_1.png]
+
+
+──────────────────────────────────────────────────
+  8. Diagram & Slide & Lan
+──────────────────────────────────────────────────
+  Keywords: diagram, slide, lan, content, slide content
+
+  • LAN - DEVICES
+
+* Wired LAN (Example: Ethernet - Hub, Switcl) JIN
+
+‘gs
+rd
+
+* Wireless LAN (Example: Wi-Fi)
+
+Diagram Description:
+an image of a network with green lights
+
+--- slide5_fused ---
+Slide Content:
+2.
+  • Diagram Description:
+
+--- slide6_fused ---
+Slide Content:
+2.
+  • Diagram Description:
+
+--- slide4_fused ---
+Slide Content:
+1.
+  • Metropolitan Area Network (MAN)
+
+Diagram Description:
+
+--- slide13_fused ---
+Slide Content:
+3.
+  • Local Area Network (LAN)
+
+Diagram Description:
+a diagram of a wireless network
+
+--- slide11_fused ---
+Slide Content:
+4.
+  • Wide Area Network (WAN)
+
+a) @nesoacademy
+Follow
+
+Diagram Description:
+
+--- slide3_fused ---
+Slide Content:
+1.
+  • Diagram Description:
+a computer network diagram an image of a cloud computing system
+
+--- slide5_fused ---
+Slide Content:
++ Example: Google drive.
+  • Metropolitan Area Network (MAN)
+
+Advantages of MAN:
+
+Diagram Description:
+a diagram of a network
+
+--- slide14_fused ---
+Slide Content:
+Used In:
+L. Mobile Broadband, Telecom Companies cte.
+
+  [Diagram: slide_013_diagram_1.png]

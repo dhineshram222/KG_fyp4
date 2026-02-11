@@ -1,0 +1,132 @@
+[
+  {
+    "source": "N2",
+    "target": "N1",
+    "relation": "categorizes"
+  },
+  {
+    "source": "N2",
+    "target": "N3",
+    "relation": "includes"
+  },
+  {
+    "source": "N2",
+    "target": "N4",
+    "relation": "includes"
+  },
+  {
+    "source": "N2",
+    "target": "N5",
+    "relation": "includes"
+  },
+  {
+    "source": "N3",
+    "target": "N6",
+    "relation": "can_be_of_type"
+  },
+  {
+    "source": "N3",
+    "target": "N7",
+    "relation": "can_be_of_type"
+  },
+  {
+    "source": "N6",
+    "target": "N8",
+    "relation": "uses_technology"
+  },
+  {
+    "source": "N6",
+    "target": "N11",
+    "relation": "uses_device"
+  },
+  {
+    "source": "N6",
+    "target": "N12",
+    "relation": "uses_device"
+  },
+  {
+    "source": "N7",
+    "target": "N13",
+    "relation": "example_technology_is"
+  },
+  {
+    "source": "N8",
+    "target": "N9",
+    "relation": "uses_cable"
+  },
+  {
+    "source": "N8",
+    "target": "N10",
+    "relation": "uses_cable"
+  },
+  {
+    "source": "N4",
+    "target": "N3",
+    "relation": "interconnects_multiple"
+  },
+  {
+    "source": "N4",
+    "target": "N14",
+    "relation": "uses_device"
+  },
+  {
+    "source": "N4",
+    "target": "N15",
+    "relation": "uses_device"
+  },
+  {
+    "source": "N5",
+    "target": "N16",
+    "relation": "is_a_type_of"
+  },
+  {
+    "source": "N5",
+    "target": "N3",
+    "relation": "interconnects_multiple"
+  },
+  {
+    "source": "N17",
+    "target": "N5",
+    "relation": "is_a_form_of"
+  },
+  {
+    "source": "N17",
+    "target": "N3",
+    "relation": "connects_globally"
+  },
+  {
+    "source": "N17",
+    "target": "N4",
+    "relation": "connects_globally"
+  },
+  {
+    "source": "N17",
+    "target": "N5",
+    "relation": "connects_globally"
+  },
+  {
+    "source": "N1",
+    "target": "N18",
+    "relation": "has_trends"
+  },
+  {
+    "source": "N18",
+    "target": "N19",
+    "relation": "includes"
+  },
+  {
+    "source": "N18",
+    "target": "N20",
+    "relation": "includes"
+  },
+  {
+    "source": "N18",
+    "target": "N21",
+    "relation": "includes"
+  },
+  {
+    "source": "N21",
+    "target": "N22",
+    "relation": "example_is"
+  }
+]

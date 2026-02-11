@@ -1,0 +1,44 @@
+Slide Content:
+SAE OPETAMONS AS ONLY One TOC’ Wabsinits cata at a UIE asl
+
+4, Low privacy, as all nodes receive the signal sent by the server, stb —--— —_L—__
+-= =
+
+5. Data loss over long distances
+
+Is by ¥rushati
+
+3. Slower operations, as only one node transmits data at a time
+
+2, The cost of the cable & starting cost of installation is less.
+
+Examples
+
+3. Coaxial or twisted pair cables support upto 10 Mbps. 1. Ethemet LAN
+
+2. Automation system in
+Small Office
+
+3. Television Networks
+
+4. A failure in one node will not have any effect on other nodes.
+
++ Disadvantages of Bus Topology
+
+. If the common cable fails, then the whole system will crash down.
+2. Adding new devices to the network would slow down networks.
+
+then the whole system will crash down.
+
+» Disadvantages of Bus Topology
+
+3. Coaxial or twisted pair cables support upto 10 Mbps.
+
+1. It works excellently in a smal] network.
+
+2. Bus Topology
+
++ Advantages of Bus Topology
+
+Diagram Description:
+a diagram of a network with two computers

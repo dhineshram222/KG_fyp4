@@ -1,0 +1,3 @@
+SECONDARY STACK OPERATIONS
+
+top(): returns the last inserted element without removing it.

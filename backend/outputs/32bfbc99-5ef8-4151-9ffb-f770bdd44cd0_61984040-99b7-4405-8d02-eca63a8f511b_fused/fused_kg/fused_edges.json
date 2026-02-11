@@ -1,0 +1,307 @@
+[
+  {
+    "source": "N1",
+    "target": "N3",
+    "relation": "works_in"
+  },
+  {
+    "source": "N1",
+    "target": "N2",
+    "relation": "includes_concept_of"
+  },
+  {
+    "source": "N1",
+    "target": "N4",
+    "relation": "has"
+  },
+  {
+    "source": "N1",
+    "target": "N9",
+    "relation": "hides"
+  },
+  {
+    "source": "N1",
+    "target": "N10",
+    "relation": "shows"
+  },
+  {
+    "source": "N2",
+    "target": "N4",
+    "relation": "achieved_through"
+  },
+  {
+    "source": "N2",
+    "target": "N11",
+    "relation": "means_no_direct_interaction_between"
+  },
+  {
+    "source": "N2",
+    "target": "N12",
+    "relation": "means_no_direct_interaction_between"
+  },
+  {
+    "source": "N4",
+    "target": "N5",
+    "relation": "includes"
+  },
+  {
+    "source": "N4",
+    "target": "N6",
+    "relation": "includes"
+  },
+  {
+    "source": "N4",
+    "target": "N7",
+    "relation": "includes"
+  },
+  {
+    "source": "N5",
+    "target": "N4",
+    "relation": "is_lowest_level"
+  },
+  {
+    "source": "N5",
+    "target": "N8",
+    "relation": "handled_by"
+  },
+  {
+    "source": "N5",
+    "target": "N17",
+    "relation": "is_called"
+  },
+  {
+    "source": "N5",
+    "target": "N12",
+    "relation": "directly_connected_to"
+  },
+  {
+    "source": "N5",
+    "target": "N6",
+    "relation": "modification_reflects_at"
+  },
+  {
+    "source": "N6",
+    "target": "N4",
+    "relation": "is_middle_level"
+  },
+  {
+    "source": "N6",
+    "target": "N14",
+    "relation": "defines"
+  },
+  {
+    "source": "N6",
+    "target": "N15",
+    "relation": "allows"
+  },
+  {
+    "source": "N6",
+    "target": "N8",
+    "relation": "handled_by"
+  },
+  {
+    "source": "N6",
+    "target": "N13",
+    "relation": "handled_by"
+  },
+  {
+    "source": "N6",
+    "target": "N7",
+    "relation": "modification_reflects_at"
+  },
+  {
+    "source": "N7",
+    "target": "N4",
+    "relation": "is_highest_level"
+  },
+  {
+    "source": "N7",
+    "target": "N12",
+    "relation": "provides_multiple_views_of"
+  },
+  {
+    "source": "N7",
+    "target": "N11",
+    "relation": "interacted_with_by"
+  },
+  {
+    "source": "N7",
+    "target": "N16",
+    "relation": "is_called"
+  },
+  {
+    "source": "N7",
+    "target": "N18",
+    "relation": "increases"
+  },
+  {
+    "source": "N11",
+    "target": "N7",
+    "relation": "is_present_on"
+  },
+  {
+    "source": "N11",
+    "target": "N5",
+    "relation": "does_not_directly_interact_with"
+  },
+  {
+    "source": "N11",
+    "target": "N19",
+    "relation": "sends_information_to"
+  },
+  {
+    "source": "N19",
+    "target": "N6",
+    "relation": "is_at"
+  },
+  {
+    "source": "N19",
+    "target": "N12",
+    "relation": "fetches_from"
+  },
+  {
+    "source": "N20",
+    "target": "N4",
+    "relation": "related to having"
+  },
+  {
+    "source": "N21",
+    "target": "N22",
+    "relation": "focuses on"
+  },
+  {
+    "source": "N21",
+    "target": "N1",
+    "relation": "requires understanding of"
+  },
+  {
+    "source": "N1",
+    "target": "N26",
+    "relation": "means hiding"
+  },
+  {
+    "source": "N1",
+    "target": "N27",
+    "relation": "means providing"
+  },
+  {
+    "source": "N1",
+    "target": "N28",
+    "relation": "aims for"
+  },
+  {
+    "source": "N28",
+    "target": "N29",
+    "relation": "is preferred over"
+  },
+  {
+    "source": "N23",
+    "target": "N24",
+    "relation": "involves"
+  },
+  {
+    "source": "N24",
+    "target": "N25",
+    "relation": "may involve"
+  },
+  {
+    "source": "N4",
+    "target": "N5",
+    "relation": "includes"
+  },
+  {
+    "source": "N4",
+    "target": "N30",
+    "relation": "includes"
+  },
+  {
+    "source": "N4",
+    "target": "N7",
+    "relation": "includes"
+  },
+  {
+    "source": "N5",
+    "target": "N24",
+    "relation": "deals with"
+  },
+  {
+    "source": "N5",
+    "target": "N25",
+    "relation": "deals with"
+  },
+  {
+    "source": "N5",
+    "target": "N31",
+    "relation": "uses"
+  },
+  {
+    "source": "N30",
+    "target": "N32",
+    "relation": "deals with"
+  },
+  {
+    "source": "N30",
+    "target": "N33",
+    "relation": "deals with"
+  },
+  {
+    "source": "N30",
+    "target": "N34",
+    "relation": "uses"
+  },
+  {
+    "source": "N30",
+    "target": "N36",
+    "relation": "resides at"
+  },
+  {
+    "source": "N30",
+    "target": "N35",
+    "relation": "enables"
+  },
+  {
+    "source": "N36",
+    "target": "N37",
+    "relation": "applications do not depend on physical"
+  },
+  {
+    "source": "N38",
+    "target": "N30",
+    "relation": "writes logic for"
+  },
+  {
+    "source": "N7",
+    "target": "N22",
+    "relation": "contains"
+  },
+  {
+    "source": "N7",
+    "target": "N26",
+    "relation": "hides from users"
+  },
+  {
+    "source": "N7",
+    "target": "N39",
+    "relation": "deals with"
+  },
+  {
+    "source": "N7",
+    "target": "N40",
+    "relation": "facilitates"
+  },
+  {
+    "source": "N40",
+    "target": "N41",
+    "relation": "uses"
+  },
+  {
+    "source": "N7",
+    "target": "N42",
+    "relation": "ensures"
+  },
+  {
+    "source": "N7",
+    "target": "N30",
+    "relation": "interacts with"
+  }
+]

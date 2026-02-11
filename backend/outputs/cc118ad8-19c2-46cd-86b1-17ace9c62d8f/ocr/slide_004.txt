@@ -1,0 +1,23 @@
+¢ It totally depends on the DBA, how he/she manages the database at the physical level.
+
+¢ They decide if the data has to be centralized or distributed.
+
+disk drive, how the data has to be arranged, where it has to be stored ete.
+
+Level 1: Physical Level or Internal Schema == —
+* Lowest level of Data Abstraction.
+¢ It defines how data are stored.
+2 Bos
+
+¢ It tells the actual location of the data that is being stored by the user.
+°
+
+¢ The Database Administrators(DBA) decide that which data should be kept at which particular
+
+¢ It tells the actual location of the data that is being stored by the user.
+
+¢ It defines how data are stored.
+
+¢ Lowest level of Data Abstraction.
+
+Level 1: Physical Level or Internal Schema

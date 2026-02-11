@@ -1,0 +1,112 @@
+[
+  {
+    "id": "N1",
+    "label": "Network Topology",
+    "description": "Arrangement of nodes of a computer network, viewed as a layout of a computer network."
+  },
+  {
+    "id": "N2",
+    "label": "Nodes",
+    "description": "Components that need to be arranged to establish communication in a network."
+  },
+  {
+    "id": "N3",
+    "label": "Communication",
+    "description": "The establishment of data exchange among all nodes in a network."
+  },
+  {
+    "id": "N4",
+    "label": "Physical Topology",
+    "description": "The placement of various nodes in a network."
+  },
+  {
+    "id": "N5",
+    "label": "Logical Topology",
+    "description": "How the data is going to flow in the network."
+  },
+  {
+    "id": "N6",
+    "label": "Bus Topology",
+    "description": "A network topology where all data is transmitted over a common transmission medium and received by all nodes simultaneously."
+  },
+  {
+    "id": "N7",
+    "label": "Common Transmission Medium (Bus)",
+    "description": "A single wire or cable in bus topology capable of sending and receiving data bidirectionally."
+  },
+  {
+    "id": "N8",
+    "label": "Advantages of Bus Topology",
+    "description": "Benefits of bus topology, including less expense, suitability for temporary networks, and node failures not affecting others."
+  },
+  {
+    "id": "N9",
+    "label": "Disadvantages of Bus Topology",
+    "description": "Drawbacks of bus topology, including not being fault tolerant, limited cable length, and no security."
+  },
+  {
+    "id": "N10",
+    "label": "Ring Topology",
+    "description": "A bus topology arranged in a closed loop, where each node has two connections to its nearest neighbors, and communication is unidirectional."
+  },
+  {
+    "id": "N11",
+    "label": "Token (Ring Topology)",
+    "description": "A mechanism in ring topology that dictates which node gets to send data, circulated throughout the network."
+  },
+  {
+    "id": "N12",
+    "label": "Advantages of Ring Topology",
+    "description": "Benefits of ring topology, including better performance than bus topology and all nodes having equal access."
+  },
+  {
+    "id": "N13",
+    "label": "Disadvantages of Ring Topology",
+    "description": "Drawbacks of ring topology, including unidirectional communication, single point of failure affecting the whole network, performance degradation with high load, and no security."
+  },
+  {
+    "id": "N14",
+    "label": "Star Topology",
+    "description": "A network topology where every node is connected to a central node (hub or switch), and all traffic must pass through this central node."
+  },
+  {
+    "id": "N15",
+    "label": "Central Node (Hub/Switch)",
+    "description": "A central device in a star topology that performs centralized administration and through which all network traffic passes."
+  },
+  {
+    "id": "N16",
+    "label": "Advantages of Star Topology",
+    "description": "Benefits of star topology, including ease of design and implementation, centralized administration, and scalability."
+  },
+  {
+    "id": "N17",
+    "label": "Disadvantages of Star Topology",
+    "description": "Drawbacks of star topology, including a single point of failure affecting the whole network, bottlenecks due to overloaded hub/switch, and increased cost."
+  },
+  {
+    "id": "N18",
+    "label": "Extended Star Topology",
+    "description": "A variation of star topology where two or more star topologies are connected."
+  },
+  {
+    "id": "N19",
+    "label": "Mesh Topology",
+    "description": "A network topology where each node is directly connected to every other node in the network, providing fault tolerance and reliability."
+  },
+  {
+    "id": "N20",
+    "label": "Advantages of Mesh Topology",
+    "description": "Benefits of mesh topology, including being fault tolerant and reliable."
+  },
+  {
+    "id": "N21",
+    "label": "Disadvantages of Mesh Topology",
+    "description": "Drawbacks of mesh topology, including issues with broadcasting messages, being expensive, and impractical for large networks."
+  },
+  {
+    "id": "N22",
+    "label": "Hybrid Topology",
+    "description": "A network topology that combines two or more different topologies (e.g., bus, star, mesh)."
+  }
+]

@@ -1,0 +1,20 @@
+Slide Content:
+a
+
+Source code Target code
+tee. co) {e.g machine code)
+
++ The main purpose of compiler is to change the code written in one language
+without changing the meaning of the program.
+
++ High-level language is written by a developer_and machine language can be
+understood by the pracess
+* Compiler is used to show errors to the programmer.
+
+*A compiler is a translator that converts the high-level language into the
+machine language.
+
+About Compiler
+
+Diagram Description:
+a diagram showing the components of a computer

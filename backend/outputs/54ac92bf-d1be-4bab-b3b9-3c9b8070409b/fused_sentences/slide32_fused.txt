@@ -1,0 +1,20 @@
+Slide Content:
+Tools for Practical implementation:
+
+ee
+
+Lexical Analysis
+
+Syntax Analysis
+
+Semantic Analysis
+
+Intermediate Code
+Generation
+
+Code Optimization
+
+Target Code le
+Generation
+
+Diagram Description:

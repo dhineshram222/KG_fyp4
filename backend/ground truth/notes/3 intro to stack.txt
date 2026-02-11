@@ -1,0 +1,41 @@
+1. Definition and Fundamental Concept
+
+• Definition: A stack is a linear Abstract Data Type (ADT) used in programming languages where insertions and deletions are restricted to a single end.
+• The "Top": This specific end where all operations occur is called the Top of the stack.
+• LIFO Principle: Stacks operate on the Last-In-First-Out (LIFO) principle, meaning the last element added is the first one to be removed.
+• Physical Representation: It can be visualized as a container that is closed at the bottom and open only at the top.
+
+2. Primary Operations
+
+The sources identify several key operations used to manage data within a stack:
+• Push: The process of inserting or adding a new element into the stack.
+• Pop: The process of removing or deleting the top-most element from the stack.
+• Peek / Top: This operation allows the user to view the value of the topmost element without actually removing it from the structure.
+
+3. Secondary & Status Operations
+
+These functions are used to check the state of the stack and prevent errors:
+• isEmpty: A boolean check to determine if the stack contains any elements.
+• isFull: A check to see if the stack has reached its maximum capacity (relevant in fixed-size implementations like arrays).
+• Size: A function that returns the total number of elements currently present in the stack.
+
+4. Real-World Analogies
+
+To better understand the LIFO behavior, the sources provide several everyday examples:
+• Stack of Books: You place books one on top of another; to get to the bottom book, you must first remove those on top.
+• Stack of Plates: Common in cafeterias or buffets, where plates are added and removed from the top of the pile.
+• Deck of Cards: Cards are typically dealt or picked from the top.
+• Stack of Chairs: Adding or removing chairs from a vertical pile.
+
+5. Abstract Data Type (ADT) Characteristics
+
+• Interface vs. Implementation: As an ADT, a stack focuses on what operations can be performed (the interface) rather than how they are implemented internally.
+• Encapsulation: Users are only interested in the available operations and do not need to know the underlying data structures used for storage.
+
+6. Applications in Computer Science
+
+Stacks are critical for various computational tasks, including:
+• Expression Handling: Used for converting expressions (e.g., Infix to Postfix) and evaluating those expressions.
+• Memory & Function Management: Handling recursion, managing function calls, and storing return addresses or parameters.
+• Navigation & History: Powering the Undo/Redo mechanisms in editors and the Back/Forward button logic in web browsers.
+• Algorithmic Problems: Essential for backtracking (such as the N-Queen problem), string reversal, and decimal-to-binary conversion.

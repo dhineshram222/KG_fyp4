@@ -1,0 +1,34 @@
+ESE EE
+
+1. Data are sent over long distances without being attenuated.
+2. It is casy to expand & managed the network.
+3. Enror detection and correction are very casy.
+
++ Disadvantages of Tree Topology:
+1. If the central hub gets fails the entire system fails.
+2. The cost is high because of the cabling.
+
+3. Error detection and correction are very casy.
+
+2. Tis casy lo expand & managed the network.
+
+1. Data are sent over long distances without being attenuated.
+
+» Advantages of Tree Topology:
+
++ Example:
+
+: Large networks such as Offices, University campuses & Hospitals
+
+—————_ —————————_==———=——_ —_——_—— ——_—_—O—"
+
++ Point-to-point or point-to-multipoint links are frequently used.
+
+=)
+
++ All the computers are connected with each other in hierarchical fashion. Q
+ni
+
+6. Tree Topology
+
++ Ir combines the characteristics of bus and star topology.

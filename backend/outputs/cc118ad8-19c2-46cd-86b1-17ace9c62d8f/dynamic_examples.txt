@@ -1,0 +1,27 @@
+Example Input:
+"============================================================\nFULL VIDEO TRANSCRIPT\n============================================================\n\nGood morning everyone, I am Rishalli Thanokar, Assistant Professor IT Department."
+
+Example Output:
+{"nodes": [{"id": "N1", "label": "FULL", "description": ""}, {"id": "N2", "label": "VIDEO", "description": ""}, {"id": "N3", "label": "TRANSCRIPT", "description": ""}, {"id": "N4", "label": "Good", "description": ""}], "edges": [{"source": "N1", "target": "N2", "relation": "related_to"}, {"source": "N1", "target": "N3", "relation": "related_to"}, {"source": "N1", "target": "N4", "relation": "related_to"}]}
+
+
+Example Input:
+"In my last video, we will learn about the advantages of database management system over file system."
+
+Example Output:
+{"nodes": [{"id": "N1", "label": "last", "description": ""}, {"id": "N2", "label": "video", "description": ""}, {"id": "N3", "label": "will", "description": ""}, {"id": "N4", "label": "learn", "description": ""}], "edges": [{"source": "N1", "target": "N2", "relation": "related_to"}, {"source": "N1", "target": "N3", "relation": "related_to"}, {"source": "N1", "target": "N4", "relation": "related_to"}]}
+
+
+Example Input:
+"Hope you have watched that video."
+
+Example Output:
+{"nodes": [{"id": "N1", "label": "Hope", "description": ""}, {"id": "N2", "label": "you", "description": ""}, {"id": "N3", "label": "have", "description": ""}, {"id": "N4", "label": "watched", "description": ""}], "edges": [{"source": "N1", "target": "N2", "relation": "related_to"}, {"source": "N1", "target": "N3", "relation": "related_to"}, {"source": "N1", "target": "N4", "relation": "related_to"}]}
+
+
+Example Input:
+"Now in this video, we will learn about our next topic in the first unit that is data abstraction and data independence."
+
+Example Output:
+{"nodes": [{"id": "N1", "label": "Now", "description": ""}, {"id": "N2", "label": "this", "description": ""}, {"id": "N3", "label": "video", "description": ""}, {"id": "N4", "label": "will", "description": ""}], "edges": [{"source": "N1", "target": "N2", "relation": "related_to"}, {"source": "N1", "target": "N3", "relation": "related_to"}, {"source": "N1", "target": "N4", "relation": "related_to"}]}
+

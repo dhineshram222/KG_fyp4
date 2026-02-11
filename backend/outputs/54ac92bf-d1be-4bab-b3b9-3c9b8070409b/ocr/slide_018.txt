@@ -1,0 +1,21 @@
+Syntax Analyzer:
+
+Lexemes
+
+Tokens
+
+identiRer
+
+‘operator
+
+identifier
+
+‘operator
+
+Syntox Analysis
+
+identifier
+
+‘operator
+
+identifier

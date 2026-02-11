@@ -1,0 +1,105 @@
+LECTURE NOTES
+=============
+
+
+1. Data Abstraction
+Definition: The process of hiding irrelevant details from the user and showing only necessary information.
+  - Levels of Data Abstraction: Total three levels in database management system: View level, conceptual level, and physical level.
+  - Primary Goal of Database: To store and retrieve data conveniently and effectively.
+  - Hiding Complexity: A core principle of data abstraction.
+  - Levels of Abstraction: Several layers used to achieve data abstraction.
+
+2. Data Independence
+Definition: Users and data should not directly interact with each other.
+
+3. Levels Of Data Abstraction
+Definition: Total three levels in database management system: View level, conceptual level, and physical level.
+  - Physical Level (Internal Schema): The lowest level of data abstraction, defining how data are stored and its location in memory, completely handled by the database administrator.
+  - Conceptual Level (Logical Level): The level that defines what data are stored in the database, relationships among data, and the structure of the entire database, handled by DBA, programmer, or developer.
+  - View Level (External Schema): The level that tells the application how data should be shown to the user, providing multiple views of the same database for user interaction.
+  - Data Independence: Users and data should not directly interact with each other.
+Visual Representation:
+Figure 3: Diagram illustrating: The process of hiding irrelevant details from the user and showing only necessary information.
+
+4. Database Management System (Dbms)
+Definition: A system where data abstraction and data independence are applied and managed.
+  - Data Abstraction: The process of hiding irrelevant details from the user and showing only necessary information.
+  - Data Independence: Users and data should not directly interact with each other.
+
+5. Database Administrator (Dba)
+Definition: An entity responsible for deciding data storage, arrangement, and managing the physical and conceptual levels of data abstraction.
+  - Logical Level: The middle level of data abstraction, dealing with what data are stored and their relationships.
+
+6. User
+Definition: An entity that accesses the system, shown only necessary information, and directly interacts with the view level.
+  - Physical Level (Internal Schema): The lowest level of data abstraction, defining how data are stored and its location in memory, completely handled by the database administrator.
+
+7. 3 Tier Architecture
+Definition: A database architecture discussed in the last presentation.
+  - View of Data: The main focus of the current presentation.
+Visual Representation:
+Figure 7: Diagram illustrating: A database architecture discussed in the last presentation.
+
+8. View Of Data
+Definition: The main focus of the current presentation.
+  - Multiple Views: Different perspectives of data existing at the presentation level.
+Visual Representation:
+Figure 8: Diagram illustrating: The main focus of the current presentation.
+
+9. Primary Goal Of Database
+Definition: To store and retrieve data conveniently and effectively.
+  - Storage: Required for storing and retrieving data, potentially involving simple or complex data structures.
+
+10. Storage
+Definition: Required for storing and retrieving data, potentially involving simple or complex data structures.
+
+11. Hiding Complexity
+Definition: A core principle of data abstraction.
+  - Essential Details: The desired outcome from data abstraction, providing a short and sweet answer.
+
+12. Essential Details
+Definition: The desired outcome from data abstraction, providing a short and sweet answer.
+
+13. Levels Of Abstraction
+Definition: Several layers used to achieve data abstraction.
+13.1 Logical Level
+The middle level of data abstraction, dealing with what data are stored and their relationships.
+  - Application Level: Another name for the logical level.
+13.2 View Level
+The topmost and highest level of data abstraction, interacting directly with users.
+  - Multiple Views: Different perspectives of data existing at the presentation level.
+  - Physical Level: The lowest level of data abstraction.
+Visual Representation:
+Figure 13: Diagram illustrating: Several layers used to achieve data abstraction.
+
+14. How Data Stored
+Definition: The concern of the physical level, dealing with how data are stored.
+
+15. Data Structures (Physical Level)
+Definition: Data structures used at the physical level, which can be low-level, simple or complex.
+
+16. What Data Stored
+Definition: The concern of the logical level, dealing with what data are stored.
+
+17. Relationship Among Data
+Definition: The relationship among data stored in the database, described at the logical level.
+
+18. Data Structures (Logical Level)
+Definition: Simple data structures used at the logical level.
+
+19. Physical Data Independence
+Definition: A concept where applications do not depend on the physical level or physical schema, allowing changes in logical structure without affecting physical structure.
+  - Physical Level: The lowest level of data abstraction.
+  - Schema: The structure of the database.
+
+20. User Interaction
+Definition: Interaction with the system, done at the view level.
+  - Interfaces: Means by which users interact with the system, such as web, mobile, or graphical user interfaces (GUI).
+Visual Representation:
+Figure 20: Diagram illustrating: An entity that accesses the system, shown only necessary information, and directly interacts with the view level.
+
+21. Interfaces
+Definition: Means by which users interact with the system, such as web, mobile, or graphical user interfaces (GUI).
+
+22. Security
+Definition: An important aspect achieved at the view level by providing restricted access to data for users.

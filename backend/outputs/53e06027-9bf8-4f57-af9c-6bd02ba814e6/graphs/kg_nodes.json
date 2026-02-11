@@ -1,0 +1,132 @@
+[
+  {
+    "id": "N1",
+    "label": "Data Structure and Algorithm Subject",
+    "description": "The subject where stack and queue are covered in unit three."
+  },
+  {
+    "id": "N2",
+    "label": "Unit 3",
+    "description": "Contains topics such as stack and queue."
+  },
+  {
+    "id": "N3",
+    "label": "Stack",
+    "description": "An abstract data type, commonly used in most programming languages. A linear data structure that follows a particular order (LIFO/FILO)."
+  },
+  {
+    "id": "N4",
+    "label": "Queue",
+    "description": "A data structure topic covered in unit three."
+  },
+  {
+    "id": "N5",
+    "label": "Abstract Data Type (ADT)",
+    "description": "Means stack uses different types of operations, whose theory allows direct use of push and pop operations during implementation."
+  },
+  {
+    "id": "N6",
+    "label": "Homogeneous Items",
+    "description": "Similar types of items that form an ordered group of elements."
+  },
+  {
+    "id": "N7",
+    "label": "Linear Data Structure",
+    "description": "All the data or elements are arranged in a sequential manner or in linear fashion."
+  },
+  {
+    "id": "N8",
+    "label": "LIFO (Last In First Out)",
+    "description": "The particular order in which operations are performed on a stack, where the last item added is the first one out."
+  },
+  {
+    "id": "N9",
+    "label": "FILO (First In Last Out)",
+    "description": "An order that is the same as LIFO."
+  },
+  {
+    "id": "N10",
+    "label": "Top of the Stack",
+    "description": "The location where elements are added to and removed from; the most recently added items are placed here."
+  },
+  {
+    "id": "N11",
+    "label": "Stack Implementation Methods",
+    "description": "Ways to implement a stack, including by means of Array, Structure, Pointer, and Linked List."
+  },
+  {
+    "id": "N12",
+    "label": "Stack Size",
+    "description": "Can either be fixed size or may have a sense of dynamic resizing."
+  },
+  {
+    "id": "N13",
+    "label": "Real Life Applications of Stack",
+    "description": "Examples include stack of cafeteria trays, coins, shoe boxes, neatly folded shirts, books, stones, plates of tray, shipment in cargo, drawers, and railway yard."
+  },
+  {
+    "id": "N14",
+    "label": "Stack Representation",
+    "description": "A conceptual diagram showing how data is inserted and deleted using operations."
+  },
+  {
+    "id": "N15",
+    "label": "Push Operation",
+    "description": "Inserting elements one by one into the stack."
+  },
+  {
+    "id": "N16",
+    "label": "Pop Operation",
+    "description": "Removing elements from the stack one by one."
+  },
+  {
+    "id": "N17",
+    "label": "Types of Stack",
+    "description": "Mainly two types: implicit stack and explicit stack."
+  },
+  {
+    "id": "N18",
+    "label": "Implicit Stack",
+    "description": "Built-in to every computer system, not implemented by a program or developer, used by the compiler to implement recursion, and stores information like return address, local variables, and parameters."
+  },
+  {
+    "id": "N19",
+    "label": "Explicit Stack",
+    "description": "Implemented by programmers or developers, used by algorithms needing a stack, and examples include push/pop operations, infix to prefix expression conversion, recursive algorithms, and traversive algorithms."
+  },
+  {
+    "id": "N20",
+    "label": "Operations Performed on Stack (ADT)",
+    "description": "A set of functions that can be performed on a stack including push, pop, peek, isFull, and isEmpty."
+  },
+  {
+    "id": "N21",
+    "label": "Peek Function",
+    "description": "Gets the top data element from the stack without removing it."
+  },
+  {
+    "id": "N22",
+    "label": "isFull Function",
+    "description": "Checks whether the stack is full."
+  },
+  {
+    "id": "N23",
+    "label": "isEmpty Function",
+    "description": "Checks if the stack is empty."
+  },
+  {
+    "id": "N24",
+    "label": "Applications of Stack in Data Structure",
+    "description": "Includes converting infix expression to postfix and prefix, evaluating postfix expressions, reversing strings, checking well-formed parentheses, processing subprogram/function calls, parsing, decimal to binary conversion, and backtracking algorithms."
+  },
+  {
+    "id": "N25",
+    "label": "Important Questions (SPPU Exam)",
+    "description": "Frequently asked questions in the SPPU exam pattern, covering stack definition, implementation, implicit/explicit stack, recursion importance, and applications of stack."
+  },
+  {
+    "id": "N26",
+    "label": "Recursion",
+    "description": "A functionality implemented by the compiler using the implicit stack; also relevant to explicit stack algorithms and an important question topic."
+  }
+]

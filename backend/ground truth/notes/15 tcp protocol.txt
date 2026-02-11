@@ -1,0 +1,44 @@
+I. Comparison: TCP/IP vs. OSI Model
+
+While the OSI model is a theoretical seven-layer framework, the TCP/IP model is more streamlined.
+• Layer Count: TCP/IP typically has four layers, though some frameworks split the bottom layer into two, totaling five.
+• Layer Mapping:
+    ◦ Application (TCP/IP): Combines OSI's Application, Presentation, and Session layers.
+    ◦ Transport (TCP/IP): Matches the OSI Transport layer.
+    ◦ Internet (TCP/IP): Equivalent to the OSI Network layer.
+    ◦ Network Access (TCP/IP): Combines OSI's Data Link and Physical layers.
+
+II. Layer Breakdown, Protocols, and PDUs
+
+Communication is organized through Protocol Data Units (PDUs), which change names as data moves through the layers.
+1. Application Layer
+• Function: Handles user interaction, data representation, encoding, and dialogue control.
+• Protocols:
+    ◦ Web/Data: HTTP (web browsing), DNS (domain naming), DHCP (host configuration).
+    ◦ Email: SMTP, POP, IMAP.
+    ◦ Files/Misc: FTP/TFTP (file transfer), Telnet (virtual terminals), and NTP (time synchronization).
+• PDU: Data.
+2. Transport Layer
+• Function: Manages process-to-process communication, segmentation (breaking data into smaller units), flow control, and error control.
+• Protocols:
+    ◦ TCP: Connection-oriented, reliable, and provides guaranteed delivery through feedback and retransmission.
+    ◦ UDP: Connectionless, faster, but "unreliable" as it does not guarantee delivery; used for streaming and voice.
+• PDU: Segment.
+3. Internet Layer
+• Function: Responsible for routing packets across networks and determining the shortest/best path using logical IP addresses.
+• Protocols:
+    ◦ IP (IPv4/IPv6): Delivers packets from source to destination.
+    ◦ ICMP: Reports network problems and status messages.
+    ◦ ARP: Finds a device's physical address using its IP address.
+• PDU: Packet.
+4. Network Access Layer
+• Function: Controls hardware devices and transmission media (cables, fiber optics). It converts data into signals suitable for the specific medium.
+• Protocols: Ethernet (wired LAN), PPP (Point-to-Point Protocol), and Frame Relay.
+• PDU: Frames (Data Link functions) and Bits (Physical transmission).
+
+
+III. Data Transmission Flow
+
+The process ensures accurate communication between a sender and receiver.
+1. Sender Side: Data is generated at the Application layer, divided into segments, addressed into packets, framed for the medium, and sent as bits.
+2. Receiver Side: The process is reversed to reconstruct the original message for the user.

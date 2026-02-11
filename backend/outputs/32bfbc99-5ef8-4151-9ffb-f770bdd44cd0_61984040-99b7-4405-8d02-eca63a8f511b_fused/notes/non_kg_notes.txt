@@ -1,0 +1,158 @@
+============================================================
+LECTURE NOTES (Non-KG Based - Topic Modeling)
+============================================================
+
+
+──────────────────────────────────────────────────
+  1. Data Abstraction & Abstraction & Data
+──────────────────────────────────────────────────
+  Keywords: data abstraction, abstraction, data, levels, levels data
+
+  • So this is the data abstraction.
+  • That's what data abstraction is all about.
+  • So our following points are covered in this video, which includes data abstraction, levels of data abstraction, then data independence and there are types of data abstraction and examples of data abstraction in database management system.
+  • So we are sure that there are 3 levels of data abstraction.
+  • I will explain data abstraction now.
+  • So I will explain this concept through the levels of data abstraction.
+  • So let us see how exactly data abstraction will be work in database management system.
+  • So you understood about the concept of data abstraction, levels of data abstraction and data independence.
+
+
+──────────────────────────────────────────────────
+  2. Level & View & View Level
+──────────────────────────────────────────────────
+  Keywords: level, view, view level, conceptual level, conceptual
+
+  • Next one is conceptual level and next one is view level.
+  • So this is the view level and in the view level, security of the system also increases, right?
+  • Client has the view level, that is external level.
+  • This is the concept of view level.
+  • Level 3: View Level or External Schema
+
+—$— $$ — — Physical Level
+
+5.
+  • It will be directly reflect at the conceptual level and if you change any information in conceptual level, it will be reflected in the view level.
+  • View level, conceptual level and physical level.
+  • View Level
+
+achieve Data Independence.
+
+  [Diagram: slide_004_diagram_1.png]
+
+
+──────────────────────────────────────────────────
+  3. Views & Multiple Views & Multiple
+──────────────────────────────────────────────────
+  Keywords: views, multiple views, multiple, database, views database
+
+  • There is multiple views of the same database.
+  • There is only one database and there are multiple views of this same database towards the user.
+  • Means there is only one database and multiple views of the same database given to the user as per their priority.
+  • Why do we need multiple views of data?
+  • To the interfaces, it may be a web interface or a mobile interface, simply GUI, the graphical user interface, GUI and also this level is going to interact with the next level that is the logical level where application programs are written and as mentioned, multiple views exist in this level and of course we need to focus on the security of multiple views.
+  • In the last presentation I told you we have multiple views at the presentation level.
+  • All data are stored in the same database but there exist multiple views.
+  • How multiple views exist in this level?
+
+
+──────────────────────────────────────────────────
+  4. Data Independence & Independence & Data
+──────────────────────────────────────────────────
+  Keywords: data independence, independence, data, concept, concept data
+
+  • So this is the concept of data independence.
+  • So this is the concept of data independence.
+  • Now what is meant by data independence?
+  • View Level
+
+achieve Data Independence.
+  • Data independence means users and data should not directly interact with each other.
+  • * Data Independence means users and datashould not directly interact with each other.
+  • So you understood about the concept of data abstraction, levels of data abstraction and data independence.
+  • Now the levels of data abstraction and data independence.
+
+
+──────────────────────────────────────────────────
+  5. Stored & Data Stored & Data
+──────────────────────────────────────────────────
+  Keywords: stored, data stored, data, defines, defines data
+
+  • It defines how data are stored.
+  • ¢ It defines how data are stored.
+  • ¢ It defines how data are stored.
+  • So logical level defines that what data are stored into the database and what are the relationships exist among this data.
+  • ¢ This level defines what data are stored in database &
+
+What relationship exists among these data.
+  • We know all data are stored in a central place.
+  • Now we know this physical level is actually the database level the physical storage is involved we know databases are actually stored in the physical medium right it may be a hard disk or SSDs any physical medium and that's why it is the lowest level of abstraction and it deals with how the data are stored because the data are actually stored in this level the database actually exists in this level and that's why this level deals with how the data are stored when we talk about how the data are stored it deals with the data structures and this storage may be involving simple data structures or even complex data structures but please be noted that these users the low level data structures in case we are storing multimedia data in the database then obviously the data structure would be complex data structures anyway we'll talk about the data structures elaborately in the coming presentations and we know this is actually the database level we know data are stored in the databases and these databases are actually stored in the storage medium and that's why this level deals with storage we are done with the bottom most level the physical level let's now move on to the next level we know physical level deals with how the data are stored and this logical level deals with what data are actually stored and what the relationship among the data stored so logical level describes what data are actually to be stored in the databases and what's the relationship among the data that are stored in the database nobody's when we see relational database year models we will understand about the relationship among the data for now just understand this level the logical level deals with what data are actually stored the physical level deals with how the data are stored logical level deals with what data are stored and the relationship among the data.
+  • How data has to be arranged, whether the data is to be stored, these all things are done by the database administrator.
+
+
+──────────────────────────────────────────────────
+  6. Physical & Physical Level & Level
+──────────────────────────────────────────────────
+  Keywords: physical, physical level, level, level physical, suppose
+
+  • This is your physical level.
+  • That is physical level and physical level is directly connected to the database.
+  • Let's start with the first level the physical level what's this physical level is all about.
+  • See here, suppose this is your physical level.
+  • Now what is meant by physical level?
+  • Level 1: Physical Level or Internal Schema
+
+3.
+  • So first level of data abstraction is physical level.
+  • Level 1: Physical Level or Internal Schema == —
+* Lowest level of Data Abstraction.
+
+  [Diagram: slide_005_diagram_1.png]
+
+
+──────────────────────────────────────────────────
+  7. Student & Faculty & University
+──────────────────────────────────────────────────
+  Keywords: student, faculty, university, different, right
+
+  • * So, both the student and the faculty have a different view.
+  • But the faculty of the university will have a different
+
+view.
+  • Physical Level
+
+= os
+
+Example:
+
+* If we have a login-id and password in a university system, then as a student, we can view our
+marks, attendance, fee structure, etc.
+  • But faculty of university have different view of this same database.
+  • And another side faculty of university again has their login and ID and password, okay?
+  • Student view is different and faculty view is different, right?
+  • University system has a particular login ID and password of the student.
+  • So student can view their marks, view their attendance, mark list, field structure in university login, right?
+
+
+──────────────────────────────────────────────────
+  8. Logical & Logical Level & Level
+──────────────────────────────────────────────────
+  Keywords: logical, logical level, level, structure, entire
+
+  • We are done with the logical level.
+  • So logical level decides structure of your entire database.
+  • So this is the concept of logical level.
+  • Server is a logical level.
+  • Logical level decide the structure of entire database.
+  • This all types of queries in logical level.
+  • Conceptual Level
+
+(Intemal Schema}
+
+(Logical Level}
+
+1.
+  • Logical Level Entire database with simple
+data structures.
+
+  [Diagram: v1_slide_004_diagram_1.png]

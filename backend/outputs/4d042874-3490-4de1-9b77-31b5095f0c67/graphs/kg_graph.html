@@ -1,0 +1,155 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 750px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "description": "Arrangement of nodes of a computer network, viewed as a layout of a computer network.", "id": "N1", "label": "Network Topology", "shape": "dot", "size": 10, "title": "Arrangement of nodes of a computer network, viewed as a layout of a computer network."}, {"color": "#97c2fc", "description": "Components that need to be arranged to establish communication in a network.", "id": "N2", "label": "Nodes", "shape": "dot", "size": 10, "title": "Components that need to be arranged to establish communication in a network."}, {"color": "#97c2fc", "description": "The establishment of data exchange among all nodes in a network.", "id": "N3", "label": "Communication", "shape": "dot", "size": 10, "title": "The establishment of data exchange among all nodes in a network."}, {"color": "#97c2fc", "description": "The placement of various nodes in a network.", "id": "N4", "label": "Physical Topology", "shape": "dot", "size": 10, "title": "The placement of various nodes in a network."}, {"color": "#97c2fc", "description": "How the data is going to flow in the network.", "id": "N5", "label": "Logical Topology", "shape": "dot", "size": 10, "title": "How the data is going to flow in the network."}, {"color": "#97c2fc", "description": "A network topology where all data is transmitted over a common transmission medium and received by all nodes simultaneously.", "id": "N6", "label": "Bus Topology", "shape": "dot", "size": 10, "title": "A network topology where all data is transmitted over a common transmission medium and received by all nodes simultaneously."}, {"color": "#97c2fc", "description": "A bus topology arranged in a closed loop, where each node has two connections to its nearest neighbors, and communication is unidirectional.", "id": "N10", "label": "Ring Topology", "shape": "dot", "size": 10, "title": "A bus topology arranged in a closed loop, where each node has two connections to its nearest neighbors, and communication is unidirectional."}, {"color": "#97c2fc", "description": "A network topology where every node is connected to a central node (hub or switch), and all traffic must pass through this central node.", "id": "N14", "label": "Star Topology", "shape": "dot", "size": 10, "title": "A network topology where every node is connected to a central node (hub or switch), and all traffic must pass through this central node."}, {"color": "#97c2fc", "description": "A network topology where each node is directly connected to every other node in the network, providing fault tolerance and reliability.", "id": "N19", "label": "Mesh Topology", "shape": "dot", "size": 10, "title": "A network topology where each node is directly connected to every other node in the network, providing fault tolerance and reliability."}, {"color": "#97c2fc", "description": "A network topology that combines two or more different topologies (e.g., bus, star, mesh).", "id": "N22", "label": "Hybrid Topology", "shape": "dot", "size": 10, "title": "A network topology that combines two or more different topologies (e.g., bus, star, mesh)."}, {"color": "#97c2fc", "description": "A single wire or cable in bus topology capable of sending and receiving data bidirectionally.", "id": "N7", "label": "Common Transmission Medium (Bus)", "shape": "dot", "size": 10, "title": "A single wire or cable in bus topology capable of sending and receiving data bidirectionally."}, {"color": "#97c2fc", "description": "Benefits of bus topology, including less expense, suitability for temporary networks, and node failures not affecting others.", "id": "N8", "label": "Advantages of Bus Topology", "shape": "dot", "size": 10, "title": "Benefits of bus topology, including less expense, suitability for temporary networks, and node failures not affecting others."}, {"color": "#97c2fc", "description": "Drawbacks of bus topology, including not being fault tolerant, limited cable length, and no security.", "id": "N9", "label": "Disadvantages of Bus Topology", "shape": "dot", "size": 10, "title": "Drawbacks of bus topology, including not being fault tolerant, limited cable length, and no security."}, {"color": "#97c2fc", "description": "A mechanism in ring topology that dictates which node gets to send data, circulated throughout the network.", "id": "N11", "label": "Token (Ring Topology)", "shape": "dot", "size": 10, "title": "A mechanism in ring topology that dictates which node gets to send data, circulated throughout the network."}, {"color": "#97c2fc", "description": "Benefits of ring topology, including better performance than bus topology and all nodes having equal access.", "id": "N12", "label": "Advantages of Ring Topology", "shape": "dot", "size": 10, "title": "Benefits of ring topology, including better performance than bus topology and all nodes having equal access."}, {"color": "#97c2fc", "description": "Drawbacks of ring topology, including unidirectional communication, single point of failure affecting the whole network, performance degradation with high load, and no security.", "id": "N13", "label": "Disadvantages of Ring Topology", "shape": "dot", "size": 10, "title": "Drawbacks of ring topology, including unidirectional communication, single point of failure affecting the whole network, performance degradation with high load, and no security."}, {"color": "#97c2fc", "description": "A central device in a star topology that performs centralized administration and through which all network traffic passes.", "id": "N15", "label": "Central Node (Hub/Switch)", "shape": "dot", "size": 10, "title": "A central device in a star topology that performs centralized administration and through which all network traffic passes."}, {"color": "#97c2fc", "description": "Benefits of star topology, including ease of design and implementation, centralized administration, and scalability.", "id": "N16", "label": "Advantages of Star Topology", "shape": "dot", "size": 10, "title": "Benefits of star topology, including ease of design and implementation, centralized administration, and scalability."}, {"color": "#97c2fc", "description": "Drawbacks of star topology, including a single point of failure affecting the whole network, bottlenecks due to overloaded hub/switch, and increased cost.", "id": "N17", "label": "Disadvantages of Star Topology", "shape": "dot", "size": 10, "title": "Drawbacks of star topology, including a single point of failure affecting the whole network, bottlenecks due to overloaded hub/switch, and increased cost."}, {"color": "#97c2fc", "description": "A variation of star topology where two or more star topologies are connected.", "id": "N18", "label": "Extended Star Topology", "shape": "dot", "size": 10, "title": "A variation of star topology where two or more star topologies are connected."}, {"color": "#97c2fc", "description": "Benefits of mesh topology, including being fault tolerant and reliable.", "id": "N20", "label": "Advantages of Mesh Topology", "shape": "dot", "size": 10, "title": "Benefits of mesh topology, including being fault tolerant and reliable."}, {"color": "#97c2fc", "description": "Drawbacks of mesh topology, including issues with broadcasting messages, being expensive, and impractical for large networks.", "id": "N21", "label": "Disadvantages of Mesh Topology", "shape": "dot", "size": 10, "title": "Drawbacks of mesh topology, including issues with broadcasting messages, being expensive, and impractical for large networks."}]);
+                  edges = new vis.DataSet([{"arrows": "to", "from": "N1", "label": "involves arrangement of", "title": "involves arrangement of", "to": "N2", "width": 1}, {"arrows": "to", "from": "N1", "label": "enables", "title": "enables", "to": "N3", "width": 1}, {"arrows": "to", "from": "N1", "label": "can be viewed as", "title": "can be viewed as", "to": "N4", "width": 1}, {"arrows": "to", "from": "N1", "label": "can be viewed as", "title": "can be viewed as", "to": "N5", "width": 1}, {"arrows": "to", "from": "N1", "label": "is a type of", "title": "is a type of", "to": "N6", "width": 1}, {"arrows": "to", "from": "N1", "label": "is a type of", "title": "is a type of", "to": "N10", "width": 1}, {"arrows": "to", "from": "N1", "label": "is a type of", "title": "is a type of", "to": "N14", "width": 1}, {"arrows": "to", "from": "N1", "label": "is a type of", "title": "is a type of", "to": "N19", "width": 1}, {"arrows": "to", "from": "N1", "label": "is a type of", "title": "is a type of", "to": "N22", "width": 1}, {"arrows": "to", "from": "N4", "label": "is the placement of", "title": "is the placement of", "to": "N2", "width": 1}, {"arrows": "to", "from": "N5", "label": "deals with data flow for", "title": "deals with data flow for", "to": "N3", "width": 1}, {"arrows": "to", "from": "N6", "label": "uses", "title": "uses", "to": "N7", "width": 1}, {"arrows": "to", "from": "N6", "label": "has", "title": "has", "to": "N8", "width": 1}, {"arrows": "to", "from": "N6", "label": "has", "title": "has", "to": "N9", "width": 1}, {"arrows": "to", "from": "N10", "label": "is a closed loop variation of", "title": "is a closed loop variation of", "to": "N6", "width": 1}, {"arrows": "to", "from": "N10", "label": "uses for data transfer", "title": "uses for data transfer", "to": "N11", "width": 1}, {"arrows": "to", "from": "N10", "label": "has", "title": "has", "to": "N12", "width": 1}, {"arrows": "to", "from": "N10", "label": "has", "title": "has", "to": "N13", "width": 1}, {"arrows": "to", "from": "N14", "label": "uses", "title": "uses", "to": "N15", "width": 1}, {"arrows": "to", "from": "N14", "label": "has", "title": "has", "to": "N16", "width": 1}, {"arrows": "to", "from": "N14", "label": "has", "title": "has", "to": "N17", "width": 1}, {"arrows": "to", "from": "N14", "label": "can be extended to form", "title": "can be extended to form", "to": "N18", "width": 1}, {"arrows": "to", "from": "N15", "label": "provides centralized administration for", "title": "provides centralized administration for", "to": "N14", "width": 1}, {"arrows": "to", "from": "N19", "label": "has", "title": "has", "to": "N20", "width": 1}, {"arrows": "to", "from": "N19", "label": "has", "title": "has", "to": "N21", "width": 1}, {"arrows": "to", "from": "N22", "label": "can combine", "title": "can combine", "to": "N6", "width": 1}, {"arrows": "to", "from": "N22", "label": "can combine", "title": "can combine", "to": "N10", "width": 1}, {"arrows": "to", "from": "N22", "label": "can combine", "title": "can combine", "to": "N14", "width": 1}, {"arrows": "to", "from": "N22", "label": "can combine", "title": "can combine", "to": "N19", "width": 1}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

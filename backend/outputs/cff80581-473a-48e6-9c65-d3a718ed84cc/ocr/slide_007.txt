@@ -1,0 +1,8 @@
+Its not difficult to understand that the data needs to be managed in such a
+way so that it can produce some meaninoful information.
+
+To provide an appropriate way to structure the data, we need to know about
+
+' Data STRUCTURES
+I
+a a" i:

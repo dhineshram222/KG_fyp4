@@ -1,0 +1,34 @@
+¢ Though the data is stored in the database but the structure of the tables like the student table.
+
+teacher table, books table, etc are defined here in the conceptual level or logical level.
+
+¢ Also, how the tables are related to each other are defined here.
+
+¢ This level defines what data are stored in database &
+
+What relationship exists among these data.
+
+* Logical levels decide structure of entire database.
+
+¢ DBA use the logical level for abstraction purpose.
+
+Example: 2D aa
+¢ Let us take an example where we use the relational model for storing the data.
+
+¢ We have to store the data of a student, the columns in the student table will be student_name.
+
+age, mail id, roll_no ete.
+
+¢ Let us take an example where we use the relational model for storing the data.
+
+Example:
+
+¢ DBA use the logical level for abstraction purpose.
+
+* Logical levels decide structure of entire database.
+
+What relationship exists among these data.
+
+¢ This level defines what data are stored in database &
+
+Level 2: Conceptual Level or Logical Level

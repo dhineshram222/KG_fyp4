@@ -1,0 +1,16 @@
+Slide Content:
+¢ A scheme for organizing related pieces of information & we can manipulate it.
+
+considers not only the elements stored but also their relationship to each other.
+
+¢ Data structure is a specialized format for organizing and storing data _in memory that
+
+efficiently.
+
+* A data structure is a particular way of organizing data in a computer so that it can be used
+
+Data Structure:
+
+What is mean by Data Structure?
+
+Diagram Description:

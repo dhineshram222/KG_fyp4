@@ -1,0 +1,155 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 750px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "description": "a new subject that is data structures.", "id": "N1", "label": "Data Structures (Subject)", "shape": "dot", "size": 10, "title": "a new subject that is data structures."}, {"color": "#97c2fc", "description": "a prerequisite before understanding what data structure is.", "id": "N2", "label": "Data (Core Concept)", "shape": "dot", "size": 10, "title": "a prerequisite before understanding what data structure is."}, {"color": "#97c2fc", "description": "the reason why companies are preferring this subject over other subjects, as it is very important and useful in day-to-day life and used more frequently.", "id": "N26", "label": "Data Structures Importance", "shape": "dot", "size": 10, "title": "the reason why companies are preferring this subject over other subjects, as it is very important and useful in day-to-day life and used more frequently."}, {"color": "#97c2fc", "description": "quantities, characters or symbols on which operations are performed by a computer, which may be stored and transmitted in the form of electrical signals and recorded on magnetic, optical or mechanical recording media.", "id": "N3", "label": "Data (Dictionary Definition)", "shape": "dot", "size": 10, "title": "quantities, characters or symbols on which operations are performed by a computer, which may be stored and transmitted in the form of electrical signals and recorded on magnetic, optical or mechanical recording media."}, {"color": "#97c2fc", "description": "a distinction between data and an information, which is a very confusing topic.", "id": "N7", "label": "Data vs. Information Distinction", "shape": "dot", "size": 10, "title": "a distinction between data and an information, which is a very confusing topic."}, {"color": "#97c2fc", "description": "operations performed by a computer on quantities, characters or symbols.", "id": "N4", "label": "Operations on Data", "shape": "dot", "size": 10, "title": "operations performed by a computer on quantities, characters or symbols."}, {"color": "#97c2fc", "description": "data may be stored and transmitted in the form of electrical signals and recorded on magnetic, optical or mechanical recording media.", "id": "N5", "label": "Storage and Transmission of Data", "shape": "dot", "size": 10, "title": "data may be stored and transmitted in the form of electrical signals and recorded on magnetic, optical or mechanical recording media."}, {"color": "#97c2fc", "description": "meaningful or processed data.", "id": "N6", "label": "Information", "shape": "dot", "size": 10, "title": "meaningful or processed data."}, {"color": "#97c2fc", "description": "information from which some meaning can be extracted, making it quite understandable.", "id": "N10", "label": "Meaningful Information (Goal)", "shape": "dot", "size": 10, "title": "information from which some meaning can be extracted, making it quite understandable."}, {"color": "#97c2fc", "description": "just a collection of characters or symbols where one won\u0027t be able to understand it properly.", "id": "N8", "label": "Unprocessed Data (Example)", "shape": "dot", "size": 10, "title": "just a collection of characters or symbols where one won\u0027t be able to understand it properly."}, {"color": "#97c2fc", "description": "data that has been manipulated, such as reversing a whole string, to make it understandable.", "id": "N9", "label": "Processed Data", "shape": "dot", "size": 10, "title": "data that has been manipulated, such as reversing a whole string, to make it understandable."}, {"color": "#97c2fc", "description": "arranging data in a systematic way so that it gets a structure and becomes meaningful.", "id": "N11", "label": "Systematic Data Arrangement", "shape": "dot", "size": 10, "title": "arranging data in a systematic way so that it gets a structure and becomes meaningful."}, {"color": "#97c2fc", "description": "managing data in such a way so that it can produce some meaningful information.", "id": "N12", "label": "Data Management", "shape": "dot", "size": 10, "title": "managing data in such a way so that it can produce some meaningful information."}, {"color": "#97c2fc", "description": "the systematic way to organize data so that it can be used efficiently.", "id": "N13", "label": "Data Structure (Definition)", "shape": "dot", "size": 10, "title": "the systematic way to organize data so that it can be used efficiently."}, {"color": "#97c2fc", "description": "using data efficiently in terms of time as well as space.", "id": "N14", "label": "Efficiency (Time/Space)", "shape": "dot", "size": 10, "title": "using data efficiently in terms of time as well as space."}, {"color": "#97c2fc", "description": "a classical data structure, thought of as a sequence or collection of some symbols, characters, integers, or floats.", "id": "N15", "label": "Arrays (Example Data Structure)", "shape": "dot", "size": 10, "title": "a classical data structure, thought of as a sequence or collection of some symbols, characters, integers, or floats."}, {"color": "#97c2fc", "description": "a data structure used in implementing the redo and undo feature.", "id": "N16", "label": "Stack Data Structure", "shape": "dot", "size": 10, "title": "a data structure used in implementing the redo and undo feature."}, {"color": "#97c2fc", "description": "a data structure (e.g., 37x40) used to store pixel information (each pixel\u0027s color) for bitmap images.", "id": "N22", "label": "Two-Dimensional Array", "shape": "dot", "size": 10, "title": "a data structure (e.g., 37x40) used to store pixel information (each pixel\u0027s color) for bitmap images."}, {"color": "#97c2fc", "description": "a data structure used to store friendship information on social networking sites.", "id": "N23", "label": "Graph Data Structure", "shape": "dot", "size": 10, "title": "a data structure used to store friendship information on social networking sites."}, {"color": "#97c2fc", "description": "a famous feature in applications like Google Docs, PowerPoint, or Microsoft Word that uses stack data structures.", "id": "N17", "label": "Undo/Redo Feature", "shape": "dot", "size": 10, "title": "a famous feature in applications like Google Docs, PowerPoint, or Microsoft Word that uses stack data structures."}, {"color": "#97c2fc", "description": "a stack where each information entered gets stored; elements are popped out when control z (undo) is pressed.", "id": "N18", "label": "Undo Stack", "shape": "dot", "size": 10, "title": "a stack where each information entered gets stored; elements are popped out when control z (undo) is pressed."}, {"color": "#97c2fc", "description": "a stack where elements popped from the undo stack are placed; used when control y (redo) is pressed to get the operation again.", "id": "N19", "label": "Redo Stack", "shape": "dot", "size": 10, "title": "a stack where elements popped from the undo stack are placed; used when control y (redo) is pressed to get the operation again."}, {"color": "#97c2fc", "description": "images stored as a series of tiny dots called pixels.", "id": "N20", "label": "Bitmap Images", "shape": "dot", "size": 10, "title": "images stored as a series of tiny dots called pixels."}, {"color": "#97c2fc", "description": "tiny dots or small squares, each assigned a color and then arranged in a pattern to form an image.", "id": "N21", "label": "Pixels", "shape": "dot", "size": 10, "title": "tiny dots or small squares, each assigned a color and then arranged in a pattern to form an image."}, {"color": "#97c2fc", "description": "individuals (e.g., James, Mark, Leah, Lucy) represented in a graph data structure.", "id": "N24", "label": "Graph Nodes", "shape": "dot", "size": 10, "title": "individuals (e.g., James, Mark, Leah, Lucy) represented in a graph data structure."}, {"color": "#97c2fc", "description": "connections or relationships between individuals (nodes) represented in a graph data structure.", "id": "N25", "label": "Graph Edges", "shape": "dot", "size": 10, "title": "connections or relationships between individuals (nodes) represented in a graph data structure."}]);
+                  edges = new vis.DataSet([{"arrows": "to", "from": "N1", "label": "requires understanding of", "title": "requires understanding of", "to": "N2", "width": 1}, {"arrows": "to", "from": "N1", "label": "possesses", "title": "possesses", "to": "N26", "width": 1}, {"arrows": "to", "from": "N2", "label": "is defined by", "title": "is defined by", "to": "N3", "width": 1}, {"arrows": "to", "from": "N2", "label": "has a", "title": "has a", "to": "N7", "width": 1}, {"arrows": "to", "from": "N3", "label": "involves", "title": "involves", "to": "N4", "width": 1}, {"arrows": "to", "from": "N3", "label": "involves", "title": "involves", "to": "N5", "width": 1}, {"arrows": "to", "from": "N6", "label": "is characterized by being", "title": "is characterized by being", "to": "N10", "width": 1}, {"arrows": "to", "from": "N8", "label": "becomes through processing", "title": "becomes through processing", "to": "N9", "width": 1}, {"arrows": "to", "from": "N8", "label": "needs", "title": "needs", "to": "N11", "width": 1}, {"arrows": "to", "from": "N9", "label": "is a form of", "title": "is a form of", "to": "N6", "width": 1}, {"arrows": "to", "from": "N11", "label": "results in", "title": "results in", "to": "N6", "width": 1}, {"arrows": "to", "from": "N12", "label": "aims to produce", "title": "aims to produce", "to": "N10", "width": 1}, {"arrows": "to", "from": "N12", "label": "requires", "title": "requires", "to": "N13", "width": 1}, {"arrows": "to", "from": "N13", "label": "is a way for", "title": "is a way for", "to": "N11", "width": 1}, {"arrows": "to", "from": "N13", "label": "enables", "title": "enables", "to": "N14", "width": 1}, {"arrows": "to", "from": "N13", "label": "example includes", "title": "example includes", "to": "N15", "width": 1}, {"arrows": "to", "from": "N13", "label": "example includes", "title": "example includes", "to": "N16", "width": 1}, {"arrows": "to", "from": "N13", "label": "example includes", "title": "example includes", "to": "N22", "width": 1}, {"arrows": "to", "from": "N13", "label": "example includes", "title": "example includes", "to": "N23", "width": 1}, {"arrows": "to", "from": "N15", "label": "improves", "title": "improves", "to": "N14", "width": 1}, {"arrows": "to", "from": "N16", "label": "is used in", "title": "is used in", "to": "N17", "width": 1}, {"arrows": "to", "from": "N17", "label": "utilizes", "title": "utilizes", "to": "N18", "width": 1}, {"arrows": "to", "from": "N17", "label": "utilizes", "title": "utilizes", "to": "N19", "width": 1}, {"arrows": "to", "from": "N18", "label": "interacts with", "title": "interacts with", "to": "N19", "width": 1}, {"arrows": "to", "from": "N20", "label": "are composed of", "title": "are composed of", "to": "N21", "width": 1}, {"arrows": "to", "from": "N21", "label": "are stored using a", "title": "are stored using a", "to": "N22", "width": 1}, {"arrows": "to", "from": "N23", "label": "comprises", "title": "comprises", "to": "N24", "width": 1}, {"arrows": "to", "from": "N23", "label": "comprises", "title": "comprises", "to": "N25", "width": 1}, {"arrows": "to", "from": "N23", "label": "enables", "title": "enables", "to": "N11", "width": 1}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

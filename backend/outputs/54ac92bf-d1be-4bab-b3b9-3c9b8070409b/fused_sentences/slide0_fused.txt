@@ -1,0 +1,9 @@
+Slide Content:
+. #
+
+Compiler Design
+
+Oifferent Phases of Compiler
+
+Diagram Description:
+a black and white logo with the word'independent ' a black background with a white outline of a house a black background with white text that says, ` ` ' an image of a computer screen with the words'source'and'code ' a blackboard with white writing on it a blackboard with white writing on it a screen shot of a black screen with a text that reads, ` `'' a blackboard with white writing on it a computer screen with a black background and white text a blackboard with a diagram on it a blackboard with a whiteboard on it an image of a computer screen with the words lexi analysis a blackboard with the words x and b on it a black background with a white and gold logo on it a black and white logo with the words a diagram of a network a blackboard with a diagram of an exexor a blackboard with the words x and y on it a blackboard with a whiteboard and a blue screen a computer screen showing a table with a number of items a blackboard with a whiteboard on it a diagram of a tree with several circles a diagram of a tree with the letters e and f a black background with a diagram of a tree intermediate code generator a graph is shown in the form of a wave a black and white photo of a plane flying through the sky an image of a black background with white letters and arrows intermediate code generator code optimization an image of a black background with the words optimization code an image of a computer screen with a message the logo of the american association a red square with a white square in the middle a screenshot of a smartphone with a screen showing a video game on the screen

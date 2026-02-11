@@ -1,0 +1,40 @@
+Slide Content:
+2 PND NF
+
+Real Life Applications of Stack.
+
+Stack Representations.
+
+Types of Stack
+
+Implicit Stack
+
+Explicit Stack
+
+Stack as an ADT/ Operations
+Applications of Stack in Data Structure
+
+Important Questions
+
+First
+
+8. Applications of Stack in Data Structure
+
+7. Stack as an ADT/ Operations
+
+6. Explicit Stack
+
+5. Implicit Stack bast | STAC KS
+
+4. Types of Stack
+
+3. Stack Representations.
+
+2. Real Life Applications of Stack.
+
+1. What is Stack?
+
+Course Outline
+
+Diagram Description:
+a stack of ice creams with the words stacks on it

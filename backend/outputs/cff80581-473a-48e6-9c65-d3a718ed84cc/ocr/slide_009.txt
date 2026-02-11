@@ -1,0 +1,9 @@
+WHAT IS A DATA STRUCTURE?
+
+A data structure is the systematic way to organize data so that it can be used
+efficiently.
+
+Example: Arrays
+
+Instead of creating multiple variables of same type. Why not create an array
+to store all the values.

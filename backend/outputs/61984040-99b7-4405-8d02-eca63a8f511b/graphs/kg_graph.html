@@ -1,0 +1,155 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 750px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "description": "An architecture seen in the last presentation.", "id": "N1", "label": "3 Tier Architecture", "shape": "dot", "size": 10, "title": "An architecture seen in the last presentation."}, {"color": "#97c2fc", "description": "Several levels exist, specifically 3 levels.", "id": "N12", "label": "Levels of Data Abstraction", "shape": "dot", "size": 10, "title": "Several levels exist, specifically 3 levels."}, {"color": "#97c2fc", "description": "The focus of this presentation.", "id": "N2", "label": "View of Data", "shape": "dot", "size": 10, "title": "The focus of this presentation."}, {"color": "#97c2fc", "description": "Views existing at the presentation level; reasons for needing them are revealed in this presentation.", "id": "N3", "label": "Multiple Views", "shape": "dot", "size": 10, "title": "Views existing at the presentation level; reasons for needing them are revealed in this presentation."}, {"color": "#97c2fc", "description": "Means hiding the complexity; needed to understand views of data.", "id": "N4", "label": "Data Abstraction", "shape": "dot", "size": 10, "title": "Means hiding the complexity; needed to understand views of data."}, {"color": "#97c2fc", "description": "Information to be hidden by data abstraction.", "id": "N8", "label": "Complexity", "shape": "dot", "size": 10, "title": "Information to be hidden by data abstraction."}, {"color": "#97c2fc", "description": "Provided when hiding complexity.", "id": "N9", "label": "Essential Details", "shape": "dot", "size": 10, "title": "Provided when hiding complexity."}, {"color": "#97c2fc", "description": "A short and sweet answer; desired over complete data.", "id": "N10", "label": "Abstract Data", "shape": "dot", "size": 10, "title": "A short and sweet answer; desired over complete data."}, {"color": "#97c2fc", "description": "To store and retrieve data conveniently and effectively.", "id": "N5", "label": "Database Goal", "shape": "dot", "size": 10, "title": "To store and retrieve data conveniently and effectively."}, {"color": "#97c2fc", "description": "Involved for storing and retrieving data.", "id": "N6", "label": "Data Storage", "shape": "dot", "size": 10, "title": "Involved for storing and retrieving data."}, {"color": "#97c2fc", "description": "May involve simple or complex data structures for data storage.", "id": "N7", "label": "Storage Data Structures", "shape": "dot", "size": 10, "title": "May involve simple or complex data structures for data storage."}, {"color": "#97c2fc", "description": "Not desired; involves encountered complexities.", "id": "N11", "label": "Complete Data", "shape": "dot", "size": 10, "title": "Not desired; involves encountered complexities."}, {"color": "#97c2fc", "description": "The lowest level of abstraction; the database level; deals with how data are stored.", "id": "N13", "label": "Physical Level", "shape": "dot", "size": 10, "title": "The lowest level of abstraction; the database level; deals with how data are stored."}, {"color": "#97c2fc", "description": "Deals with what data are actually stored and the relationship among data stored.", "id": "N14", "label": "Logical Level", "shape": "dot", "size": 10, "title": "Deals with what data are actually stored and the relationship among data stored."}, {"color": "#97c2fc", "description": "The topmost level; highest level of abstraction; deals with users and their access.", "id": "N15", "label": "View Level", "shape": "dot", "size": 10, "title": "The topmost level; highest level of abstraction; deals with users and their access."}, {"color": "#97c2fc", "description": "Used at the physical level, especially for multimedia data.", "id": "N16", "label": "Low Level Data Structures", "shape": "dot", "size": 10, "title": "Used at the physical level, especially for multimedia data."}, {"color": "#97c2fc", "description": "Describes the data actually to be stored in the databases.", "id": "N17", "label": "What Data Stored", "shape": "dot", "size": 10, "title": "Describes the data actually to be stored in the databases."}, {"color": "#97c2fc", "description": "Describes the relationship among the data stored in the database.", "id": "N18", "label": "Data Relationships", "shape": "dot", "size": 10, "title": "Describes the relationship among the data stored in the database."}, {"color": "#97c2fc", "description": "Used at the logical level.", "id": "N19", "label": "Simple Data Structures", "shape": "dot", "size": 10, "title": "Used at the logical level."}, {"color": "#97c2fc", "description": "Where the logical level is, and applications reside.", "id": "N21", "label": "Application Level", "shape": "dot", "size": 10, "title": "Where the logical level is, and applications reside."}, {"color": "#97c2fc", "description": "Exists so that if any changes are made in the logical level, it will not affect the physical level.", "id": "N20", "label": "Physical Data Independence", "shape": "dot", "size": 10, "title": "Exists so that if any changes are made in the logical level, it will not affect the physical level."}, {"color": "#97c2fc", "description": "Granting privileges to users, managed at the view level.", "id": "N24", "label": "User Access", "shape": "dot", "size": 10, "title": "Granting privileges to users, managed at the view level."}, {"color": "#97c2fc", "description": "Done at the view level through interfaces.", "id": "N25", "label": "User-System Interaction", "shape": "dot", "size": 10, "title": "Done at the view level through interfaces."}, {"color": "#97c2fc", "description": "An important aspect to focus on at the view level.", "id": "N27", "label": "Security of Multiple Views", "shape": "dot", "size": 10, "title": "An important aspect to focus on at the view level."}, {"color": "#97c2fc", "description": "The structure of the database.", "id": "N22", "label": "Schema", "shape": "dot", "size": 10, "title": "The structure of the database."}, {"color": "#97c2fc", "description": "Involved in all levels; writes all the logic, especially at the logical level.", "id": "N23", "label": "Database Administrator", "shape": "dot", "size": 10, "title": "Involved in all levels; writes all the logic, especially at the logical level."}, {"color": "#97c2fc", "description": "Web, mobile, GUI; used for user interaction with the system.", "id": "N26", "label": "Interfaces", "shape": "dot", "size": 10, "title": "Web, mobile, GUI; used for user interaction with the system."}]);
+                  edges = new vis.DataSet([{"arrows": "to", "from": "N1", "label": "related to having", "title": "related to having", "to": "N12", "width": 1}, {"arrows": "to", "from": "N2", "label": "focuses on", "title": "focuses on", "to": "N3", "width": 1}, {"arrows": "to", "from": "N2", "label": "requires understanding of", "title": "requires understanding of", "to": "N4", "width": 1}, {"arrows": "to", "from": "N4", "label": "means hiding", "title": "means hiding", "to": "N8", "width": 1}, {"arrows": "to", "from": "N4", "label": "means providing", "title": "means providing", "to": "N9", "width": 1}, {"arrows": "to", "from": "N4", "label": "aims for", "title": "aims for", "to": "N10", "width": 1}, {"arrows": "to", "from": "N5", "label": "involves", "title": "involves", "to": "N6", "width": 1}, {"arrows": "to", "from": "N6", "label": "may involve", "title": "may involve", "to": "N7", "width": 1}, {"arrows": "to", "from": "N10", "label": "is preferred over", "title": "is preferred over", "to": "N11", "width": 1}, {"arrows": "to", "from": "N12", "label": "includes", "title": "includes", "to": "N13", "width": 1}, {"arrows": "to", "from": "N12", "label": "includes", "title": "includes", "to": "N14", "width": 1}, {"arrows": "to", "from": "N12", "label": "includes", "title": "includes", "to": "N15", "width": 1}, {"arrows": "to", "from": "N13", "label": "deals with", "title": "deals with", "to": "N6", "width": 1}, {"arrows": "to", "from": "N13", "label": "deals with", "title": "deals with", "to": "N7", "width": 1}, {"arrows": "to", "from": "N13", "label": "uses", "title": "uses", "to": "N16", "width": 1}, {"arrows": "to", "from": "N14", "label": "deals with", "title": "deals with", "to": "N17", "width": 1}, {"arrows": "to", "from": "N14", "label": "deals with", "title": "deals with", "to": "N18", "width": 1}, {"arrows": "to", "from": "N14", "label": "uses", "title": "uses", "to": "N19", "width": 1}, {"arrows": "to", "from": "N14", "label": "resides at", "title": "resides at", "to": "N21", "width": 1}, {"arrows": "to", "from": "N14", "label": "enables", "title": "enables", "to": "N20", "width": 1}, {"arrows": "to", "from": "N15", "label": "contains", "title": "contains", "to": "N3", "width": 1}, {"arrows": "to", "from": "N15", "label": "hides from users", "title": "hides from users", "to": "N8", "width": 1}, {"arrows": "to", "from": "N15", "label": "deals with", "title": "deals with", "to": "N24", "width": 1}, {"arrows": "to", "from": "N15", "label": "facilitates", "title": "facilitates", "to": "N25", "width": 1}, {"arrows": "to", "from": "N15", "label": "ensures", "title": "ensures", "to": "N27", "width": 1}, {"arrows": "to", "from": "N15", "label": "interacts with", "title": "interacts with", "to": "N14", "width": 1}, {"arrows": "to", "from": "N21", "label": "applications do not depend on physical", "title": "applications do not depend on physical", "to": "N22", "width": 1}, {"arrows": "to", "from": "N23", "label": "writes logic for", "title": "writes logic for", "to": "N14", "width": 1}, {"arrows": "to", "from": "N25", "label": "uses", "title": "uses", "to": "N26", "width": 1}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

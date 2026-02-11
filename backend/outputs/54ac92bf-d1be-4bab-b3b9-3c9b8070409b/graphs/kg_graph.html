@@ -1,0 +1,155 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 750px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "description": "The course topic.", "id": "N1", "label": "Compiler Design", "shape": "dot", "size": 10, "title": "The course topic."}, {"color": "#97c2fc", "description": "The different stages of the compiler.", "id": "N2", "label": "Compiler Phases", "shape": "dot", "size": 10, "title": "The different stages of the compiler."}, {"color": "#97c2fc", "description": "Needed to convert human readable source code into machine code.", "id": "N3", "label": "Language Translator", "shape": "dot", "size": 10, "title": "Needed to convert human readable source code into machine code."}, {"color": "#97c2fc", "description": "The input to a language translator.", "id": "N4", "label": "Human Readable Source Code", "shape": "dot", "size": 10, "title": "The input to a language translator."}, {"color": "#97c2fc", "description": "The output of a language translator.", "id": "N5", "label": "Machine Code", "shape": "dot", "size": 10, "title": "The output of a language translator."}, {"color": "#97c2fc", "description": "A phase of the language translator that converts high-level language code into pure high-level language code.", "id": "N6", "label": "Pre-processor", "shape": "dot", "size": 10, "title": "A phase of the language translator that converts high-level language code into pure high-level language code."}, {"color": "#97c2fc", "description": "A phase of the language translator that converts pure high-level language code into equivalent assembly language code.", "id": "N9", "label": "Compiler (Specific)", "shape": "dot", "size": 10, "title": "A phase of the language translator that converts pure high-level language code into equivalent assembly language code."}, {"color": "#97c2fc", "description": "A phase of the language translator, following the compiler.", "id": "N10", "label": "Assembler", "shape": "dot", "size": 10, "title": "A phase of the language translator, following the compiler."}, {"color": "#97c2fc", "description": "The final phase of the language translator.", "id": "N11", "label": "Linker and Loader", "shape": "dot", "size": 10, "title": "The final phase of the language translator."}, {"color": "#97c2fc", "description": "The input to the pre-processor.", "id": "N7", "label": "High-Level Language Code", "shape": "dot", "size": 10, "title": "The input to the pre-processor."}, {"color": "#97c2fc", "description": "The output of the pre-processor, where required header files are embedded and pre-processor directives are omitted; input to the compiler.", "id": "N8", "label": "Pure High-Level Language Code", "shape": "dot", "size": 10, "title": "The output of the pre-processor, where required header files are embedded and pre-processor directives are omitted; input to the compiler."}, {"color": "#97c2fc", "description": "The equivalent code produced by the compiler from pure high-level language code.", "id": "N12", "label": "Assembly Language Code", "shape": "dot", "size": 10, "title": "The equivalent code produced by the compiler from pure high-level language code."}, {"color": "#97c2fc", "description": "The first of the six phases of the compiler where the lexical analyzer processes input.", "id": "N13", "label": "Lexical Analysis Phase", "shape": "dot", "size": 10, "title": "The first of the six phases of the compiler where the lexical analyzer processes input."}, {"color": "#97c2fc", "description": "The second phase of the compiler where the syntax analyzer processes a stream of tokens.", "id": "N21", "label": "Syntax Analysis Phase", "shape": "dot", "size": 10, "title": "The second phase of the compiler where the syntax analyzer processes a stream of tokens."}, {"color": "#97c2fc", "description": "The third phase of the compiler where the semantic analyzer performs logical analysis.", "id": "N31", "label": "Semantic Analysis Phase", "shape": "dot", "size": 10, "title": "The third phase of the compiler where the semantic analyzer performs logical analysis."}, {"color": "#97c2fc", "description": "The fourth phase of the compiler where intermediate code is produced.", "id": "N38", "label": "Intermediate Code Generation Phase", "shape": "dot", "size": 10, "title": "The fourth phase of the compiler where intermediate code is produced."}, {"color": "#97c2fc", "description": "The fifth phase of the compiler where intermediate code is optimized.", "id": "N45", "label": "Code Optimization Phase", "shape": "dot", "size": 10, "title": "The fifth phase of the compiler where intermediate code is optimized."}, {"color": "#97c2fc", "description": "The sixth and final phase of the compiler, where the final assembly code is produced.", "id": "N51", "label": "Target Code Generation Phase", "shape": "dot", "size": 10, "title": "The sixth and final phase of the compiler, where the final assembly code is produced."}, {"color": "#97c2fc", "description": "The component that takes care of the lexical analysis process, taking lexemes as inputs and generating tokens.", "id": "N14", "label": "Lexical Analyzer", "shape": "dot", "size": 10, "title": "The component that takes care of the lexical analysis process, taking lexemes as inputs and generating tokens."}, {"color": "#97c2fc", "description": "The output of the lexical analysis phase, serving as input to the syntax analysis phase.", "id": "N20", "label": "Stream of Tokens", "shape": "dot", "size": 10, "title": "The output of the lexical analysis phase, serving as input to the syntax analysis phase."}, {"color": "#97c2fc", "description": "Inputs to the lexical analyzer, similar to words, where groups in their entirety convey meaning.", "id": "N15", "label": "Lexemes", "shape": "dot", "size": 10, "title": "Inputs to the lexical analyzer, similar to words, where groups in their entirety convey meaning."}, {"color": "#97c2fc", "description": "The output of the lexical analyzer, representing the meanings of the lexemes.", "id": "N16", "label": "Tokens", "shape": "dot", "size": 10, "title": "The output of the lexical analyzer, representing the meanings of the lexemes."}, {"color": "#97c2fc", "description": "Used by the lexical analyzer to recognize tokens.", "id": "N17", "label": "Regular Expressions (Regexs)", "shape": "dot", "size": 10, "title": "Used by the lexical analyzer to recognize tokens."}, {"color": "#97c2fc", "description": "Grammars used by the lexical analyzer for examining lexemes, belonging to the family of grammars for formal languages.", "id": "N19", "label": "Type 3 / Regular Grammars", "shape": "dot", "size": 10, "title": "Grammars used by the lexical analyzer for examining lexemes, belonging to the family of grammars for formal languages."}, {"color": "#97c2fc", "description": "An equivalent illustration used to demonstrate regular expressions for identifiers.", "id": "N18", "label": "Finite Automata", "shape": "dot", "size": 10, "title": "An equivalent illustration used to demonstrate regular expressions for identifiers."}, {"color": "#97c2fc", "description": "The component in control of the syntax analysis phase, analyzing the stream of tokens following specific production rules.", "id": "N22", "label": "Syntax Analyzer / Parser", "shape": "dot", "size": 10, "title": "The component in control of the syntax analysis phase, analyzing the stream of tokens following specific production rules."}, {"color": "#97c2fc", "description": "The output of the syntax analysis phase, illustrating the grammatical structure.", "id": "N25", "label": "Parse Tree", "shape": "dot", "size": 10, "title": "The output of the syntax analysis phase, illustrating the grammatical structure."}, {"color": "#97c2fc", "description": "Grammars that the syntax analyzer depends on.", "id": "N23", "label": "Type 2 / Context-Free Grammars (CFG)", "shape": "dot", "size": 10, "title": "Grammars that the syntax analyzer depends on."}, {"color": "#97c2fc", "description": "Specific set of rules used by the parser to form the parse tree.", "id": "N24", "label": "Production Rules", "shape": "dot", "size": 10, "title": "Specific set of rules used by the parser to form the parse tree."}, {"color": "#97c2fc", "description": "An error detected if the yield of the parse tree and the provided stream of tokens are not the same.", "id": "N30", "label": "Syntax Error", "shape": "dot", "size": 10, "title": "An error detected if the yield of the parse tree and the provided stream of tokens are not the same."}, {"color": "#97c2fc", "description": "A non-terminal symbol in production rules that can be rewritten to derive expressions.", "id": "N26", "label": "Start Symbol (S)", "shape": "dot", "size": 10, "title": "A non-terminal symbol in production rules that can be rewritten to derive expressions."}, {"color": "#97c2fc", "description": "The set of elements in a grammar like identifiers, operators, and semicolons.", "id": "N27", "label": "Terminals", "shape": "dot", "size": 10, "title": "The set of elements in a grammar like identifiers, operators, and semicolons."}, {"color": "#97c2fc", "description": "The set of elements in a grammar like S, E, T, F, which can be rewritten.", "id": "N28", "label": "Variables / Non-terminals", "shape": "dot", "size": 10, "title": "The set of elements in a grammar like S, E, T, F, which can be rewritten."}, {"color": "#97c2fc", "description": "Found by traversing the parse tree top to bottom, left to right, taking notes of only the terminals.", "id": "N29", "label": "Yield of the Parse Tree", "shape": "dot", "size": 10, "title": "Found by traversing the parse tree top to bottom, left to right, taking notes of only the terminals."}, {"color": "#97c2fc", "description": "The component that takes the parse tree and produces a semantically verified parse tree.", "id": "N32", "label": "Semantic Analyzer", "shape": "dot", "size": 10, "title": "The component that takes the parse tree and produces a semantically verified parse tree."}, {"color": "#97c2fc", "description": "The output of the semantic analysis phase, indicating logical correctness.", "id": "N33", "label": "Semantically Verified Parse Tree", "shape": "dot", "size": 10, "title": "The output of the semantic analysis phase, indicating logical correctness."}, {"color": "#97c2fc", "description": "A responsibility of the semantic analyzer.", "id": "N34", "label": "Type Checking", "shape": "dot", "size": 10, "title": "A responsibility of the semantic analyzer."}, {"color": "#97c2fc", "description": "A responsibility of the semantic analyzer.", "id": "N35", "label": "Area Bound Checking", "shape": "dot", "size": 10, "title": "A responsibility of the semantic analyzer."}, {"color": "#97c2fc", "description": "A responsibility of the semantic analyzer.", "id": "N36", "label": "Correctness of Scope Resolution", "shape": "dot", "size": 10, "title": "A responsibility of the semantic analyzer."}, {"color": "#97c2fc", "description": "The process performed by the semantic analyzer on the parse tree to check for meaningfulness.", "id": "N37", "label": "Logical Analysis", "shape": "dot", "size": 10, "title": "The process performed by the semantic analyzer on the parse tree to check for meaningfulness."}, {"color": "#97c2fc", "description": "The component that takes a semantically verified parse tree and produces intermediate code.", "id": "N39", "label": "Intermediate Code Generator", "shape": "dot", "size": 10, "title": "The component that takes a semantically verified parse tree and produces intermediate code."}, {"color": "#97c2fc", "description": "The output of the intermediate code generator, serving as a machine-independent representation of the code.", "id": "N40", "label": "Intermediate Code", "shape": "dot", "size": 10, "title": "The output of the intermediate code generator, serving as a machine-independent representation of the code."}, {"color": "#97c2fc", "description": "Variables (e.g., T0, T1) created by the intermediate code generator to store intermediate results.", "id": "N42", "label": "Temporary Variable", "shape": "dot", "size": 10, "title": "Variables (e.g., T0, T1) created by the intermediate code generator to store intermediate results."}, {"color": "#97c2fc", "description": "A popular intermediate code representation where statements have at most three addresses.", "id": "N41", "label": "Three-Address Code (TAC)", "shape": "dot", "size": 10, "title": "A popular intermediate code representation where statements have at most three addresses."}, {"color": "#97c2fc", "description": "Refers to the addresses of variables within three-address code statements.", "id": "N43", "label": "Address", "shape": "dot", "size": 10, "title": "Refers to the addresses of variables within three-address code statements."}, {"color": "#97c2fc", "description": "The collective term for the first four phases of the compiler (Lexical Analysis, Syntax Analysis, Semantic Analysis, Intermediate Code Generation).", "id": "N44", "label": "Frontend", "shape": "dot", "size": 10, "title": "The collective term for the first four phases of the compiler (Lexical Analysis, Syntax Analysis, Semantic Analysis, Intermediate Code Generation)."}, {"color": "#97c2fc", "description": "The component that takes intermediate code and generates optimized code.", "id": "N46", "label": "Code Optimizer", "shape": "dot", "size": 10, "title": "The component that takes intermediate code and generates optimized code."}, {"color": "#97c2fc", "description": "The output of the code optimizer, a reduced or improved version of the intermediate code.", "id": "N47", "label": "Optimized Code", "shape": "dot", "size": 10, "title": "The output of the code optimizer, a reduced or improved version of the intermediate code."}, {"color": "#97c2fc", "description": "A type of code optimization that depends on the target machine architecture.", "id": "N48", "label": "Machine Dependent Optimization", "shape": "dot", "size": 10, "title": "A type of code optimization that depends on the target machine architecture."}, {"color": "#97c2fc", "description": "A type of code optimization that is not specific to any particular machine architecture.", "id": "N49", "label": "Machine Independent Optimization", "shape": "dot", "size": 10, "title": "A type of code optimization that is not specific to any particular machine architecture."}, {"color": "#97c2fc", "description": "The collective term for the last two phases of the compiler (Code Optimization and Target Code Generation).", "id": "N50", "label": "Backend", "shape": "dot", "size": 10, "title": "The collective term for the last two phases of the compiler (Code Optimization and Target Code Generation)."}, {"color": "#97c2fc", "description": "The component that takes optimized code and finally produces the assembly code segment.", "id": "N52", "label": "Target Code Generator", "shape": "dot", "size": 10, "title": "The component that takes optimized code and finally produces the assembly code segment."}, {"color": "#97c2fc", "description": "The final machine-specific output of the target code generator.", "id": "N53", "label": "Assembly Code Segment", "shape": "dot", "size": 10, "title": "The final machine-specific output of the target code generator."}, {"color": "#97c2fc", "description": "Instructions used in assembly code (e.g., MOV, IMUL).", "id": "N54", "label": "Mnemonic", "shape": "dot", "size": 10, "title": "Instructions used in assembly code (e.g., MOV, IMUL)."}, {"color": "#97c2fc", "description": "CPU components like EAX and EDX used to store data during assembly code execution.", "id": "N55", "label": "Registers (EAX, EDX)", "shape": "dot", "size": 10, "title": "CPU components like EAX and EDX used to store data during assembly code execution."}, {"color": "#97c2fc", "description": "A data word pointer used in assembly code.", "id": "N56", "label": "D Word PTR", "shape": "dot", "size": 10, "title": "A data word pointer used in assembly code."}, {"color": "#97c2fc", "description": "A register-based pointer used in assembly code.", "id": "N57", "label": "RBP (Register-Based Pointer)", "shape": "dot", "size": 10, "title": "A register-based pointer used in assembly code."}, {"color": "#97c2fc", "description": "A standard lexical analyzer generator used for implementing the lexical analysis phase.", "id": "N58", "label": "LEX (Tool)", "shape": "dot", "size": 10, "title": "A standard lexical analyzer generator used for implementing the lexical analysis phase."}, {"color": "#97c2fc", "description": "An LALR parser generator used for implementing the syntax analysis phase.", "id": "N59", "label": "YACC (Yet Another Compiler Compiler) (Tool)", "shape": "dot", "size": 10, "title": "An LALR parser generator used for implementing the syntax analysis phase."}, {"color": "#97c2fc", "description": "A type of parser generator that YACC is.", "id": "N60", "label": "LALR Parser Generator", "shape": "dot", "size": 10, "title": "A type of parser generator that YACC is."}, {"color": "#97c2fc", "description": "A software platform used to implement the entire frontend of a C language compiler for an embedded processor.", "id": "N61", "label": "LANS C Compiler (Tool)", "shape": "dot", "size": 10, "title": "A software platform used to implement the entire frontend of a C language compiler for an embedded processor."}]);
+                  edges = new vis.DataSet([{"arrows": "to", "from": "N1", "label": "discusses", "title": "discusses", "to": "N2", "width": 1}, {"arrows": "to", "from": "N3", "label": "converts", "title": "converts", "to": "N4", "width": 1}, {"arrows": "to", "from": "N3", "label": "into", "title": "into", "to": "N5", "width": 1}, {"arrows": "to", "from": "N3", "label": "has phase", "title": "has phase", "to": "N6", "width": 1}, {"arrows": "to", "from": "N3", "label": "has phase", "title": "has phase", "to": "N9", "width": 1}, {"arrows": "to", "from": "N3", "label": "has phase", "title": "has phase", "to": "N10", "width": 1}, {"arrows": "to", "from": "N3", "label": "has phase", "title": "has phase", "to": "N11", "width": 1}, {"arrows": "to", "from": "N6", "label": "takes as input", "title": "takes as input", "to": "N7", "width": 1}, {"arrows": "to", "from": "N6", "label": "produces", "title": "produces", "to": "N8", "width": 1}, {"arrows": "to", "from": "N8", "label": "is input to", "title": "is input to", "to": "N9", "width": 1}, {"arrows": "to", "from": "N9", "label": "produces", "title": "produces", "to": "N12", "width": 1}, {"arrows": "to", "from": "N9", "label": "consists of", "title": "consists of", "to": "N13", "width": 1}, {"arrows": "to", "from": "N9", "label": "consists of", "title": "consists of", "to": "N21", "width": 1}, {"arrows": "to", "from": "N9", "label": "consists of", "title": "consists of", "to": "N31", "width": 1}, {"arrows": "to", "from": "N9", "label": "consists of", "title": "consists of", "to": "N38", "width": 1}, {"arrows": "to", "from": "N9", "label": "consists of", "title": "consists of", "to": "N45", "width": 1}, {"arrows": "to", "from": "N9", "label": "consists of", "title": "consists of", "to": "N51", "width": 1}, {"arrows": "to", "from": "N13", "label": "handled by", "title": "handled by", "to": "N14", "width": 1}, {"arrows": "to", "from": "N13", "label": "produces", "title": "produces", "to": "N20", "width": 1}, {"arrows": "to", "from": "N14", "label": "takes as input", "title": "takes as input", "to": "N15", "width": 1}, {"arrows": "to", "from": "N14", "label": "generates", "title": "generates", "to": "N16", "width": 1}, {"arrows": "to", "from": "N14", "label": "recognizes tokens using", "title": "recognizes tokens using", "to": "N17", "width": 1}, {"arrows": "to", "from": "N14", "label": "makes use of", "title": "makes use of", "to": "N19", "width": 1}, {"arrows": "to", "from": "N15", "label": "meaning conveyed by", "title": "meaning conveyed by", "to": "N16", "width": 1}, {"arrows": "to", "from": "N17", "label": "illustrated by", "title": "illustrated by", "to": "N18", "width": 1}, {"arrows": "to", "from": "N20", "label": "is input to", "title": "is input to", "to": "N21", "width": 1}, {"arrows": "to", "from": "N21", "label": "handled by", "title": "handled by", "to": "N22", "width": 1}, {"arrows": "to", "from": "N21", "label": "produces", "title": "produces", "to": "N25", "width": 1}, {"arrows": "to", "from": "N22", "label": "depends on", "title": "depends on", "to": "N23", "width": 1}, {"arrows": "to", "from": "N22", "label": "follows", "title": "follows", "to": "N24", "width": 1}, {"arrows": "to", "from": "N22", "label": "produces if mismatch", "title": "produces if mismatch", "to": "N30", "width": 1}, {"arrows": "to", "from": "N25", "label": "derived from", "title": "derived from", "to": "N26", "width": 1}, {"arrows": "to", "from": "N25", "label": "contains", "title": "contains", "to": "N27", "width": 1}, {"arrows": "to", "from": "N25", "label": "contains", "title": "contains", "to": "N28", "width": 1}, {"arrows": "to", "from": "N25", "label": "has", "title": "has", "to": "N29", "width": 1}, {"arrows": "to", "from": "N25", "label": "is input to", "title": "is input to", "to": "N31", "width": 1}, {"arrows": "to", "from": "N29", "label": "compared with", "title": "compared with", "to": "N20", "width": 1}, {"arrows": "to", "from": "N31", "label": "handled by", "title": "handled by", "to": "N32", "width": 1}, {"arrows": "to", "from": "N31", "label": "produces", "title": "produces", "to": "N33", "width": 1}, {"arrows": "to", "from": "N32", "label": "responsible for", "title": "responsible for", "to": "N34", "width": 1}, {"arrows": "to", "from": "N32", "label": "responsible for", "title": "responsible for", "to": "N35", "width": 1}, {"arrows": "to", "from": "N32", "label": "responsible for", "title": "responsible for", "to": "N36", "width": 1}, {"arrows": "to", "from": "N32", "label": "performs", "title": "performs", "to": "N37", "width": 1}, {"arrows": "to", "from": "N33", "label": "is input to", "title": "is input to", "to": "N38", "width": 1}, {"arrows": "to", "from": "N38", "label": "handled by", "title": "handled by", "to": "N39", "width": 1}, {"arrows": "to", "from": "N38", "label": "produces", "title": "produces", "to": "N40", "width": 1}, {"arrows": "to", "from": "N39", "label": "creates", "title": "creates", "to": "N42", "width": 1}, {"arrows": "to", "from": "N40", "label": "example of", "title": "example of", "to": "N41", "width": 1}, {"arrows": "to", "from": "N40", "label": "is input to", "title": "is input to", "to": "N45", "width": 1}, {"arrows": "to", "from": "N41", "label": "mentions", "title": "mentions", "to": "N43", "width": 1}, {"arrows": "to", "from": "N44", "label": "includes", "title": "includes", "to": "N13", "width": 1}, {"arrows": "to", "from": "N44", "label": "includes", "title": "includes", "to": "N21", "width": 1}, {"arrows": "to", "from": "N44", "label": "includes", "title": "includes", "to": "N31", "width": 1}, {"arrows": "to", "from": "N44", "label": "includes", "title": "includes", "to": "N38", "width": 1}, {"arrows": "to", "from": "N45", "label": "handled by", "title": "handled by", "to": "N46", "width": 1}, {"arrows": "to", "from": "N45", "label": "produces", "title": "produces", "to": "N47", "width": 1}, {"arrows": "to", "from": "N45", "label": "can be", "title": "can be", "to": "N48", "width": 1}, {"arrows": "to", "from": "N45", "label": "can be", "title": "can be", "to": "N49", "width": 1}, {"arrows": "to", "from": "N47", "label": "is input to", "title": "is input to", "to": "N51", "width": 1}, {"arrows": "to", "from": "N50", "label": "includes", "title": "includes", "to": "N45", "width": 1}, {"arrows": "to", "from": "N50", "label": "includes", "title": "includes", "to": "N51", "width": 1}, {"arrows": "to", "from": "N51", "label": "handled by", "title": "handled by", "to": "N52", "width": 1}, {"arrows": "to", "from": "N51", "label": "produces", "title": "produces", "to": "N53", "width": 1}, {"arrows": "to", "from": "N53", "label": "uses", "title": "uses", "to": "N54", "width": 1}, {"arrows": "to", "from": "N53", "label": "uses", "title": "uses", "to": "N55", "width": 1}, {"arrows": "to", "from": "N53", "label": "uses", "title": "uses", "to": "N56", "width": 1}, {"arrows": "to", "from": "N53", "label": "uses", "title": "uses", "to": "N57", "width": 1}, {"arrows": "to", "from": "N58", "label": "implements", "title": "implements", "to": "N13", "width": 1}, {"arrows": "to", "from": "N58", "label": "commonly used with", "title": "commonly used with", "to": "N59", "width": 1}, {"arrows": "to", "from": "N59", "label": "implements", "title": "implements", "to": "N21", "width": 1}, {"arrows": "to", "from": "N59", "label": "is a", "title": "is a", "to": "N60", "width": 1}, {"arrows": "to", "from": "N61", "label": "implements", "title": "implements", "to": "N44", "width": 1}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

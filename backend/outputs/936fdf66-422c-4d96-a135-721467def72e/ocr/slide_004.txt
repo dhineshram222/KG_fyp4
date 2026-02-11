@@ -1,0 +1,19 @@
+‘nerelore, IC Works On recovery aller Me COMSiOn & r_§
++ CSMA CA (Collision Avoidance): If transmission media lem
+is busy, then the sender svaits until the media becomes idle. stax ~~] commun
+
+7 CSMA (C:
++ This technique is used to handles data flow to guarantee data integrity,
+
++ CSMA CD (Collision detection): If collision is detected, the sender will stop transmilting data.
+Therefore, it works on “recovery after the collision”, x a |
+
+nse Multiple Access):
+
++ All nodes available in network will receive the message whether it has been addressed or not.
+
++ Itis multi-point connection & non-robust topology because if backbone fails topology crashes.
+
+2. Bus Topology
++ Every device is connected to the sinele coaxial cable called as Backbone cable.
++ When a node wants to scnd a message. it puts a message over the network,

@@ -1,0 +1,149 @@
+============================================================
+FULL VIDEO TRANSCRIPT
+============================================================
+
+In the last presentation we have seen about the 3 tier architecture. In this presentation we will focus on the view of data. In the last presentation I told you we have multiple views at the presentation level. Why do we need multiple views of data? The answer for this will be revealed in this presentation. Before we step into various views of data we need to understand what is data abstraction. I will explain data abstraction now. We know basically the primary goal of any database is to store and retrieve the data conveniently and effectively. And obviously we need storage for doing this and this storage may involve simple or even complex data structures. We have already seen about this in the second presentation of this chapter. If you want more clarity I request you to watch my previous lecture titled DBMR's definition. And now we will focus on the data abstraction means hiding the complexity. Why do we need to hide the complexity? In order to understand data abstraction that is hiding the complexity let's take an analogy for better understanding. Let's assume we have subscribed to a milk vendor and every day we are getting milk packets delivered to our home in time by the milk vendor. Let's imagine there is some delay in the delivery of milk packets for a particular day and we are interested to know the reason for the delay in the delivery of the milk packet. Let's say we are inquiring the milk delivery agent regarding the delay. The replay obviously from the milk delivery agent will be the reason for the delay and if he gives the reason that his alarm was not working and that's why he was not able to wake up on time that would be sufficient for us. Installed if the milk delivery agent replies as that he has gone to the bed last night at this time and he has woken up twice and slept again alarm which he has said has disappointed. He still continued sleeping it was 6 a.m. already for him but still he was sleeping it was 6 1 a.m. And still he was sleeping and blah blah blah who needs all this information. We wanted only the reason for the delay in other words we want a short and sweet answer to be precise we want abstract data not the complete data. Though he may have encountered complexities but we want only abstract information. So we are focusing on hiding the complexity and providing only the essential details. That's what data abstraction is all about. In order to do that we have several levels of abstraction we know basically in a 3-tier architecture we have 3 levels likewise here we have 3 levels the first level is the physical level the second level is the logical level and the third level is the view level which is at the top most level the user level. In this presentation we are going to see all the levels 1 by 1. So we are sure that there are 3 levels of data abstraction. One is the physical level the other one is the logical level and finally we have the view level multiple views are there. Let's see all the levels 1 by 1 in detail and the topic now is the various view of data and we know basically there are 3 levels the top level is the view level followed by the middle level the logical level followed by the bottom most level the physical level. Let's start with the first level the physical level what's this physical level is all about. This physical level is actually the lowest level of abstraction. Now we know this physical level is actually the database level the physical storage is involved we know databases are actually stored in the physical medium right it may be a hard disk or SSDs any physical medium and that's why it is the lowest level of abstraction and it deals with how the data are stored because the data are actually stored in this level the database actually exists in this level and that's why this level deals with how the data are stored when we talk about how the data are stored it deals with the data structures and this storage may be involving simple data structures or even complex data structures but please be noted that these users the low level data structures in case we are storing multimedia data in the database then obviously the data structure would be complex data structures anyway we'll talk about the data structures elaborately in the coming presentations and we know this is actually the database level we know data are stored in the databases and these databases are actually stored in the storage medium and that's why this level deals with storage we are done with the bottom most level the physical level let's now move on to the next level we know physical level deals with how the data are stored and this logical level deals with what data are actually and what's the relationship among the data stored so logical level describes what data are actually to be stored in the database and what's the relationship among the data that is stored in the database now the readings When we see relational database year models we will understand about the relationship among the data for now just understand this level the logical level deals with what data are actually stored the physical level deals with how the data R store logical level deals with what data are stored and the relationship among the data. And what about the data structures? For example, if we are storing the entire database, this entire database may be involving simple data structures or even complex data structures, but storing the data physically at this level or the physical level involves more complexity, but at the logical level, it may use only simple data structures. Just see at the logical level, we use only simple data structures, but at the physical level, we use complex data structures, how this simple data structures interact with complex data structures. That's what this point there exists physical data independence. What do we mean by this? And we know this logical level is at the application level, right? This is at the application. Now the applications actually do not depend on the physical level or the physical schema. Don't worry about the term schema in the next lecture. I will explain about schema elaborately for now. Just understand the structure of the database is referred as schema. So when we have the existing structure at the physical level and when we make some changes in the logical level, it doesn't mean that we need to rewrite the entire structure in the physical level. Simply applications do not depend on the physical schema. So we need not rewrite the physical structure if there is a change in the logical structure because these logical structures are going to use only simple data structures and there should exist physical data independence so that if any changes are made in the logical level, it will not affect the physical level and obviously who's going to write all the logic. The database administrator what to store how to store everything is done by the database administrator. Of course, he's involved in all the levels, but the actual logic is involved in the logical level. We are done with the logical level. Let's now move on to the top most level the view level and we know there are multiple views existing and we know this is the highest level of abstraction. It means it involves more complexity and we are going to hide most of the complexity at this level. Why? Because we need not show the complexities to the user. Say if a user wants to transfer fun from one account to another account, he should be given with the option how to do the transfer at the back end at the logical level or at the physical level multiple complexities are involved. We need not show that complexity to the user and that's why this level deals with the users and the access to the users. So granting privileges everything will be coming under this level and we know this is the view level where user is going to interact. So obviously the interaction with the system is done at this level. How the user is going to interact with the system through the interfaces. It may be a web interface or a mobile interface simply GUI, the graphical user interface GUI and also this level is going to interact with the next level that is the logical level where application programs are written and as mentioned multiple views exist in this level and of course we need to focus on the security of multiple views. How multiple views exist in this level? We know all data are stored in a central place. Let's take banking environment. A normal user will be able to access his own data. A teller may access some more data than the normal user but he will be able to give assistance to the customers or users with the basic details. Think about the bank manager. He will be obviously having more privileges when compared to other users in his branch. And what about the regional manager? He or she will have more privilege when compared to the branch manager. It doesn't mean that data are stored separately for every user. All data are stored in the same database but there exist multiple views. I'll give you one more example. Just assume you are going to ATM machine for withdrawing your money. When you insert your ATM card only your details are fixed. This is view 1. When I go and insert my ATM card the database system will provide only my details. This is another view. See this is how multiple views are existing and also there is security that strongly enforce that I can access only my data where I am not given with other's data. That's how security is also achieved at the view level. This is just an example. Anyway when the course progresses we will be able to understand even more things about multiple views and security. And that's it guys. I hope in this presentation we have seen various views of data. In the next presentation I will teach you what is schema and instance. I hope the session is informative and thank you for watching.
+
+============================================================
+SLIDE CONTENTS (OCR Text + Diagrams)
+============================================================
+
+--- slide0_fused ---
+Slide Content:
+=>
+
+Xt
+Database Management
+
+Systeme
+
+View of Data
+w
+
+Diagram Description:
+a black and white image of two gears on a blue background an image of a hat with a flower on it a diagram showing the location of an object a screenshot showing the level level in the game a screenshot of a green screen with the text'physical level ' a black background with a yellow frame and the words view a red and white shield with a cross on it a red and white logo with the letter a a red and white circle with the letter a in it a black and white image of two gears on a blue background an image of a hat with a flower on it
+
+--- slide1_fused ---
+Slide Content:
+Data Abstraction
+
+vv Primary goal: store and retrieve.
+
+El ¥ © | Gnesoacademy
+
+Diagram Description:
+
+--- slide2_fused ---
+Slide Content:
+Data Abstraction
+
+% Primary goal: store and retrieve.
+¥ Convenient and efficient.
+
+¥ Complex data structures.
+
+wv Hiding the com;
+
+Diagram Description:
+
+--- slide3_fused ---
+Slide Content:
+Levels of Data Abstraction
+
+NN
+
+nesoacademy.org
+
+Diagram Description:
+a diagram showing the location of an object
+
+--- slide4_fused ---
+Slide Content:
+View of Data
+
+CJ Physical Level
+
+% Lowest level of abstraction.
+
+Physical Level
+
+nesoacademy. org
+
+Diagram Description:
+a screenshot showing the level level in the game a screenshot of a green screen with the text'physical level '
+
+--- slide5_fused ---
+Slide Content:
+View of Data
+
+CC Logical Level
+
+Deals with what and
+
+relationship.
+
+Logical Level Entire database with simple
+data structures.
+
+Diagram Description:
+
+--- slide6_fused ---
+Slide Content:
+View of Data
+
+| View Level |
+
+Diagram Description:
+a black background with a yellow frame and the words view
+
+--- slide7_fused ---
+Slide Content:
+Get Ei @nesoacademy
+Neso Academy
+
+App wW @nesoacademy
+
+* ©)
+C PROGRAMMING
+Static and Dynamic Scoping (Part 1) [O) @nesoacademy
+
+= R x
+
+Comments Bookmark Dowload
+
+Up next
+
+Sn] «static and Dynamic
+
+(arts
+Scoping (Part 1)
+
+ESRI] «Static and Dynamic
+
+(Part 2)
+[2 =| Scoping (Part 2)
+£CPragranming
+
+3:10
+
+Static & Dynamic Scopin
+Nort 3) tae §= Static and Dynamic
+Scoping (Part 3)
+
+Static & Dynamie Scoping
+rar 4) Static and Dynamic.
+
+Scoping (Part 4)
+
+Get
+Neso Academy
+App
+
+@nesoacademy
+
+W @nesoacademy
+
+Ei @nesoacademy
+
+Diagram Description:
+a red and white shield with a cross on it a red and white logo with the letter a a red and white circle with the letter a in it

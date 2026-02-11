@@ -1,0 +1,257 @@
+[
+  {
+    "source": "N6",
+    "target": "N1",
+    "relation": "is defined by"
+  },
+  {
+    "source": "N6",
+    "target": "N2",
+    "relation": "is defined by"
+  },
+  {
+    "source": "N5",
+    "target": "N4",
+    "relation": "is composed of"
+  },
+  {
+    "source": "N5",
+    "target": "N6",
+    "relation": "is composed of"
+  },
+  {
+    "source": "N6",
+    "target": "N1",
+    "relation": "organizes"
+  },
+  {
+    "source": "N6",
+    "target": "N7",
+    "relation": "enables"
+  },
+  {
+    "source": "N6",
+    "target": "N8",
+    "relation": "considers"
+  },
+  {
+    "source": "N6",
+    "target": "N9",
+    "relation": "allows"
+  },
+  {
+    "source": "N10",
+    "target": "N11",
+    "relation": "arises from"
+  },
+  {
+    "source": "N10",
+    "target": "N12",
+    "relation": "provides"
+  },
+  {
+    "source": "N10",
+    "target": "N13",
+    "relation": "provides"
+  },
+  {
+    "source": "N10",
+    "target": "N14",
+    "relation": "provides"
+  },
+  {
+    "source": "N10",
+    "target": "N15",
+    "relation": "provides"
+  },
+  {
+    "source": "N16",
+    "target": "N6",
+    "relation": "is part of studying"
+  },
+  {
+    "source": "N17",
+    "target": "N6",
+    "relation": "is part of studying"
+  },
+  {
+    "source": "N17",
+    "target": "N18",
+    "relation": "uses"
+  },
+  {
+    "source": "N19",
+    "target": "N6",
+    "relation": "is part of studying"
+  },
+  {
+    "source": "N20",
+    "target": "N6",
+    "relation": "categorizes"
+  },
+  {
+    "source": "N20",
+    "target": "N21",
+    "relation": "includes"
+  },
+  {
+    "source": "N20",
+    "target": "N23",
+    "relation": "includes"
+  },
+  {
+    "source": "N21",
+    "target": "N22",
+    "relation": "represents"
+  },
+  {
+    "source": "N21",
+    "target": "N46",
+    "relation": "example is"
+  },
+  {
+    "source": "N21",
+    "target": "N47",
+    "relation": "example is"
+  },
+  {
+    "source": "N21",
+    "target": "N48",
+    "relation": "example is"
+  },
+  {
+    "source": "N21",
+    "target": "N49",
+    "relation": "example is"
+  },
+  {
+    "source": "N23",
+    "target": "N21",
+    "relation": "is derived from"
+  },
+  {
+    "source": "N23",
+    "target": "N24",
+    "relation": "is"
+  },
+  {
+    "source": "N23",
+    "target": "N25",
+    "relation": "emphasizes"
+  },
+  {
+    "source": "N23",
+    "target": "N26",
+    "relation": "includes"
+  },
+  {
+    "source": "N23",
+    "target": "N28",
+    "relation": "includes"
+  },
+  {
+    "source": "N26",
+    "target": "N27",
+    "relation": "is characterized by"
+  },
+  {
+    "source": "N26",
+    "target": "N41",
+    "relation": "example is"
+  },
+  {
+    "source": "N26",
+    "target": "N42",
+    "relation": "example is"
+  },
+  {
+    "source": "N26",
+    "target": "N40",
+    "relation": "example is"
+  },
+  {
+    "source": "N26",
+    "target": "N39",
+    "relation": "example is"
+  },
+  {
+    "source": "N28",
+    "target": "N29",
+    "relation": "exhibits"
+  },
+  {
+    "source": "N28",
+    "target": "N43",
+    "relation": "example is"
+  },
+  {
+    "source": "N28",
+    "target": "N44",
+    "relation": "example is"
+  },
+  {
+    "source": "N28",
+    "target": "N45",
+    "relation": "example is"
+  },
+  {
+    "source": "N6",
+    "target": "N30",
+    "relation": "can be classified as"
+  },
+  {
+    "source": "N6",
+    "target": "N31",
+    "relation": "can be classified as"
+  },
+  {
+    "source": "N30",
+    "target": "N39",
+    "relation": "example is"
+  },
+  {
+    "source": "N31",
+    "target": "N40",
+    "relation": "example is"
+  },
+  {
+    "source": "N32",
+    "target": "N6",
+    "relation": "are performed on"
+  },
+  {
+    "source": "N32",
+    "target": "N33",
+    "relation": "includes"
+  },
+  {
+    "source": "N32",
+    "target": "N34",
+    "relation": "includes"
+  },
+  {
+    "source": "N32",
+    "target": "N35",
+    "relation": "includes"
+  },
+  {
+    "source": "N32",
+    "target": "N36",
+    "relation": "includes"
+  },
+  {
+    "source": "N32",
+    "target": "N37",
+    "relation": "includes"
+  },
+  {
+    "source": "N32",
+    "target": "N38",
+    "relation": "includes"
+  },
+  {
+    "source": "N9",
+    "target": "N32",
+    "relation": "involves"
+  }
+]

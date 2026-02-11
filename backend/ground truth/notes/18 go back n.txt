@@ -1,0 +1,25 @@
+1. Overview of Sliding Window Protocols
+
+• Definition and Layers: Sliding window protocols are primarily used in the Data Link Layer of the OSI model and within TCP.
+• Core Purpose: They allow a sender to transmit multiple frames or information units simultaneously to a receiver rather than waiting for an individual acknowledgment (ACK) for every single frame.
+• Pipelining Concept: This approach utilizes protocol pipelining, which means the sender can keep sending frames until the window is full without waiting for the first frame's acknowledgment.
+• Sequence Numbering: Every frame is assigned a unique sequence number to help the receiver identify missing data and prevent the acceptance of duplicate frames.
+• Determining Sequence Numbers: The range of sequence numbers is determined by the sender’s window size (N); specifically, if N=4, it can be represented as 2 
+2, meaning 2 bits are used to create decimal sequence numbers from 0 to 3.
+
+2. Go-Back-N (GBN) ARQ
+
+• Window Configurations: In GBN, the sender has a fixed window size (N), allowing it to send N frames before an ACK is required. However, the receiver window size is always 1, meaning it only expects and receives one frame at a time in a specific order.
+• Operational Process: As the receiver sends an ACK for the first frame in the window (e.g., frame 0), the window "slides" forward, allowing the sender to transmit the next available frame in the buffer.
+• Error Handling and Retransmission:
+    ◦ If a frame is lost or an ACK does not reach the sender within a specified timeout period, the sender identifies a failure.
+    ◦ The sender must then "go back" to the first unacknowledged frame and retransmit all frames currently in the window, even if the receiver had previously seen some of those subsequent frames.
+    ◦ Receiver Logic during Errors: Because the receiver only accepts frames in the correct sequence, it will discard any out-of-order frames it receives while waiting for the retransmitted missing frame.
+
+3. Selective Repeat (SR) ARQ
+
+• General Characteristics: This is considered an advanced version of GBN and is specifically used in environments where there are frequent errors in information transmission.
+• Efficiency: It provides more efficient data transmission and the fastest recovery of data compared to GBN.
+• Individual Retransmission: In the event of a network error or lost acknowledgment, the sender retransmits only the specific missing frame.
+• Comparison to GBN: Unlike GBN, which retransmits the entire sliding window, Selective Repeat allows the sender to fill in the gap of the missing frame while continuing to send new frames.
+• Data Recovery: This specific focus on only missing data prevents the unnecessary re-sending of frames that the receiver may have already processed correctly.

@@ -1,0 +1,22 @@
+eee NE
+2. Industrial control systems
+3. Telecommunications network
+
+2. Industrial control systems
+
+. Used in LAN & WAN.
+
++ The sender modifies the “token” by putting the address along with the data.
+« This token is passed from one device to another device until the destination address matches.
+
++ Once token received by the destination device, then it sends the acknowledgment to the sender.
+
+>Examples:
+
++ The method of transferring data in the ring structurg,is called “Token Passing”.
+
++ Here data move from onc node to another, cither clockwise or anticlockwise.
+
+3. Ring Topology
+
+s neighbor to form a closed network.

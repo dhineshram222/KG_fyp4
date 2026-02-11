@@ -1,0 +1,25 @@
+{
+  "summary": "In database management system, there are total three levels. Physical level means database, logical level means actual table in tabular format and view level means different views as per their priority. Data Independence means users and datashould not directly interact with each other. One is the physical level, the other one is the logical level and finally we have the view level. The applications actually do not depend on the physicallevel or the physical Schema. So obviously the interaction with the system is done at this level. We know all data are stored in a central place. The normal user will be able to access his own data. A teller may access some more data than the normal user. The application does not need to be on this level to work.",
+  "reference_summary": "Data abstraction in DBMS focuses on hiding complex implementation details while providing users with only essential information. This is achieved through three levels: the physical level, which describes how data is stored on hardware using data structures; the logical level, which defines what data is stored and their relationships; and the view level, the highest level of abstraction. The logical level provides physical data independence, ensuring that changes to the logical structure do not necessitate a physical rewrite. Additionally, the view level allows for multiple customized views and ensures security by granting different users access to specific data subsets.",
+  "evaluation": {
+    "rouge": {
+      "rouge1": {
+        "precision": 0.3816793893129771,
+        "recall": 0.5050505050505051,
+        "fmeasure": 0.43478260869565216
+      },
+      "rougeL": {
+        "precision": 0.19083969465648856,
+        "recall": 0.25252525252525254,
+        "fmeasure": 0.21739130434782608
+      }
+    },
+    "keyword_coverage": 0.2857142857142857,
+    "bertscore": {
+      "precision": 0.13580742478370667,
+      "recall": 0.1870473176240921,
+      "f1": 0.16266252100467682
+    },
+    "sentence_cosine": 0.7476563453674316
+  }
+}

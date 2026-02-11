@@ -1,0 +1,112 @@
+[
+  {
+    "id": "N1",
+    "label": "Computer Networks",
+    "description": "The subject area covered by the course."
+  },
+  {
+    "id": "N2",
+    "label": "Classification of Computer Networks",
+    "description": "The categorization method for computer networks discussed in the session."
+  },
+  {
+    "id": "N3",
+    "label": "Local Area Network (LAN)",
+    "description": "A computer network that interconnects computers within a limited area."
+  },
+  {
+    "id": "N4",
+    "label": "Metropolitan Area Network (MAN)",
+    "description": "A computer network that interconnects users or computers in a geographic region of the size of a metropolitan area (City)."
+  },
+  {
+    "id": "N5",
+    "label": "Wide Area Network (WAN)",
+    "description": "A telecommunications network that extends over a large geographical area for the primary purpose of computer networking."
+  },
+  {
+    "id": "N6",
+    "label": "Wired LAN",
+    "description": "A type of Local Area Network that uses cables."
+  },
+  {
+    "id": "N7",
+    "label": "Wireless LAN",
+    "description": "A type of Local Area Network that is wireless."
+  },
+  {
+    "id": "N8",
+    "label": "Ethernet",
+    "description": "The well known and most popular technology in wired LAN, used to connect two or more nodes."
+  },
+  {
+    "id": "N9",
+    "label": "Ethernet Straight Through Cable",
+    "description": "A cable used to connect devices of different kinds."
+  },
+  {
+    "id": "N10",
+    "label": "Ethernet Crossover Cable",
+    "description": "A cable used to connect a computer with another computer directly."
+  },
+  {
+    "id": "N11",
+    "label": "Hub",
+    "description": "An intermediary device in a wired local area network."
+  },
+  {
+    "id": "N12",
+    "label": "Switch",
+    "description": "An intermediary device in a wired local area network."
+  },
+  {
+    "id": "N13",
+    "label": "Wi-Fi",
+    "description": "An example technology for a wireless LAN."
+  },
+  {
+    "id": "N14",
+    "label": "Router",
+    "description": "A device needed to connect two local area networks."
+  },
+  {
+    "id": "N15",
+    "label": "Bridge",
+    "description": "A device needed to connect two local area networks."
+  },
+  {
+    "id": "N16",
+    "label": "Telecommunications Network",
+    "description": "Any communications at a distance."
+  },
+  {
+    "id": "N17",
+    "label": "Internet",
+    "description": "A wide wide area network where many local area networks, metropolitan area networks, and wide area networks across the world are connected to each other."
+  },
+  {
+    "id": "N18",
+    "label": "New Trends in Computer Networks",
+    "description": "Emerging trends in the computer networking field."
+  },
+  {
+    "id": "N19",
+    "label": "Bring Your Own Device (BYOD)",
+    "description": "A scenario where employees are encouraged by their employers to bring their own device and connect to the office network."
+  },
+  {
+    "id": "N20",
+    "label": "Online Collaboration",
+    "description": "The ability for participants to collaborate with others from wherever they are with the help of computer networks."
+  },
+  {
+    "id": "N21",
+    "label": "Cloud Computing",
+    "description": "The on-demand availability of computer resources, especially data storage and computing power, without direct active management by the user."
+  },
+  {
+    "id": "N22",
+    "label": "Google Drive",
+    "description": "An example of cloud computing where one can store files and folders."
+  }
+]

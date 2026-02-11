@@ -1,0 +1,5 @@
+Slide Content:
+Its not difficult to understand that the data needs to be managed in such a
+way so that it can produce some meaninoful information.
+
+Diagram Description:

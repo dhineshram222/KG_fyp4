@@ -1,0 +1,147 @@
+[
+  {
+    "source": "N1",
+    "target": "N2",
+    "relation": "requires understanding of"
+  },
+  {
+    "source": "N2",
+    "target": "N3",
+    "relation": "is defined by"
+  },
+  {
+    "source": "N3",
+    "target": "N4",
+    "relation": "involves"
+  },
+  {
+    "source": "N3",
+    "target": "N5",
+    "relation": "involves"
+  },
+  {
+    "source": "N2",
+    "target": "N7",
+    "relation": "has a"
+  },
+  {
+    "source": "N8",
+    "target": "N9",
+    "relation": "becomes through processing"
+  },
+  {
+    "source": "N9",
+    "target": "N6",
+    "relation": "is a form of"
+  },
+  {
+    "source": "N8",
+    "target": "N11",
+    "relation": "needs"
+  },
+  {
+    "source": "N11",
+    "target": "N6",
+    "relation": "results in"
+  },
+  {
+    "source": "N6",
+    "target": "N10",
+    "relation": "is characterized by being"
+  },
+  {
+    "source": "N12",
+    "target": "N10",
+    "relation": "aims to produce"
+  },
+  {
+    "source": "N12",
+    "target": "N13",
+    "relation": "requires"
+  },
+  {
+    "source": "N13",
+    "target": "N11",
+    "relation": "is a way for"
+  },
+  {
+    "source": "N13",
+    "target": "N14",
+    "relation": "enables"
+  },
+  {
+    "source": "N13",
+    "target": "N15",
+    "relation": "example includes"
+  },
+  {
+    "source": "N15",
+    "target": "N14",
+    "relation": "improves"
+  },
+  {
+    "source": "N13",
+    "target": "N16",
+    "relation": "example includes"
+  },
+  {
+    "source": "N16",
+    "target": "N17",
+    "relation": "is used in"
+  },
+  {
+    "source": "N17",
+    "target": "N18",
+    "relation": "utilizes"
+  },
+  {
+    "source": "N17",
+    "target": "N19",
+    "relation": "utilizes"
+  },
+  {
+    "source": "N18",
+    "target": "N19",
+    "relation": "interacts with"
+  },
+  {
+    "source": "N13",
+    "target": "N22",
+    "relation": "example includes"
+  },
+  {
+    "source": "N20",
+    "target": "N21",
+    "relation": "are composed of"
+  },
+  {
+    "source": "N21",
+    "target": "N22",
+    "relation": "are stored using a"
+  },
+  {
+    "source": "N13",
+    "target": "N23",
+    "relation": "example includes"
+  },
+  {
+    "source": "N23",
+    "target": "N24",
+    "relation": "comprises"
+  },
+  {
+    "source": "N23",
+    "target": "N25",
+    "relation": "comprises"
+  },
+  {
+    "source": "N23",
+    "target": "N11",
+    "relation": "enables"
+  },
+  {
+    "source": "N1",
+    "target": "N26",
+    "relation": "possesses"
+  }
+]

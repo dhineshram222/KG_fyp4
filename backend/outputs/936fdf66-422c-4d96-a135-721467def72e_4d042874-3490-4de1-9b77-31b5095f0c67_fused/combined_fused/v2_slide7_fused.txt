@@ -1,0 +1,16 @@
+Slide Content:
+RING TOPOLOGY
+
+Aring topology is a bus topology in a closed loop.
+
+Peer-to-Peer LAN topology.
+
+Two connections: one to each of its nearest neighbors.
+‘Unidirectional.
+
+Sending and receiving data takes place with the help of a TOKEN.
+
+Ce ae
+
+Diagram Description:
+a black hole in the center of a circle

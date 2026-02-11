@@ -1,0 +1,27 @@
+Example Input:
+"============================================================\nFULL VIDEO TRANSCRIPT\n============================================================\n\nHello everyone, welcome back to the Computer Networks course."
+
+Example Output:
+{"nodes": [{"id": "N1", "label": "FULL", "description": ""}, {"id": "N2", "label": "VIDEO", "description": ""}, {"id": "N3", "label": "TRANSCRIPT", "description": ""}, {"id": "N4", "label": "Hello", "description": ""}], "edges": [{"source": "N1", "target": "N2", "relation": "related_to"}, {"source": "N1", "target": "N3", "relation": "related_to"}, {"source": "N1", "target": "N4", "relation": "related_to"}]}
+
+
+Example Input:
+"Today we will see the classification of computer networks."
+
+Example Output:
+{"nodes": [{"id": "N1", "label": "Today", "description": ""}, {"id": "N2", "label": "will", "description": ""}, {"id": "N3", "label": "see", "description": ""}, {"id": "N4", "label": "the", "description": ""}], "edges": [{"source": "N1", "target": "N2", "relation": "related_to"}, {"source": "N1", "target": "N3", "relation": "related_to"}, {"source": "N1", "target": "N4", "relation": "related_to"}]}
+
+
+Example Input:
+"After completing this session, we will understand what are LAN, Man and Van."
+
+Example Output:
+{"nodes": [{"id": "N1", "label": "After", "description": ""}, {"id": "N2", "label": "completing", "description": ""}, {"id": "N3", "label": "this", "description": ""}, {"id": "N4", "label": "session", "description": ""}], "edges": [{"source": "N1", "target": "N2", "relation": "related_to"}, {"source": "N1", "target": "N3", "relation": "related_to"}, {"source": "N1", "target": "N4", "relation": "related_to"}]}
+
+
+Example Input:
+"And after understanding LAN, Van and Van, we will also understand what are the devices that are involved in LAN, Man and Van."
+
+Example Output:
+{"nodes": [{"id": "N1", "label": "And", "description": ""}, {"id": "N2", "label": "after", "description": ""}, {"id": "N3", "label": "understanding", "description": ""}, {"id": "N4", "label": "LAN", "description": ""}], "edges": [{"source": "N1", "target": "N2", "relation": "related_to"}, {"source": "N1", "target": "N3", "relation": "related_to"}, {"source": "N1", "target": "N4", "relation": "related_to"}]}
+

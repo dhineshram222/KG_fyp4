@@ -1,0 +1,155 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 750px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "id": "N5", "label": "Program", "shape": "dot", "size": 10, "title": "Algorithm + Data Structure."}, {"color": "#97c2fc", "id": "N4", "label": "Algorithm", "shape": "dot", "size": 10, "title": "Step by Step procedure to solve a particular function."}, {"color": "#97c2fc", "id": "N6", "label": "Data Structure", "shape": "dot", "size": 10, "title": "A particular way of organizing data in a computer so that it can be used efficiently."}, {"color": "#97c2fc", "id": "N1", "label": "Data", "shape": "dot", "size": 10, "title": "Are simply a value are set of values of different type which is called data types like string, integer, char etc. or collection of information."}, {"color": "#97c2fc", "id": "N2", "label": "Structure (Concept)", "shape": "dot", "size": 10, "title": "Way of organizing information, so that it is easier to use."}, {"color": "#97c2fc", "id": "N7", "label": "Efficiency", "shape": "dot", "size": 10, "title": "Allows data to be used efficiently."}, {"color": "#97c2fc", "id": "N8", "label": "Element Relationship", "shape": "dot", "size": 10, "title": "Consideration of elements stored and their relationship to each other."}, {"color": "#97c2fc", "id": "N9", "label": "Data Manipulation", "shape": "dot", "size": 10, "title": "A scheme for organizing related pieces of information that can be manipulated."}, {"color": "#97c2fc", "id": "N30", "label": "Static Data Structure", "shape": "dot", "size": 10, "title": "The size of the structure is fixed."}, {"color": "#97c2fc", "id": "N31", "label": "Dynamic Data Structure", "shape": "dot", "size": 10, "title": "The size of the structure in not fixed and can be modified during the operations performed on it."}, {"color": "#97c2fc", "id": "N32", "label": "Data Structure Operations", "shape": "dot", "size": 10, "title": "Commonly used operations performed on data structure."}, {"color": "#97c2fc", "id": "N10", "label": "Why Data Structure", "shape": "dot", "size": 10, "title": "Necessity to solve complex requirements in an efficient way."}, {"color": "#97c2fc", "id": "N11", "label": "Complex Human Requirements", "shape": "dot", "size": 10, "title": "Human requirement with computer are going to complex day by day."}, {"color": "#97c2fc", "id": "N12", "label": "Fastest Solutions", "shape": "dot", "size": 10, "title": "Provides fastest solution of human requirements."}, {"color": "#97c2fc", "id": "N13", "label": "Efficient Solutions for Complex Problems", "shape": "dot", "size": 10, "title": "Provides efficient solution of complex problem."}, {"color": "#97c2fc", "id": "N14", "label": "Space Complexity Solution", "shape": "dot", "size": 10, "title": "Provides solution for Space Complexity."}, {"color": "#97c2fc", "id": "N15", "label": "Time Complexity Solution", "shape": "dot", "size": 10, "title": "Provides solution for Time Complexity."}, {"color": "#97c2fc", "id": "N16", "label": "Logical/Mathematical Description", "shape": "dot", "size": 10, "title": "Logical or mathematical description of the structure."}, {"color": "#97c2fc", "id": "N17", "label": "Structure Implementation", "shape": "dot", "size": 10, "title": "Implementation of structure on a computer using different computer languages."}, {"color": "#97c2fc", "id": "N18", "label": "C++ Language", "shape": "dot", "size": 10, "title": "A computer language mentioned for implementation purpose in the syllabus."}, {"color": "#97c2fc", "id": "N19", "label": "Quantitative Analysis", "shape": "dot", "size": 10, "title": "Determining the amount of memory needed to store the structure and the time required to process the structure."}, {"color": "#97c2fc", "id": "N20", "label": "Data Structure Classification", "shape": "dot", "size": 10, "title": "Categorization of data structures into types."}, {"color": "#97c2fc", "id": "N21", "label": "Primitive Data Structure", "shape": "dot", "size": 10, "title": "Data structures that are directly operated upon the machine-level instructions."}, {"color": "#97c2fc", "id": "N23", "label": "Non-Primitive Data Structure", "shape": "dot", "size": 10, "title": "Data structures that are derived from the primitive data structures."}, {"color": "#97c2fc", "id": "N22", "label": "Built-in/Predefined Data Types", "shape": "dot", "size": 10, "title": "Standard / Predefine/ Built data types in of any one of the computer languages."}, {"color": "#97c2fc", "id": "N46", "label": "Integer", "shape": "dot", "size": 10, "title": "A type of primitive data structure."}, {"color": "#97c2fc", "id": "N47", "label": "Character", "shape": "dot", "size": 10, "title": "A type of primitive data structure."}, {"color": "#97c2fc", "id": "N48", "label": "Float", "shape": "dot", "size": 10, "title": "A type of primitive data structure."}, {"color": "#97c2fc", "id": "N49", "label": "Pointers", "shape": "dot", "size": 10, "title": "A type of primitive data structure."}, {"color": "#97c2fc", "id": "N24", "label": "User-Designed", "shape": "dot", "size": 10, "title": "Can be designed by user."}, {"color": "#97c2fc", "id": "N25", "label": "Homogeneous/Heterogeneous Grouping", "shape": "dot", "size": 10, "title": "Structuring of a group of homogeneous (same type) or heterogeneous (different type) data items."}, {"color": "#97c2fc", "id": "N26", "label": "Linear Data Structure", "shape": "dot", "size": 10, "title": "A data structure that has homogeneous elements and where elements are in a sequence."}, {"color": "#97c2fc", "id": "N28", "label": "Non-Linear Data Structure", "shape": "dot", "size": 10, "title": "A data structure in which data item is connected to several other data items."}, {"color": "#97c2fc", "id": "N27", "label": "Elements in a Sequence", "shape": "dot", "size": 10, "title": "Elements are in a sequence and form a liner series."}, {"color": "#97c2fc", "id": "N41", "label": "Stack", "shape": "dot", "size": 10, "title": "An example of a linear data structure."}, {"color": "#97c2fc", "id": "N42", "label": "Queue", "shape": "dot", "size": 10, "title": "An example of a linear data structure."}, {"color": "#97c2fc", "id": "N40", "label": "Linked List", "shape": "dot", "size": 10, "title": "A non-primitive data structure, an example of dynamic and linear data structures."}, {"color": "#97c2fc", "id": "N39", "label": "Array", "shape": "dot", "size": 10, "title": "A non-primitive data structure that includes single dimensional and multi-dimensional types, and is an example of static and linear data structures."}, {"color": "#97c2fc", "id": "N29", "label": "Hierarchical/Parent-Child Relationship", "shape": "dot", "size": 10, "title": "May exhibit either a hierarchical relationship or parent child relationship."}, {"color": "#97c2fc", "id": "N43", "label": "Tree", "shape": "dot", "size": 10, "title": "An example of a non-linear data structure."}, {"color": "#97c2fc", "id": "N44", "label": "Graph", "shape": "dot", "size": 10, "title": "An example of a non-linear data structure."}, {"color": "#97c2fc", "id": "N45", "label": "Hash Table", "shape": "dot", "size": 10, "title": "An example of a non-linear data structure."}, {"color": "#97c2fc", "id": "N33", "label": "Traversing", "shape": "dot", "size": 10, "title": "Processing each element in the list."}, {"color": "#97c2fc", "id": "N34", "label": "Search", "shape": "dot", "size": 10, "title": "Finding the location of the element with a given value or the Selection record with a given key."}, {"color": "#97c2fc", "id": "N35", "label": "Insertion", "shape": "dot", "size": 10, "title": "Adding a new element to the list."}, {"color": "#97c2fc", "id": "N36", "label": "Deletion", "shape": "dot", "size": 10, "title": "Removing an elements from the list."}, {"color": "#97c2fc", "id": "N37", "label": "Sorting", "shape": "dot", "size": 10, "title": "Arranging the elements in some type of order."}, {"color": "#97c2fc", "id": "N38", "label": "Merging", "shape": "dot", "size": 10, "title": "Combining two list into a single list."}, {"color": "#97c2fc", "id": "N50", "label": "Data Structures (Subject)", "shape": "dot", "size": 10, "title": "a new subject that is data structures."}, {"color": "#97c2fc", "id": "N51", "label": "Data (Core Concept)", "shape": "dot", "size": 10, "title": "a prerequisite before understanding what data structure is."}, {"color": "#97c2fc", "id": "N75", "label": "Data Structures Importance", "shape": "dot", "size": 10, "title": "the reason why companies are preferring this subject over other subjects, as it is very important and useful in day-to-day life and used more frequently."}, {"color": "#97c2fc", "id": "N52", "label": "Data (Dictionary Definition)", "shape": "dot", "size": 10, "title": "quantities, characters or symbols on which operations are performed by a computer, which may be stored and transmitted in the form of electrical signals and recorded on magnetic, optical or mechanical recording media."}, {"color": "#97c2fc", "id": "N56", "label": "Data vs. Information Distinction", "shape": "dot", "size": 10, "title": "a distinction between data and an information, which is a very confusing topic."}, {"color": "#97c2fc", "id": "N53", "label": "Operations on Data", "shape": "dot", "size": 10, "title": "operations performed by a computer on quantities, characters or symbols."}, {"color": "#97c2fc", "id": "N54", "label": "Storage and Transmission of Data", "shape": "dot", "size": 10, "title": "data may be stored and transmitted in the form of electrical signals and recorded on magnetic, optical or mechanical recording media."}, {"color": "#97c2fc", "id": "N55", "label": "Information", "shape": "dot", "size": 10, "title": "meaningful or processed data."}, {"color": "#97c2fc", "id": "N59", "label": "Meaningful Information (Goal)", "shape": "dot", "size": 10, "title": "information from which some meaning can be extracted, making it quite understandable."}, {"color": "#97c2fc", "id": "N57", "label": "Unprocessed Data (Example)", "shape": "dot", "size": 10, "title": "just a collection of characters or symbols where one won\u0027t be able to understand it properly."}, {"color": "#97c2fc", "id": "N58", "label": "Processed Data", "shape": "dot", "size": 10, "title": "data that has been manipulated, such as reversing a whole string, to make it understandable."}, {"color": "#97c2fc", "id": "N60", "label": "Systematic Data Arrangement", "shape": "dot", "size": 10, "title": "arranging data in a systematic way so that it gets a structure and becomes meaningful."}, {"color": "#97c2fc", "id": "N61", "label": "Data Management", "shape": "dot", "size": 10, "title": "managing data in such a way so that it can produce some meaningful information."}, {"color": "#97c2fc", "id": "N62", "label": "Data Structure (Definition)", "shape": "dot", "size": 10, "title": "the systematic way to organize data so that it can be used efficiently."}, {"color": "#97c2fc", "id": "N63", "label": "Efficiency (Time/Space)", "shape": "dot", "size": 10, "title": "using data efficiently in terms of time as well as space."}, {"color": "#97c2fc", "id": "N64", "label": "Arrays (Example Data Structure)", "shape": "dot", "size": 10, "title": "a classical data structure, thought of as a sequence or collection of some symbols, characters, integers, or floats."}, {"color": "#97c2fc", "id": "N65", "label": "Stack Data Structure", "shape": "dot", "size": 10, "title": "a data structure used in implementing the redo and undo feature."}, {"color": "#97c2fc", "id": "N71", "label": "Two-Dimensional Array", "shape": "dot", "size": 10, "title": "a data structure (e.g., 37x40) used to store pixel information (each pixel\u0027s color) for bitmap images."}, {"color": "#97c2fc", "id": "N72", "label": "Graph Data Structure", "shape": "dot", "size": 10, "title": "a data structure used to store friendship information on social networking sites."}, {"color": "#97c2fc", "id": "N66", "label": "Undo/Redo Feature", "shape": "dot", "size": 10, "title": "a famous feature in applications like Google Docs, PowerPoint, or Microsoft Word that uses stack data structures."}, {"color": "#97c2fc", "id": "N67", "label": "Undo Stack", "shape": "dot", "size": 10, "title": "a stack where each information entered gets stored; elements are popped out when control z (undo) is pressed."}, {"color": "#97c2fc", "id": "N68", "label": "Redo Stack", "shape": "dot", "size": 10, "title": "a stack where elements popped from the undo stack are placed; used when control y (redo) is pressed to get the operation again."}, {"color": "#97c2fc", "id": "N69", "label": "Bitmap Images", "shape": "dot", "size": 10, "title": "images stored as a series of tiny dots called pixels."}, {"color": "#97c2fc", "id": "N70", "label": "Pixels", "shape": "dot", "size": 10, "title": "tiny dots or small squares, each assigned a color and then arranged in a pattern to form an image."}, {"color": "#97c2fc", "id": "N73", "label": "Graph Nodes", "shape": "dot", "size": 10, "title": "individuals (e.g., James, Mark, Leah, Lucy) represented in a graph data structure."}, {"color": "#97c2fc", "id": "N74", "label": "Graph Edges", "shape": "dot", "size": 10, "title": "connections or relationships between individuals (nodes) represented in a graph data structure."}, {"color": "#97c2fc", "id": "N3", "label": "Data Objects", "shape": "dot", "size": 10, "title": "A unique location in computer memory that contains the values."}]);
+                  edges = new vis.DataSet([{"arrows": "to", "from": "N5", "label": "is composed of", "to": "N4", "width": 1}, {"arrows": "to", "from": "N5", "label": "is composed of", "to": "N6", "width": 1}, {"arrows": "to", "from": "N6", "label": "organizes", "to": "N1", "width": 1}, {"arrows": "to", "from": "N6", "label": "is defined by", "to": "N2", "width": 1}, {"arrows": "to", "from": "N6", "label": "enables", "to": "N7", "width": 1}, {"arrows": "to", "from": "N6", "label": "considers", "to": "N8", "width": 1}, {"arrows": "to", "from": "N6", "label": "allows", "to": "N9", "width": 1}, {"arrows": "to", "from": "N6", "label": "can be classified as", "to": "N30", "width": 1}, {"arrows": "to", "from": "N6", "label": "can be classified as", "to": "N31", "width": 1}, {"arrows": "to", "from": "N9", "label": "involves", "to": "N32", "width": 1}, {"arrows": "to", "from": "N10", "label": "arises from", "to": "N11", "width": 1}, {"arrows": "to", "from": "N10", "label": "provides", "to": "N12", "width": 1}, {"arrows": "to", "from": "N10", "label": "provides", "to": "N13", "width": 1}, {"arrows": "to", "from": "N10", "label": "provides", "to": "N14", "width": 1}, {"arrows": "to", "from": "N10", "label": "provides", "to": "N15", "width": 1}, {"arrows": "to", "from": "N16", "label": "is part of studying", "to": "N6", "width": 1}, {"arrows": "to", "from": "N17", "label": "is part of studying", "to": "N6", "width": 1}, {"arrows": "to", "from": "N17", "label": "uses", "to": "N18", "width": 1}, {"arrows": "to", "from": "N19", "label": "is part of studying", "to": "N6", "width": 1}, {"arrows": "to", "from": "N20", "label": "categorizes", "to": "N6", "width": 1}, {"arrows": "to", "from": "N20", "label": "includes", "to": "N21", "width": 1}, {"arrows": "to", "from": "N20", "label": "includes", "to": "N23", "width": 1}, {"arrows": "to", "from": "N21", "label": "represents", "to": "N22", "width": 1}, {"arrows": "to", "from": "N21", "label": "example is", "to": "N46", "width": 1}, {"arrows": "to", "from": "N21", "label": "example is", "to": "N47", "width": 1}, {"arrows": "to", "from": "N21", "label": "example is", "to": "N48", "width": 1}, {"arrows": "to", "from": "N21", "label": "example is", "to": "N49", "width": 1}, {"arrows": "to", "from": "N23", "label": "is derived from", "to": "N21", "width": 1}, {"arrows": "to", "from": "N23", "label": "is", "to": "N24", "width": 1}, {"arrows": "to", "from": "N23", "label": "emphasizes", "to": "N25", "width": 1}, {"arrows": "to", "from": "N23", "label": "includes", "to": "N26", "width": 1}, {"arrows": "to", "from": "N23", "label": "includes", "to": "N28", "width": 1}, {"arrows": "to", "from": "N26", "label": "is characterized by", "to": "N27", "width": 1}, {"arrows": "to", "from": "N26", "label": "example is", "to": "N41", "width": 1}, {"arrows": "to", "from": "N26", "label": "example is", "to": "N42", "width": 1}, {"arrows": "to", "from": "N26", "label": "example is", "to": "N40", "width": 1}, {"arrows": "to", "from": "N26", "label": "example is", "to": "N39", "width": 1}, {"arrows": "to", "from": "N28", "label": "exhibits", "to": "N29", "width": 1}, {"arrows": "to", "from": "N28", "label": "example is", "to": "N43", "width": 1}, {"arrows": "to", "from": "N28", "label": "example is", "to": "N44", "width": 1}, {"arrows": "to", "from": "N28", "label": "example is", "to": "N45", "width": 1}, {"arrows": "to", "from": "N30", "label": "example is", "to": "N39", "width": 1}, {"arrows": "to", "from": "N31", "label": "example is", "to": "N40", "width": 1}, {"arrows": "to", "from": "N32", "label": "are performed on", "to": "N6", "width": 1}, {"arrows": "to", "from": "N32", "label": "includes", "to": "N33", "width": 1}, {"arrows": "to", "from": "N32", "label": "includes", "to": "N34", "width": 1}, {"arrows": "to", "from": "N32", "label": "includes", "to": "N35", "width": 1}, {"arrows": "to", "from": "N32", "label": "includes", "to": "N36", "width": 1}, {"arrows": "to", "from": "N32", "label": "includes", "to": "N37", "width": 1}, {"arrows": "to", "from": "N32", "label": "includes", "to": "N38", "width": 1}, {"arrows": "to", "from": "N50", "label": "requires understanding of", "to": "N51", "width": 1}, {"arrows": "to", "from": "N50", "label": "possesses", "to": "N75", "width": 1}, {"arrows": "to", "from": "N51", "label": "is defined by", "to": "N52", "width": 1}, {"arrows": "to", "from": "N51", "label": "has a", "to": "N56", "width": 1}, {"arrows": "to", "from": "N52", "label": "involves", "to": "N53", "width": 1}, {"arrows": "to", "from": "N52", "label": "involves", "to": "N54", "width": 1}, {"arrows": "to", "from": "N55", "label": "is characterized by being", "to": "N59", "width": 1}, {"arrows": "to", "from": "N57", "label": "becomes through processing", "to": "N58", "width": 1}, {"arrows": "to", "from": "N57", "label": "needs", "to": "N60", "width": 1}, {"arrows": "to", "from": "N58", "label": "is a form of", "to": "N55", "width": 1}, {"arrows": "to", "from": "N60", "label": "results in", "to": "N55", "width": 1}, {"arrows": "to", "from": "N61", "label": "aims to produce", "to": "N59", "width": 1}, {"arrows": "to", "from": "N61", "label": "requires", "to": "N62", "width": 1}, {"arrows": "to", "from": "N62", "label": "is a way for", "to": "N60", "width": 1}, {"arrows": "to", "from": "N62", "label": "enables", "to": "N63", "width": 1}, {"arrows": "to", "from": "N62", "label": "example includes", "to": "N64", "width": 1}, {"arrows": "to", "from": "N62", "label": "example includes", "to": "N65", "width": 1}, {"arrows": "to", "from": "N62", "label": "example includes", "to": "N71", "width": 1}, {"arrows": "to", "from": "N62", "label": "example includes", "to": "N72", "width": 1}, {"arrows": "to", "from": "N64", "label": "improves", "to": "N63", "width": 1}, {"arrows": "to", "from": "N65", "label": "is used in", "to": "N66", "width": 1}, {"arrows": "to", "from": "N66", "label": "utilizes", "to": "N67", "width": 1}, {"arrows": "to", "from": "N66", "label": "utilizes", "to": "N68", "width": 1}, {"arrows": "to", "from": "N67", "label": "interacts with", "to": "N68", "width": 1}, {"arrows": "to", "from": "N69", "label": "are composed of", "to": "N70", "width": 1}, {"arrows": "to", "from": "N70", "label": "are stored using a", "to": "N71", "width": 1}, {"arrows": "to", "from": "N72", "label": "comprises", "to": "N73", "width": 1}, {"arrows": "to", "from": "N72", "label": "comprises", "to": "N74", "width": 1}, {"arrows": "to", "from": "N72", "label": "enables", "to": "N60", "width": 1}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

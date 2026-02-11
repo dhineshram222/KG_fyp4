@@ -1,0 +1,244 @@
+============================================================
+FULL VIDEO TRANSCRIPT
+============================================================
+
+Today we will see network topology. Upon the completion of this session, we will be able to understand various network topologies like bus, star, ring, mesh and hybrid. We will also understand what are the advantages and disadvantages of bus, star, ring, mesh and hybrid topologies. Firstly, we will start with what is a network topology. We have some nodes and we have to arrange these nodes so that we can establish communication among all the nodes. Topology means arrangement of nodes of a computer network. Say I have to arrange all these nodes so that I can establish communication among all the nodes. Topology can be viewed as a layout of a computer network. Topology can be viewed as a physical topology and logical topology. Physical topology means where I am going to place all these nodes. This is what physical topology. Say I can place all these three nodes in ground floor of my building. I can also take these two nodes to the first floor of my building. And the placement of these nodes is called as physical topology. Logical topology means how the data is going to flow from this node to this node. This node may be in ground floor, this node may be in first floor. How I am going to deal with the data flow in the network that is viewed as the logical topology. Simply topology means the arrangement of nodes in such a way that we have to make communication among all the nodes. We will see what are the various topologies. Bus, Ring, Star, Mesh and Hybrid. We will see one by one in detail. Bus topology. In bus topology there is a common transmission medium. And all nodes are connected to this transmission medium. Suppose if node A wants to send some data to node B and it can send the data over this transmission medium. And all nodes will receive this transmission. That is the data. Now the problem with this approach is if A wants to send some data to B, everyone will receive a copy of the data signal, including B, but all others will deny or reject this packet. Why because this data signal is intended to the recipient B and not to anyone else in the network. So now we will see what is a bus topology as per the definition. All data transmitted between nodes in the network is transmitted over this common transmission medium. This is the common transmission medium. And all nodes will receive this signal simultaneously. So this transmission medium is capable of sending as well as receiving the data. So the data flow in this transmission medium is by directional. It means data can flow in both directions. You will see the advantages and disadvantages of bus topology. Since there is only one wire or the cable involved in this transmission, it is less expensive. At the same time, if you are going to construct a temporary network where this is not going to last for a long, then you can go for bus topology. Another advantage of having this network is that if any node failure, please watch this, this is a node failure and this node failure does not affect others. And these are all the advantages of bus topology. There are some disadvantages with this network. And this is obviously not a fault tolerant network. We have already seen what is a fault tolerant network. Fault tolerance means if there is a failure and this failure should not affect others. But if this link, this transmission medium is failed, obviously the entire network goes down. At the same time, if this node wants to send some data to this node and there is a problem in this line. Now communication here can take place but the communication between this place will not happen. Why? Because this is not dealing with any alternative technique. The only way for this computer to reach this computer is this line and there is no redundant line. And that is why this network is not a fault tolerant network. At the same time, the cable length is limited to certain range. Also, I have already mentioned if this node wants to send some data to this node, every one participating in this network will receive a copy of this signal. So there is no security in this approach. And that is the advantages and disadvantages of bus topology. And coming to the second topology, the ring topology, a ring topology is a bus topology. But in a closed loop, if you observe, this is a bus topology but this is a closed loop. So here the nodes involved are paired to paired land topology nodes. It means there is no one in superior in this network and there is no one inferior in this network. All nodes are with equal rights and that is why we call these nodes are paired to paired nodes. And every node will have two connections, one to each of its nearest neighbors. And the communication is always unidirectional. Suppose if this node wants to send some data to this node and the network is set up like the flow of data should be in this direction and this node will send this data to this node and this node will forward the data to this node, this node, this node and finally it will be received by this node. The communication will not happen directly like this. The communication will be like this because the communication pattern of ring topology is always unidirectional. And you may ask me how this communication will happen. It is with the help of a token. That is why we call this topology as a token ring topology. Now we will see how sending and receiving happens with the help of this token. Let this be a token. Whoever has this token, it means it's their turn to send data. For example, if this node has the token, it means it's the turn of this node to send the data. After some time, the token will be moved on to the next node. It means that it's this computer's turn to send the data. After some point of time, the token will be passed on and this token will be circulated throughout this network. It means whoever holds this token, it's their time to send their data. And this is how all nodes gets opportunity to send or receive the data. Just watch this example. The token is circulated throughout this network. It means whoever is holding this token, it's their turn to send the data. And this is what exactly a ring topology is. According to the advantages of ring topology, it has better performance than bus topology because it is in a closed look. But the problem is, if this link is a weak link, this ring topology causes some bottleneck in the network because of this weak link. At the same time, all nodes are having equal access, which is considered to be one of the advantages of ring topology. And coming to the disadvantages of ring topology, I have already mentioned it is unidirectional. Today if this node wants to send some data to this node, it is very easy to send this way. But ring topology is a unidirectional communication pattern. It has to send the data by crossing these many nodes and finally reach the destination. And one of the disadvantages is being unidirectional. At the same time, a single point of failure said this link is failed. So the entire network is disrupted because of this. A node failure or a link failure will definitely affect the entire network. And this is what the primary disadvantage of a ring topology. If there is very high load in the network, then the performance of the network is getting degraded. If this is going to send some confidential data to this computer, but again, this has to cross so many intermediary nodes in order to reach the destination. And obviously, there is no security in this ring topology. Now we will see the third topology, the star topology. In this case, every node is connected to each other, but not directly, but with the help of a central node. This central node can be a hub or a switch. We will deal elaborately about hub and switch in the upcoming lectures. For time being, you just make a node of this hub or a switch as a central device or a central node. And this is going to do the entire centralized administration. And all traffic must pass through the hub or a switch. Suppose, if this node wants to send some data to this node, so obviously, this is going to send the data to the central node, which is the hub or the switch here. And it is the responsibility of this hub or switch to forward the data to this node. That is the destination. If you observe keenly, in the previous cases, there were chances for other nodes to receive a copy of the data. But here, if this node wants to send some data to this node, and this is going to be the path of this communication, and there is no way for others to hear this communication or see this communication. But there are some differences between hub and switch, which will be dealt elaborately in the next lecture. Coming to the advantages and disadvantages of start topology, it is definitely very easy to design and implement. At the same time, we have a centralized administrator here. This is the hub or a switch. If this switch has 24 ports, for example, you can connect 24 computers to this switch. If you find that 24 computers are not sufficient, you have 50 more computers, you bring another switch and connect all the computers to that switch and again make a communication between this switch and this switch. So that this network becomes a scalable network. So start topology is easy to design and implement. And there is a centralized administration. And it is a scalable network. And start topology has a serious disadvantage too. A failure in this central node will affect the entire network. If this node, that is the switch or the hub is failed, no communication can take place. At the same time, if this node is overloaded with lot of traffic and lot of processing, then the communication or the performance is affected. That is what we call a sub-bottling. You have to spend some money for purchasing this hub or a switch. So obviously, it is going to increase the cost. So there are some disadvantages. A single point failure is going to affect the whole network and there can be bottlenecks due to a overloaded hub or switch. At the same time, you have to spend more for purchasing this hub or a switch. We can also have a variation of a start topology like this. This is one start topology. Another start topology, you can connect these two start topologies with a help of a repeater. We will see about repeaters in the next lecture. Now the point to note is that two or more start topologies can be connected with each other like this. And the last topology of the session is the mesh topology. If you observe, there are five nodes. If you observe, this node is having a link to all other nodes. Likewise, this node is having link to all other nodes. So if you observe keenly, this is the topology where each node is directly connected to every other nodes in the network. And thereby, it provides 100% fall tolerant and reliability. Suppose, if there is a link failure encountered here, and this computer has another way to reach the destination. If this link is failed, this computer has so many ways to reach the destination. This is one way, this is another way, and this is another way, and this is another way. There are so many ways for a node to reach the destination. We will see the advantages and disadvantages now. The advantages of mesh topology are, it is fall tolerant. It means, a failure is not going to affect the network. At the same time, you can rely upon this network because somehow your data will definitely reach the destination, even if there are link failures. And coming to the disadvantages, if this is going to send a broadcast message, broadcasting means one sender all receivers. This broadcast will be forwarded to everyone in the network. Again, this guy is going to do a broadcast to everyone in the network. The same broadcast which is sent by this computer, and it will also be received by other computers, and those computers are going to forward the same broadcast to the sender. There are some issues with the broadcasting. Since mesh topology involves a lot of links, so it is obviously an expensive one. At the same time, for smaller networks, this mesh topology will work fine. And it is really impractical if your network involves 1000 or 2000 computers or more than that, these are all the disadvantages of a mesh topology. Now there is a question for you, but this question need not to be answered in a very detailed manner. Just the name of the topology is sufficient. What is the topology shown in the scenario? If you observe, there is a bus topology, there is a star topology, and mesh topology as well, and all network are connected to each other. Can we give any single name for this topology? Yes, we can give. And this is an example for a hybrid topology, where this topology can be with one or more different topologies. And that is it guys. We are at the end of the session. I hope now you have understood what is bus topology, star, ring, mesh and hybrid. We also have dealt elaborately about the advantages and disadvantages of each topology. I hope this session is informative, and thank you guys for watching.
+
+============================================================
+SLIDE CONTENTS (OCR Text + Diagrams)
+============================================================
+
+--- slide0_fused ---
+Slide Content:
+COMPUTER NETWORKS
+
+A Bottom up approach (3
+
+Network Topology - Part 1
+
+Diagram Description:
+a black and white image of a molecule a black background with white squares and red circles an image of a black background with white and green lines a black hole in the center of a circle a circle with a red dot in the middle a diagram of a circle with arrows pointing in different directions a diagram of a network with several different connections a black background with white squares and squares on it a diagram of a network with several different connections an image of a computer screen with a green light on it an image of a computer screen with a diagram on it a diagram of a network with several different connections the ins academy logo a black and white image of a molecule
+
+--- slide10_fused ---
+Slide Content:
+STAR TOPOLOGY
+
+% Every node is connected to a central node called a hub or switch.
+
+%* CentralizedManagement.
+* Alltroffic must pass through the hub or switch.
+
+x
+{
+
+Diagram Description:
+a diagram of a network with several different connections
+
+--- slide11_fused ---
+Slide Content:
+STAR TOPOLOGY
+
+Advantages Disodvantages
+
+Easy to design and implement. Single point of failure affects the whole
+network.
+
+Centralized administration. Bottlenecks due to overloaded
+switeh/Hub.
+
+Sealoble. Increased cost due to switch/hub.
+
+ss
+2
+
+Diagram Description:
+a black background with white squares and squares on it
+
+--- slide12_fused ---
+Slide Content:
+ExTeNbep STAR TOPOLOGY
+
+Diagram Description:
+a diagram of a network with several different connections
+
+--- slide13_fused ---
+Slide Content:
+MESH TOPOLOGY
+%* Each node is directly connected to every other nodes in the network.
+
+* Fault tolerant and reliable.
+
+Diagram Description:
+an image of a computer screen with a green light on it
+
+--- slide14_fused ---
+Slide Content:
+MESH TOPOLOGY
+
+Advantages Disadvantages
+
+Fault tolerant. issues with broadcasting messages.
+.
+Reliable. Expensive ond impractical for large
+networks.
+
+Diagram Description:
+an image of a computer screen with a diagram on it
+
+--- slide15_fused ---
+Slide Content:
+Find THE TOPOLOGY??
+
+Diagram Description:
+a diagram of a network with several different connections
+
+--- slide16_fused ---
+Slide Content:
+OUTCOMES
+Upon the completion of this session, the learner will be able to
+
+Understand various network topologies like bus, star, ring, mesh,
+hybrid.
+
+% Understand the advantages and and disadvantages of each topology.
+
+Diagram Description:
+
+--- slide17_fused ---
+Slide Content:
+THANK YOU! |
+
+Diagram Description:
+
+--- slide18_fused ---
+Slide Content:
+4\NNESO
+
+Wp ACADEMY
+f y
+
+Diagram Description:
+the ins academy logo
+
+--- slide1_fused ---
+Slide Content:
+Outcomes
+Upon the completion of this segsion, the learner will be able to
+
+Understand various network topologies such as bus, star, ring, mesh
+
+cand hybrid.
+
+% Understand the advantages and and disadvantages of each topology.
+
+Diagram Description:
+
+--- slide2_fused ---
+Slide Content:
+Network TOPOLOGY
+
+Arrangement of nodes of a computer network.
+
+Topology = Layout.
+
+Diagram Description:
+
+--- slide3_fused ---
+Slide Content:
+PHYSICAL TOPOLOGY AND LOGICAL TOPOLOGY
+
+Physical Topolagy ~ Placement of various nodes.
+
+Logical topology - Deals with the data flow in the network.
+
+Diagram Description:
+
+--- slide4_fused ---
+Slide Content:
+NETWORK TOPOLOGY
+
+*
+
+Bus
+Ring
+Star
+Mesh
+
+Hybrid
+
+Diagram Description:
+
+--- slide5_fused ---
+Slide Content:
+Bus TOPOLOGY
+
+*
+
+All data transmitted between nodes in the network is transmitted aver this
+common transmission medium and is able to be received by all nodes in the
+network simuttaneously.
+
+Asignal containing the address of the intended receiving machine travels from
+@ source machine in both directions to all machines connected to the bus until
+it finds the intended recipient.
+
+Terminator Terminator
+
+Diagram Description:
+a black background with white squares and red circles
+
+--- slide6_fused ---
+Slide Content:
+Bus TOPOLOGY
+
+Advantages Disadvantages
+Only one wire - Less expensive. Not fault toleront (No redundancy).
+Suited for temporary network. Limited cable length.
+
+Node failures does not affect others. Nosecurity.
+
+Terminator Terminator
+
+Diagram Description:
+an image of a black background with white and green lines
+
+--- slide7_fused ---
+Slide Content:
+RING TOPOLOGY
+
+Aring topology is a bus topology in a closed loop.
+
+Peer-to-Peer LAN topology.
+
+Two connections: one to each of its nearest neighbors.
+‘Unidirectional.
+
+Sending and receiving data takes place with the help of a TOKEN.
+
+Ce ae
+
+Diagram Description:
+a black hole in the center of a circle
+
+--- slide8_fused ---
+Slide Content:
+RING TOPOLOGY
+
+Diagram Description:
+a circle with a red dot in the middle
+
+--- slide9_fused ---
+Slide Content:
+RING TOPOLOGY
+
+Advantages Disadvantages
+Performance better than Bus Unidirectional. Single point of failure
+topology. will affect the whate network.
+
+Can cause bottleneck due to weak —_f infoad ~ | in performance.
+links.
+
+All nodes with equal access. No security.
+
+Diagram Description:
+a diagram of a circle with arrows pointing in different directions

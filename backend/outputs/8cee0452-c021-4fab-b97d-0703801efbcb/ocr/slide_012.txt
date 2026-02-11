@@ -1,0 +1,20 @@
+* Destroy or Delete
+
+* Merging : Combining two list into a single list
+* Merging Bing ning gen
+
+* Sorting * Sorting :Arranging the elements in some type of order
+
+* Searching ¢ Deletion: Removing an elements from the list
+
+* Insertion: Adding a new element to the list
+
+* Selection record with a given key
+
++ Insertion * Search : Finding the location of the element with a given value or the
+
+* Traversal * Traversal : Processing each element in the list
+
+The most commonly used operation on data structure are broadly categorized into following types:
+
+Operations on Data Structure

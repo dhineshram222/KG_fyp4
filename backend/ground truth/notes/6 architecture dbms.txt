@@ -1,0 +1,38 @@
+I. DBMS Architecture
+
+DBMS architecture focuses on the design, development, and implementation of software and resources within different organizations. It defines how users interact with the database and how data is processed and stored.
+• 1-Tier Architecture: The simplest form where the user directly sits on the DBMS; the database is available on the local system for the user to interact with.
+• 2-Tier Architecture: A client-server structure where an application on the client side interacts with the database on the server side. This is often used for quick response applications and requires a direct connection between the application and the database.
+
+II. 3-Tier Architecture (Predominant Model)
+
+The 3-tier architecture is the standard for distributed systems and remote access, such as online banking. It consists of three logically and physically separated layers:
+1. Presentation Tier (Front-end / Client Tier)
+• Role: This is the topmost tier where the user interacts with the system.
+• Function: It collects and displays information through a Graphical User Interface (GUI) or web interface.
+• Devices: Accessed via PCs, tablets, or mobile devices.
+• Technologies: Built using HTML, CSS, and JavaScript.
+2. Application Tier (Middleware / Business Logic Tier)
+• Role: Known as the "heart of the application," this layer acts as an intermediary between the user and the data.
+• Function: It implements the business logic, rules, and transaction processing. For example, in a bank transfer, this tier processes the logic of moving funds.
+• Communication: It interacts with the data tier using API calls (Application Programming Interface).
+• Technologies: Developed using languages like Python, Java, PHP, and Ruby.
+3. Data Tier (Back-end / Database Server)
+• Role: The bottom-most tier where the actual data is managed and physically stored.
+• Function: It handles the management of the database via the DBMS.
+• Constraint: In a 3-tier system, this tier never interacts directly with the client; it only communicates with the application tier.
+• Technologies: Includes RDBMS (e.g., MySQL, Oracle, MS SQL Server) and NoSQL/DBMS tools (e.g., MongoDB, Cassandra).
+
+III. Advantages of 3-Tier Architecture
+
+• Independent Infrastructure: Each tier runs on its own infrastructure, allowing them to be developed simultaneously.
+• Scalability & Maintenance: Tiers can be scaled and updated individually without affecting the entire system.
+• Enhanced Security: The separation of the database from the client-facing layer provides a more secure environment.
+• Data Independence: It supports program independence, meaning changes in the database do not necessarily require changes in the user interface.
+
+IV. Conceptual Mapping of Levels
+
+The sources also align these tiers with specific levels of data abstraction:
+1. External/View Level: Corresponds to the Presentation Tier (how users see data).
+2. Conceptual Level: Corresponds to the Application Tier (defining business rules).
+3. Internal Level: Corresponds to the Data Tier (how data is physically stored).

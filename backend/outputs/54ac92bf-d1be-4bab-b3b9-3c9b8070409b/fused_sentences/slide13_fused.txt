@@ -1,0 +1,34 @@
+Slide Content:
+Lexical Analyzer:
+ee.
+
+Recognizes tokens using
+Regexs
+
+Eg, Regex for identifier
+Wed] Cled}?
+Tsletter
+
+d:digit
+—tunderseore
+
+Lexemes
+
+Tokens
+
+dentifier
+
+operator
+
+identifier
+
+‘operator
+
+identifier
+
+operotor
+
+identifier
+
+Diagram Description:
+a blackboard with the words x and b on it

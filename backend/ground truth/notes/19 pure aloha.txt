@@ -1,0 +1,38 @@
+Aloha Protocol Overview
+
+• Definition: Aloha is a type of Random Access protocol within the OSI model, originally designed for wireless local area networks (WLAN) but also applicable to shared wired mediums.
+• Fundamental Principle: It allows multiple devices to share a single communication channel to transmit data frames.
+• General Categories: There are two primary types of Aloha: Pure Aloha and Slotted Aloha.
+
+1. Pure Aloha
+
+• Transmission Mechanism: Stations are permitted to transmit data at any time they have a frame ready.
+• Collision Characteristics:
+    ◦ A collision occurs if two or more stations transmit frames simultaneously over the shared medium.
+    ◦ Data is highly sensitive; if the first bit of a new frame overlaps with even the last bit of a frame that is almost finished, both frames are totally destroyed and rendered unusable.
+    ◦ Collided frames are considered "garbled" and must be retransmitted.
+• Recovery Strategy (Back-off Time):
+    ◦ After transmitting, a station waits for an acknowledgment (ACK) from the receiver.
+    ◦ If no ACK is received within a specific time, the station assumes a collision occurred.
+    ◦ To prevent immediate repeated collisions, the station waits for a random amount of time, known as back-off time, before attempting to resend the data.
+• Technical Metrics:
+    ◦ Vulnerable Time: This is calculated as two times the frame transmission time (2×T fr ) because the channel must be clear during the current transmission and the preceding interval to avoid overlap.
+    ◦ Maximum Efficiency: The maximum throughput is approximately 18% (specifically 0.184), which occurs when the number of stations wishing to transmit (G) is 0.5.
+
+2. Slotted Aloha
+
+• Innovation: Slotted Aloha was introduced by Robert in 1972 as an advanced version of Pure Aloha to improve communication efficiency.
+• Transmission Mechanism:
+    ◦ The shared medium's time is divided into discrete, synchronized time slots.
+    ◦ Stations are restricted to transmitting data only at the beginning of each time slot.
+• Impact on Performance:
+    ◦ By forcing synchronization, the probability of frames overlapping is reduced, though collisions can still occur if two stations start at the beginning of the same slot.
+    ◦ This protocol is globally synchronized, unlike Pure Aloha which is not.
+• Maximum Efficiency: Due to the reduction in collisions, the maximum efficiency increases to 37%.
+
+Key Comparisons
+
+• Origin: Pure Aloha was developed at the University of Hawaii in 1972, while Slotted Aloha was introduced later that same year.
+• Synchronization: Pure Aloha allows transmission at any time and lacks synchronization; Slotted Aloha requires all stations to be globally synchronized to specific time intervals.
+• Reliability: The probability of successful transmission is significantly higher in Slotted Aloha compared to Pure Aloha.
+• Collision Frequency: Pure Aloha experiences a higher number of collisions because there are no restrictions on when a station can start sending data.

@@ -1,0 +1,412 @@
+[
+  {
+    "source": "N1",
+    "target": "N2",
+    "relation": "contains"
+  },
+  {
+    "source": "N2",
+    "target": "N3",
+    "relation": "is a topic in"
+  },
+  {
+    "source": "N2",
+    "target": "N4",
+    "relation": "is a topic in"
+  },
+  {
+    "source": "N3",
+    "target": "N5",
+    "relation": "is an"
+  },
+  {
+    "source": "N3",
+    "target": "N6",
+    "relation": "contains"
+  },
+  {
+    "source": "N3",
+    "target": "N7",
+    "relation": "is a"
+  },
+  {
+    "source": "N7",
+    "target": "N8",
+    "relation": "follows order"
+  },
+  {
+    "source": "N7",
+    "target": "N9",
+    "relation": "follows order"
+  },
+  {
+    "source": "N8",
+    "target": "N9",
+    "relation": "is same as"
+  },
+  {
+    "source": "N3",
+    "target": "N10",
+    "relation": "elements managed at"
+  },
+  {
+    "source": "N3",
+    "target": "N11",
+    "relation": "can be implemented using"
+  },
+  {
+    "source": "N3",
+    "target": "N12",
+    "relation": "has property"
+  },
+  {
+    "source": "N3",
+    "target": "N13",
+    "relation": "has"
+  },
+  {
+    "source": "N3",
+    "target": "N14",
+    "relation": "has a"
+  },
+  {
+    "source": "N14",
+    "target": "N15",
+    "relation": "involves"
+  },
+  {
+    "source": "N14",
+    "target": "N16",
+    "relation": "involves"
+  },
+  {
+    "source": "N3",
+    "target": "N17",
+    "relation": "has"
+  },
+  {
+    "source": "N17",
+    "target": "N18",
+    "relation": "is a type of"
+  },
+  {
+    "source": "N17",
+    "target": "N19",
+    "relation": "is a type of"
+  },
+  {
+    "source": "N18",
+    "target": "N26",
+    "relation": "used by compiler for"
+  },
+  {
+    "source": "N19",
+    "target": "N26",
+    "relation": "can be used in"
+  },
+  {
+    "source": "N3",
+    "target": "N20",
+    "relation": "has"
+  },
+  {
+    "source": "N20",
+    "target": "N15",
+    "relation": "includes"
+  },
+  {
+    "source": "N20",
+    "target": "N16",
+    "relation": "includes"
+  },
+  {
+    "source": "N20",
+    "target": "N21",
+    "relation": "includes"
+  },
+  {
+    "source": "N20",
+    "target": "N22",
+    "relation": "includes"
+  },
+  {
+    "source": "N20",
+    "target": "N23",
+    "relation": "includes"
+  },
+  {
+    "source": "N3",
+    "target": "N24",
+    "relation": "has"
+  },
+  {
+    "source": "N3",
+    "target": "N25",
+    "relation": "is subject of"
+  },
+  {
+    "source": "N25",
+    "target": "N3",
+    "relation": "asks about"
+  },
+  {
+    "source": "N25",
+    "target": "N11",
+    "relation": "asks about"
+  },
+  {
+    "source": "N25",
+    "target": "N17",
+    "relation": "asks about"
+  },
+  {
+    "source": "N25",
+    "target": "N26",
+    "relation": "asks about"
+  },
+  {
+    "source": "N25",
+    "target": "N24",
+    "relation": "asks about"
+  },
+  {
+    "source": "N28",
+    "target": "N27",
+    "relation": "introduces chapter on"
+  },
+  {
+    "source": "N28",
+    "target": "N29",
+    "relation": "has"
+  },
+  {
+    "source": "N29",
+    "target": "N30",
+    "relation": "covers"
+  },
+  {
+    "source": "N29",
+    "target": "N31",
+    "relation": "covers"
+  },
+  {
+    "source": "N29",
+    "target": "N32",
+    "relation": "covers"
+  },
+  {
+    "source": "N29",
+    "target": "N33",
+    "relation": "covers"
+  },
+  {
+    "source": "N32",
+    "target": "N5",
+    "relation": "is"
+  },
+  {
+    "source": "N33",
+    "target": "N34",
+    "relation": "include"
+  },
+  {
+    "source": "N33",
+    "target": "N35",
+    "relation": "include"
+  },
+  {
+    "source": "N27",
+    "target": "N30",
+    "relation": "explains"
+  },
+  {
+    "source": "N30",
+    "target": "N7",
+    "relation": "describes stack as a"
+  },
+  {
+    "source": "N30",
+    "target": "N36",
+    "relation": "involves"
+  },
+  {
+    "source": "N30",
+    "target": "N37",
+    "relation": "involves"
+  },
+  {
+    "source": "N36",
+    "target": "N10",
+    "relation": "allowed only at"
+  },
+  {
+    "source": "N37",
+    "target": "N10",
+    "relation": "allowed only at"
+  },
+  {
+    "source": "N7",
+    "target": "N38",
+    "relation": "like"
+  },
+  {
+    "source": "N7",
+    "target": "N39",
+    "relation": "like"
+  },
+  {
+    "source": "N31",
+    "target": "N40",
+    "relation": "includes"
+  },
+  {
+    "source": "N31",
+    "target": "N41",
+    "relation": "includes"
+  },
+  {
+    "source": "N40",
+    "target": "N42",
+    "relation": "involves"
+  },
+  {
+    "source": "N40",
+    "target": "N43",
+    "relation": "involves"
+  },
+  {
+    "source": "N41",
+    "target": "N42",
+    "relation": "involves"
+  },
+  {
+    "source": "N41",
+    "target": "N43",
+    "relation": "involves"
+  },
+  {
+    "source": "N27",
+    "target": "N44",
+    "relation": "can be imagined with"
+  },
+  {
+    "source": "N44",
+    "target": "N45",
+    "relation": "is"
+  },
+  {
+    "source": "N44",
+    "target": "N46",
+    "relation": "is"
+  },
+  {
+    "source": "N44",
+    "target": "N47",
+    "relation": "allows"
+  },
+  {
+    "source": "N32",
+    "target": "N48",
+    "relation": "focuses on"
+  },
+  {
+    "source": "N32",
+    "target": "N49",
+    "relation": "disregards"
+  },
+  {
+    "source": "N34",
+    "target": "N15",
+    "relation": "include"
+  },
+  {
+    "source": "N34",
+    "target": "N16",
+    "relation": "include"
+  },
+  {
+    "source": "N15",
+    "target": "N36",
+    "relation": "performs"
+  },
+  {
+    "source": "N16",
+    "target": "N37",
+    "relation": "performs"
+  },
+  {
+    "source": "N35",
+    "target": "N50",
+    "relation": "include"
+  },
+  {
+    "source": "N35",
+    "target": "N51",
+    "relation": "include"
+  },
+  {
+    "source": "N35",
+    "target": "N23",
+    "relation": "include"
+  },
+  {
+    "source": "N35",
+    "target": "N22",
+    "relation": "include"
+  },
+  {
+    "source": "N50",
+    "target": "N10",
+    "relation": "returns element at"
+  },
+  {
+    "source": "N52",
+    "target": "N53",
+    "relation": "includes"
+  },
+  {
+    "source": "N52",
+    "target": "N54",
+    "relation": "includes"
+  },
+  {
+    "source": "N52",
+    "target": "N55",
+    "relation": "includes"
+  },
+  {
+    "source": "N52",
+    "target": "N56",
+    "relation": "includes"
+  },
+  {
+    "source": "N52",
+    "target": "N57",
+    "relation": "includes"
+  },
+  {
+    "source": "N53",
+    "target": "N15",
+    "relation": "is an instance of"
+  },
+  {
+    "source": "N54",
+    "target": "N15",
+    "relation": "is an instance of"
+  },
+  {
+    "source": "N55",
+    "target": "N15",
+    "relation": "is an instance of"
+  },
+  {
+    "source": "N56",
+    "target": "N16",
+    "relation": "is an instance of"
+  },
+  {
+    "source": "N57",
+    "target": "N22",
+    "relation": "is an instance of"
+  }
+]

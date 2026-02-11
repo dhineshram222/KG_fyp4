@@ -1,0 +1,197 @@
+[
+  {
+    "source": "N7",
+    "target": "N1",
+    "relation": "implements the concept of"
+  },
+  {
+    "source": "N7",
+    "target": "N2",
+    "relation": "aims to achieve"
+  },
+  {
+    "source": "N1",
+    "target": "N3",
+    "relation": "is structured into"
+  },
+  {
+    "source": "N3",
+    "target": "N4",
+    "relation": "includes"
+  },
+  {
+    "source": "N3",
+    "target": "N5",
+    "relation": "includes"
+  },
+  {
+    "source": "N3",
+    "target": "N6",
+    "relation": "includes"
+  },
+  {
+    "source": "N4",
+    "target": "N8",
+    "relation": "is completely handled by"
+  },
+  {
+    "source": "N5",
+    "target": "N8",
+    "relation": "is handled by"
+  },
+  {
+    "source": "N6",
+    "target": "N9",
+    "relation": "is directly interacted with by"
+  },
+  {
+    "source": "N9",
+    "target": "N4",
+    "relation": "should not directly interact with (concept of N2)"
+  },
+  {
+    "source": "N3",
+    "target": "N2",
+    "relation": "are used to achieve"
+  },
+  {
+    "source": "N10",
+    "target": "N11",
+    "relation": "provides background for"
+  },
+  {
+    "source": "N11",
+    "target": "N12",
+    "relation": "involves"
+  },
+  {
+    "source": "N12",
+    "target": "N1",
+    "relation": "addressed by"
+  },
+  {
+    "source": "N1",
+    "target": "N13",
+    "relation": "supports"
+  },
+  {
+    "source": "N13",
+    "target": "N14",
+    "relation": "requires"
+  },
+  {
+    "source": "N1",
+    "target": "N15",
+    "relation": "is"
+  },
+  {
+    "source": "N15",
+    "target": "N16",
+    "relation": "provides"
+  },
+  {
+    "source": "N1",
+    "target": "N17",
+    "relation": "achieved through"
+  },
+  {
+    "source": "N17",
+    "target": "N18",
+    "relation": "includes"
+  },
+  {
+    "source": "N17",
+    "target": "N19",
+    "relation": "includes"
+  },
+  {
+    "source": "N17",
+    "target": "N20",
+    "relation": "includes"
+  },
+  {
+    "source": "N18",
+    "target": "N21",
+    "relation": "deals with"
+  },
+  {
+    "source": "N18",
+    "target": "N22",
+    "relation": "uses"
+  },
+  {
+    "source": "N19",
+    "target": "N23",
+    "relation": "deals with"
+  },
+  {
+    "source": "N19",
+    "target": "N24",
+    "relation": "deals with"
+  },
+  {
+    "source": "N19",
+    "target": "N25",
+    "relation": "uses"
+  },
+  {
+    "source": "N19",
+    "target": "N26",
+    "relation": "supports"
+  },
+  {
+    "source": "N26",
+    "target": "N18",
+    "relation": "provides independence from"
+  },
+  {
+    "source": "N26",
+    "target": "N27",
+    "relation": "relates to changes in"
+  },
+  {
+    "source": "N8",
+    "target": "N19",
+    "relation": "responsible for logic at"
+  },
+  {
+    "source": "N20",
+    "target": "N28",
+    "relation": "enables"
+  },
+  {
+    "source": "N28",
+    "target": "N29",
+    "relation": "via"
+  },
+  {
+    "source": "N20",
+    "target": "N15",
+    "relation": "achieves"
+  },
+  {
+    "source": "N20",
+    "target": "N30",
+    "relation": "achieves"
+  },
+  {
+    "source": "N20",
+    "target": "N12",
+    "relation": "contains"
+  },
+  {
+    "source": "N19",
+    "target": "N20",
+    "relation": "interacts with"
+  },
+  {
+    "source": "N18",
+    "target": "N19",
+    "relation": "underpins"
+  },
+  {
+    "source": "N19",
+    "target": "N31",
+    "relation": "is also known as"
+  }
+]

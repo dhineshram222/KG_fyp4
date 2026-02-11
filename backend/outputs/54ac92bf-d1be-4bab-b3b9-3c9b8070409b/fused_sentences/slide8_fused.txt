@@ -1,0 +1,16 @@
+Slide Content:
+Ant main()
+{
+
+Ant x,an2,
+x= abe}
+print#("The value of x 4s X4",x};
+
+ed, 0055
+
+return @;
+
+Pure HLL
+
+Diagram Description:
+a blackboard with white writing on it

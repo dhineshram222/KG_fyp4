@@ -1,0 +1,368 @@
+============================================================
+FULL VIDEO TRANSCRIPT
+============================================================
+
+Good evening everyone, this is Rishwali. Previously we discussed about important points in system programming or compiler designing. I have mentioned complete playlist in below description box. Now in today's session we will discuss about the next important point that is phases of compiler with examples. So let's start the session. In this channel you will get a complete point wise easy explanation, practical demo and question bank of following subjects. Please like and share this video with your friends and subscribe the channel. So you will get the notification regarding my new upcoming videos. Now the first point is what exactly compiler? See, compiler is worked like a translator. They convert high level programming language into the machine language. What exactly high level programming language? High level programming language which is written by the developer or user. For example, C, C++, Java or any other programming language generally is in English language. Right? So, processor understood the machine language. That's why compiler convert high level programming language into the machine language. Machine language means binary language generally is in 0101 format. That's why compiler work here. The another work of compiler is compiler analyze your complete source program plus compile it. And if there are any errors how present it return all the errors to the users. See here in this particular image this is a source code. For example, C++ programming code. Now compiler convert the source code into the target code. Target code means machine code or binary language clear. Next. Now, the next important point is phases of compiler. As an exam point of view this is one of the most important question. In your exam they will ask explain phases of compiler at the time you need to draw this diagram and explain all the phases with examples. Now see here in this particular diagram there is a source program. This source program converted into the target program or machine language. By using this total six compiler phases. Lexical analyzer, synthax analyzer, semantic analyzer, intermediate code generator, code optimizer and code generator. And whatever the information have generated this information have stored into the symbol table. And whatever the errors have generated these errors are handled by the error handler. Clear? Now we will discuss all these phases with examples. Now the first phase of compiler is lexical analysis. Lexical analysis take your source code, your programming code as a input. Now the work of lexical analysis is to read your complete source program character by character from left to right and convert this source code into the meaningful leg sense. Now what exactly leg sense? Legzim means some collections of tokens. For example, see here. Lex in your source code in your program this line have mentioned like sum is equal to count plus rate into 50. So the work of lexical analysis identify the tokens. For example, sum is identifier means variable. Identifier means variable. Now equal to its assignment operator count again identifier plus means addition operator. Rate is again identifier or variable. It means multiplication operator and 50 means number or constant. So this is a work of lexical analysis. They identify operators, identifiers, constant numbers in your source program and make them group in particular group. Right? So this is a work of lexical analysis. Now all these tokens or lexim have sent to the next phase that is syntax analyzer. Next. Now the second phase of compiler is syntax analysis. Syntax analysis take tokens as the input from the first lexical analysis phase. This syntax analysis phase also called as parsing. Why? See here. This syntax analysis phase check the syntax in your program. For example, in your coding language, there are a while loop syntax for loop syntax, and switch case syntax. So there are lots of syntax as per the programming language. So the work of syntax analysis phases to identify the syntax in your program, which is correct or not as per the programming language. Clear? And if there are any errors or present or if there are any wrong syntax is there. So it reports the errors to the user. Clear? Now let's take the example. So syntax analysis phase generate a parse tree like in this way. So as per the parse tree, the check syntax errors is present or not. For example, this is our previous example saying same example we will take an incomplete phases. Now the example is sum is equal to count plus rate into 50. So here we will consider that sum is the identifier one that is variable one. So it consider that id1 equal to id2 plus id3 into id4. So here 50 we consider that id4 or we consider that constant. Now here we consider that id4. Now as per the particular tokens or legzins, it generated a parse tree. See here, this is a parse tree. Now read this parse tree from bottom to up direction. See here. So id3 into id4. See here, id3 into id4 after that plus id2. See here plus id2. So after calculating this equation that is equal to id1. So equal to id1, right? Means every operator has present perfectly. That's where there is no syntax error is present, right? This is about operator syntax error. Clear? So this is the work of syntax analysis. As per the parse tree, they check the syntax whether it is expected format or not. Clear? Next. Now the third phase of the compiler is semantic analysis. Semantic analysis takes syntax 3 and symbol table as an input. Syntax tree means in previous phase we generate a syntax tree as per the particular source program and symbol table. Symbol table means whatever the legzins, whatever the tokens have generated, this all information have stored into the symbol table. Right? How many operators, how many variables and how many functions having in your program? This all information have stored into the symbol table. So semantic analysis, the semantic name represent a meaning. The meaning of each and every line in your program. For example, see here. Semantic analyzer check identifiers, their types and their expressions. For example, you should mention a proper data types like integers string. So they check proper data type present in your particular programming code or not. If there are undeclared variable, for example, you should use a is equal to 10, but you can't declare integer a in your program. So that is undeclared variable. It check those things, then type casting, improper arguments and operators in between data types. For example, you need to perform addition, that is a plus b and you can't mention plus operator is there. So this is also error, right? So semantic analysis check meaning of each and every line. And these are the errors are present, these types of errors, then they report these errors to the user. Let's take this example. For example, this is sum is equal to count plus rate into 50 and this is a past tree. Now here 50, for example, we take some count and rate, this variable value in float type, right? Now at the time this 50 is converted into the integer to float, this is called as type casting. Another example is this here, in this particular short program, this kind of left shift operator is present here. So this is a unknown operator, there is a no need to present those operator, right? So this is also called as semantic error. It means meaning of each and every line, clear? So you just remember this thing, identifiers, their types, then operators are properly present or not, undeclared variable is their type casting in proper arguments. These are all the examples of semantic analysis, clear? Next. Now the next fourth phase is intermediate code generation. As per our previous discussion, this is your source code and after compiler convert the source code into the target code or machine language. So in between that, intermediate code is present. Intermediate code is called as three address code. See, compiler convert source code into the target code, so it becomes some difficulty. That's why this source code is converted into the intermediate code and it is easy to translate into the target code or machine code. That's why intermediate code generation is necessary. Clear? Now let's see here in this particular example. For example, some is equal to count plus rate into 50. In this particular line, it generated the intermediate code. Intermediate code means see here. This is an intermediate code. Now first, they start from right to left. Code generation always start from right to left. Now here, first is a 50. 50 is constant variable. That is integer to real 50 and this value stored into the temp 1 variable. You can also mention T1, T2, T3 in this way. So this is the temp 1 variable. Now 50 stored into the temp 1. Now next, 50 into rate. So 50 stored into the temp 1, temp 1 into rate is called ID3. So temp 1 into ID3 that will be stored into the temp 2. So whatever the rate into 50, this answer have stored into the temp 2. After that, plus count. So temp 2 plus count is called as ID2. So temp 2 plus ID2, this information have stored into the temp 3. Now this all the RHS result have stored into the temp 3 variable and this temp 3 variable have stored the result into the ID1 that is some. Clear? So this is called as intermediate code generation. This intermediate code generation maintain the precedence order of source program. Means for example, in your source program, there are total 10 lines of code. So it execute the code one by one properly. Like, so that's why it maintain the precedence order. And next thing is it hold the correct number of operands of the instruction. Means in your program, correct number of order is there or correct number of operators are used there. This all things have check in intermediate code generation. And this intermediate code are easy to translate in machine language or in target code. Clear? Next. Now, the next phase is code optimization. In my previous video, we already discussed code optimization and code generation in detail in separate video. I have mentioned the link of those video in below description box. Now here, what exactly code optimization? So optimize. Optimize means to optimize the lines in your program. Okay? Optimize lines. Suppose in your program having total 10 lines, but you should mention the optimize those lines. Means less memory space and less time is required to execute the program. This is called as optimization. Clear? If your program required less time for execution, so there are time complexity is low. Okay? So run faster execution and take less memory space for this purpose, you need to use code optimization. So this is optional phase. They optimize the intermediate code, not your source code, right? Now just see here in this particular example. This is your intermediate code as per the phase 4. Okay? Now you need to optimize those codes. Optimize code means see here. In this code, you first mention 50 that stored into the temp1 variable after that you have mentioned here ID3 into temp1. Now you can directly mention here ID3 into temp1. Temp1 means 50. ID3 into 50 and that will be stored into the temp1 variable. And after that, temp1 plus ID2 that will be directly stored into the ID1. You only need to require temp3 variable, right? So this is the optimized code. The meaning of this code and this code is same. You just remove unnecessary lines of code and unused variables. Clear? So this is called as optimized code. That will be necessary for faster execution and less memory space. Next. The next last phase of the compiler is code generation. So this is the last phase. Now you check all these syntax error, semantic error. You check any unused data is present. You just optimize your code. These all things have happened in previous phases. Now last phase is code generation. So code generation means see here. The code generation which is handled by the code generator. Okay? Code generator translate your intermediate code into the machine code. Okay? Not your source code into the machine code. Okay? It translate intermediate code into the machine code. And the next work of code generation is a locate proper memory space and registers to your program. See, when you save your program, your program required particular memory, right? So in code generation phase, they allocate the memory as per your program size. They allocate the memory each and every variables that will be stored into the registers. Clear? Now see here in this example. The same example is there. Some is equal to count plus rate into 50. Now this particular line, their intermediate code is converted into this particular generated code. Now see here, this is a low level programming language. You can see this code in assembly language, right? See here, like the first one is a 50, that is ID3. So ID3 that is 50 value. Sorry, ID3 means rate. So this rate value stored into the R2 register, they move into this. After that, this 50 means whatever the information has stored, that is rate into 50. So multiplication R2 into 50, right? The next is ID2 value move into the next R2 register. So move R2 into ID2. Next you need to perform addition. Addition means this all result. Rate into 50 have stored into the R2 and count is stored into the R1. So add R2 and R1. And after that move the final result into the ID1 that is sum. So this is a assembly code or low level programming language code. And now this code is converted into the binary language or machine language, okay? That will be understood by the processor. So in this way, this code generation performing there. Next. Now after converting this code, this all information have stored into the symbol table. There are two again main components, symbol table manager and error handler. So what exactly symbol table? Symbol table is the main data structure of the compiler, okay? Symbol table easily stored all the information into the table or tabular format. It is easy to fetch all the data, okay? See here. For example, in your program you have to mention C is equal to A plus B into 10. So there are some columns like address, symbol, attributes and memory location. So which types of symbol is present? CAB. This is called as variables, identifiers or symbols. So that will be stored into the one column. Then 10 is again stored into there. So here CAB that is ID. ID means identifier. 10 means constant. These are the memory location or address space of every variable, right? So in this way, every detail information have stored there. Now these are the features of symbol table. It store all the constants and string value. It also store function names. You have declared various functions like display, main function in your program. So it store all the function name also. It store variable name constant and it store labels in source language, okay? So this all things have stored into the symbol table. So it is easy to fetch. The compiler having is easy to fetch all those information. Now the last one is error handling routine. So whatever the errors are present in different phases, which is handled by the error handler. Error handler handle those errors and display all the errors to the users. Now users need to solve those error and again compile your program, right? In this way, now there are total these some phases in compiler in lexical analyzer, wrong spelling tokens. This kind of errors have generated synth x analyzer, wrong synth x missing parentheses, missing operators, this kind of errors have generated. Now intermediate code generation. There is also mismatch operands or mismatch operators have generated code optimizer when statement is not reachable. Then code generator when your memory full proper register is not allotted and symbol table. Symbol table means multiple declared identifier means you should use multiple variables. So this all types of errors have generate in the particular compiler phases. So this all are handled by the error handling routine. Like in this kind of errors having their synth x error, runtime error, linker error, logical error, semantic error and user need to solve all the errors and again compile your program, clear? So this is all about phases of compiler. Thank you, keep learning.
+
+============================================================
+SLIDE CONTENTS (OCR Text + Diagrams)
+============================================================
+
+--- slide0_fused ---
+Slide Content:
+comoiter FG
+” 11001
+
+dhanokarvrushali@: gmail.com
+
+M.Tech
+
+with Examples
+t= with Examples
+
+————s a, Ms. Veushali Dhanokar
+
+Phases of Compiler
+
+System Programming / Compiler Design
+
+Diagram Description:
+a red arrow with the word important on it a red and white sign with the words sub like, share, comment a woman with long dark hair and a black blazer a diagram showing the components of a computer a diagram of a computer system a diagram showing the different types of the system a diagram that shows the steps in the process a diagram of a system a whiteboard with a blackboard and an image of a tree a computer screen with a code on it a diagram of a tree with a red dot on it a diagram showing the different types of the internet a diagram showing the number and type of an object an image of a laptop with a document on the screen a screenshot of the game thank you a red arrow with the word important on it
+
+--- slide10_fused ---
+Slide Content:
+It also prefers to store variable names and constants
+
+It stores labels in source languages. Address Symbol Attribute mene
+: . —_ tee
+Example: — 2 . st 1808
+
+atb* 10;
+
+©
+
+It stores labels in source languages.
+
+it helps in storing the function names.
+
++ it stores the literal constants and strings.
+
++ The symbol table connects or interacts with all phases of the compiler and error handler for
+
+updates,
+
++ The symbol table is mainly known as the data structure of the compiler.
++ It makes il very easy lo operate the searching and fetching process.
+
+About Symbol Table
+
+Diagram Description:
+
+--- slide11_fused ---
+Slide Content:
+eee
+
+Is by ¥rushali
+
+5. Code Generator: When the memory is full or proper registers are not allocated
+6. Symbol tables: Exror of multiple declared identifiers
+
+3. Intermediate code generator: Mismatched operands for an operator
+4, Code Optimizer: When the statement is not reachable
+
+Jn the compiler design process error may occur in all the below-given phases:
+Wrongly spelled tokens
+2. Syntax analyzer: Missing parenthesis / Operator
+
+1. Lexical analy,
+
+Error Handling Routine
+
+Diagram Description:
+an image of a laptop with a document on the screen
+
+--- slide12_fused ---
+Slide Content:
+ma BU iheces
+
+LIKE
+COMMENT
+SHARE
+SUBSCRIBE
+
+Thank You...!
+
+Diagram Description:
+a screenshot of the game thank you
+
+--- slide1_fused ---
+Slide Content:
+vrvvw)
+
+Sie bani
+
+ee
+Human Computer Interaction OE=D
+
+Database Management System
+Exam / Interview Preparation Tips
+Project/ Presentation/ Free Certifications Ideas Ox
+
+Link is in Description Box | OT £) O=x=>
+
+Cs & IT Lutorials By Vrushali
+
+¥ Point Wise Easy Explanation
+¥ Practical Demonstrations
+¥ Important Questiuns Bank & MCQ’s for Any Exam
+
+Data Structure & Algorithms
+
+Processor Architecture & Interface
+System Programming / Compiler Design
+Human Computer [ntera
+
+VV
+
+¥ Point Wise Easy Explanation
+¥ Practical Demonstrations
+
+¥ Important Questiuns Bank & MCQ’s for Any Exam
+
+> Data Structure & Algorithms
++ Processor Architecture & Interface
+
+CS & IT Tutorials By Vrushali
+
+¥ Point Wise Easy Explanation
+
+Diagram Description:
+a red and white sign with the words sub like, share, comment a woman with long dark hair and a black blazer
+
+--- slide2_fused ---
+Slide Content:
+a
+
+Source code Target code
+tee. co) {e.g machine code)
+
++ The main purpose of compiler is to change the code written in one language
+without changing the meaning of the program.
+
++ High-level language is written by a developer_and machine language can be
+understood by the pracess
+* Compiler is used to show errors to the programmer.
+
+*A compiler is a translator that converts the high-level language into the
+machine language.
+
+About Compiler
+
+Diagram Description:
+a diagram showing the components of a computer
+
+--- slide3_fused ---
+Slide Content:
+Phases of Compiler
+
+pal tle
+
+Diagram Description:
+a diagram of a computer system
+
+--- slide4_fused ---
+Slide Content:
+Mohiplication Operator serccee
+
+Mullintication Gperater
+
+= * ——
+Sum=count+ rate * 50 assignment Operator
+
+=D con Identifier
+
+Example:
+
+‘TdentiBier
+
+* It reads the source program one character at_a time from Jefi to right and converts it into
+meaningful lexernes.
++ Lexical analyzer represents these lexemes in the form of tokens.
+
+* Lexical analyzer phase is the first phase of compilation process.
++ Ittakes source code as input.
+
+Phase 1! : Lexical Analysis
+
+Diagram Description:
+a diagram showing the different types of the system a diagram that shows the steps in the process
+
+--- slide5_fused ---
+Slide Content:
+Sum = count + rate * 50
+fd = 1d2 + 1d3 * Lad / Const,
+
+Example:
+
++ The parser checks that the expression made by the tokens is syntactically vorrect or not.
+* It check whether tox1 / code follows the expected format as per coding language rules,
++ After that reports all syntax errors.
+
++ Syntax analysis is the second phase of compilation process also called as Parsing.
+
+input and generates a parse tree as output
+
++ Ittakes tokens
+
+Phase 2 ; Syntax Analy
+
+Diagram Description:
+a diagram of a system a whiteboard with a blackboard and an image of a tree
+
+--- slide6_fused ---
+Slide Content:
+% Operators in between data types, Undeclared variable, Type casting, Improper arguments ctc.
+
+Sum = count + rate * 50
+Nal = Id2 + M3 * 144 / Const.
+
+77 Decay reget
+kee
+
+A decoy = C515
+
+BS dame +
+
+an ee
+ke 1.8;
+
+Sum = count + rate * 50 A | ei
+eee - —
+
++ Examples:
+
+* Itchecks whether the parse tree follows the rules of coding language.
++ Semantic analyzer keeps track of identifiers, their types and expressions.
+
+* Semantic analysis is the third phase of compilation process.
++ Ike syntax tree & symbol table as input
+
+Phase 3 : Semantic Analysis
+
+Diagram Description:
+a computer screen with a code on it a diagram of a tree with a red dot on it
+
+--- slide7_fused ---
+Slide Content:
+Sum = count + rate * 50 ‘Temp! = inttoreal(50)
+
+1d = 142 + 193* fd4/ Const, Temp 2= 1d3 * Temp] f ‘emma ‘
+Temp 3 = 1d2 + Temp2 |
+
+IdI = Temp3
+
+=
+
+aN
+TAL w Teme?
+
+wee
+
+aw
+
+stl
+
+Sum
+Ta
+
+count + rate * 50 Temp}
+1d2 + Ld} * Id4 / Const. Temp 2
+
+inttoreal(50)
+
+id3 * Temp] a werent oe _,
+
+* Il gencrate semantic representation of source program.
+
+* Allows you (o maintain precedence ardering of the source program.
++ Itholds the correct number of operantis of the instruction
+
+Examples:
+
+* This intermediate code needs to be generated in such a manner that makes it easy to translate
+it into the target machine code.
+
++ Intermediate code is between the high-level and machine level language.
+
++ It is also called as three address code.
+
+Phase 4 : Intermediate Code Generation
+
+Diagram Description:
+a diagram showing the different types of the internet
+
+--- slide8_fused ---
+Slide Content:
+‘Temp! = inttoreal{50)
+Temp 2~ 143 * Temp!
+Temp 3 = 142+ Temp?
+Id = Temp3
+
+Intermediate Code
+
+‘Temp 1 = [a3 * 50
+Tal= 1d? + Temp!
+
+Optimized Code
+
+_| Optimized Code
+
+Examples:
+
++ It removes the unnecessary lines of the code & unused variable.
++ Do not waste resources like CPU, Memory etc.
+
++ Itis used to enhance / improve the intermediate code.
++ The output of the program could run faster execution and take less memory space.
+
+Phase
+
+: Code Optimization
+
+Diagram Description:
+
+--- slide9_fused ---
+Slide Content:
+MOVE [d3, R2
+MULE #50.0, 82
+MOVE 142, R2
+ADDF R2RL
+MOVE RI, fd
+
+Generated Code
+
+Generated Code
+
+MULF 450.0, R2
+
+Lal = 142 + Jag * a4 / Const MOVE [d2, R2
+
+Sum
+
+unt + rate * 50 MOVE [d3, R2
+MULF 450.0, R2 iggy baad
+
+Examples:
+
++ Code generator translates the intermediate code into the machine code of the specified
+computer.
+
++ It sclect and allocate memory space and registers to program contains,
+
++ Code generation is the final stage of the compilation process,
++ Ittakes the optimized intermediate code as input.
+
+Phase 6 : Code Generation
+
+Diagram Description:
+a diagram showing the number and type of an object

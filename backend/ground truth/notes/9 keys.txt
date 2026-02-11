@@ -1,0 +1,39 @@
+I. Overview and Importance of Keys
+
+• Definition: Keys are attributes or a set of attributes used to uniquely identify a record (also called a tuple or row) within a table.
+• Problem Prevention: Without keys, it is difficult to distinguish between records that share similar data, such as two employees named "John",. Using a key (like an ID number) ensures that operations like updates or deletions affect only the intended record, preventing data inconsistency.
+• Relationships: Keys are also used to establish and identify relationships between different tables in a database.
+
+II. Primary Key Types and Hierarchy
+
+1. Super Key
+• Superset Nature: A Super Key is a collection of attributes that can uniquely identify a tuple; it is considered a "superset" because it includes all possible key combinations in a relation.
+• Extraneous Attributes: Unlike other keys, a Super Key may contain extra (extraneous) attributes that are not strictly necessary for unique identification,. For example, "Student ID + Name" is a Super Key because the ID alone is enough, but the Name is an added extra.
+• Flexibility: It can consist of a single attribute or multiple attributes and may even contain null values depending on the specific attributes included.
+2. Candidate Key
+• Minimalism: A Candidate Key is defined as the minimal Super Key. This means it is a Super Key from which no attribute can be removed without losing its ability to uniquely identify a record.
+• Multiple Candidates: A single table can have multiple candidate keys, such as Roll Number, Passport Number, or Email.
+• Selection Base: All candidate keys are "strong" enough to be a primary key, and the primary key is ultimately chosen from this set.
+3. Primary Key
+• Selection: One specific candidate key is chosen by the Database Administrator (DBA) to be the Primary Key for the table.
+• Mandatory Constraints: A primary key must be unique and cannot contain null values.
+• Permanence: Values in a primary key column should never—or very rarely—be modified once assigned.
+• Quantity: There can be only one primary key per table.
+4. Alternate Key
+• Definition: These are the candidate keys that were not selected to serve as the primary key.
+• Formula: The number of alternate keys is calculated as the Total Number of Candidate Keys - 1 (the Primary Key).
+• Example: If ID, SSN, and Email are candidate keys and ID is chosen as the Primary Key, then SSN and Email become Alternate Keys.
+
+III. Specialized Key Categories
+
+1. Unique Key
+• Purpose: Like a primary key, it ensures all values in a column are distinct.
+• Difference from Primary Key: While a primary key forbids any null values, a Unique Key may accept null values (depending on the database's specific rules).
+2. Composite Key
+• Definition: A key that is comprised of two or more attributes (columns) to uniquely identify a record.
+• Usage: It is used when a single attribute is insufficient to guarantee uniqueness on its own.
+3. Foreign Key
+• Table Linking: Unlike other keys that focus on a single table, a Foreign Key establishes a relationship between two tables.
+• Mechanism: It is a column in a "child" table that refers to the Primary Key of a "parent" (or master) table.
+• Referential Integrity: It ensures that any value entered into the foreign key column must already exist in the primary key column of the parent table, preventing "garbage" data or orphaned records.
+• Uniqueness: Unlike primary keys, a foreign key does not necessarily have to be unique in its own table and can accept null values.

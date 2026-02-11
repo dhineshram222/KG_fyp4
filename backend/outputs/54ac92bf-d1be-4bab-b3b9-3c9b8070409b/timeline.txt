@@ -1,0 +1,41 @@
+Slide Timeline
+========================================
+Slide 000: Start 0.00s - End 7.00s
+Slide 001: Start 7.00s - End 21.00s
+Slide 002: Start 21.00s - End 33.00s
+Slide 003: Start 33.00s - End 40.00s
+Slide 004: Start 40.00s - End 48.00s
+Slide 005: Start 48.00s - End 56.00s
+Slide 006: Start 56.00s - End 76.00s
+Slide 007: Start 76.00s - End 83.00s
+Slide 008: Start 83.00s - End 92.00s
+Slide 009: Start 92.00s - End 116.00s
+Slide 010: Start 116.00s - End 123.00s
+Slide 011: Start 123.00s - End 132.00s
+Slide 012: Start 132.00s - End 142.00s
+Slide 013: Start 142.00s - End 221.00s
+Slide 014: Start 221.00s - End 240.00s
+Slide 015: Start 240.00s - End 271.00s
+Slide 016: Start 271.00s - End 310.00s
+Slide 017: Start 310.00s - End 316.00s
+Slide 018: Start 316.00s - End 335.00s
+Slide 019: Start 335.00s - End 503.00s
+Slide 020: Start 503.00s - End 548.00s
+Slide 021: Start 548.00s - End 560.00s
+Slide 022: Start 560.00s - End 624.00s
+Slide 023: Start 624.00s - End 638.00s
+Slide 024: Start 638.00s - End 673.00s
+Slide 025: Start 673.00s - End 764.00s
+Slide 026: Start 764.00s - End 771.00s
+Slide 027: Start 771.00s - End 795.00s
+Slide 028: Start 795.00s - End 838.00s
+Slide 029: Start 838.00s - End 854.00s
+Slide 030: Start 854.00s - End 1011.00s
+Slide 031: Start 1011.00s - End 1025.00s
+Slide 032: Start 1025.00s - End 1034.00s
+Slide 033: Start 1034.00s - End 1084.00s
+Slide 034: Start 1084.00s - End 1118.00s
+Slide 035: Start 1118.00s - End 1131.00s
+Slide 036: Start 1131.00s - End 1145.00s
+End: 1151.73s
+Total Slides: 37

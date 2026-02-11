@@ -1,0 +1,192 @@
+[
+  {
+    "id": "N1",
+    "label": "Stacks",
+    "description": "A new chapter introduced in the presentation."
+  },
+  {
+    "id": "N2",
+    "label": "Presentation",
+    "description": "Introduces the concepts of stacks."
+  },
+  {
+    "id": "N3",
+    "label": "Outline of Presentation",
+    "description": "The outline of this presentation."
+  },
+  {
+    "id": "N4",
+    "label": "Definition of Stack",
+    "description": "What a stack is all about."
+  },
+  {
+    "id": "N5",
+    "label": "Real Life Examples of Stacks",
+    "description": "Some real life examples of stacks."
+  },
+  {
+    "id": "N6",
+    "label": "Stack as an ADT",
+    "description": "What is a stack as an ADT (Abstract Data Type)."
+  },
+  {
+    "id": "N7",
+    "label": "Abstract Data Type (ADT)",
+    "description": "User's point of view on stack operations without implementation details."
+  },
+  {
+    "id": "N8",
+    "label": "Stack Operations",
+    "description": "Primary and secondary operations supported in case of stack."
+  },
+  {
+    "id": "N9",
+    "label": "Primary Operations",
+    "description": "A category of stack operations."
+  },
+  {
+    "id": "N10",
+    "label": "Secondary Operations",
+    "description": "Another category of stack operations."
+  },
+  {
+    "id": "N11",
+    "label": "Linear Data Structure",
+    "description": "A stack is a linear data structure."
+  },
+  {
+    "id": "N12",
+    "label": "Insertions",
+    "description": "Allowed only at the end called the top of the stack in a stack."
+  },
+  {
+    "id": "N13",
+    "label": "Deletions",
+    "description": "Allowed only at the end called the top of the stack in a stack."
+  },
+  {
+    "id": "N14",
+    "label": "Top of the Stack",
+    "description": "The end of the stack where insertions and deletions are allowed."
+  },
+  {
+    "id": "N15",
+    "label": "Array",
+    "description": "A type of linear data structure, like stack or linked list."
+  },
+  {
+    "id": "N16",
+    "label": "Linked List",
+    "description": "A type of linear data structure, like stack or array."
+  },
+  {
+    "id": "N17",
+    "label": "Stack of Books",
+    "description": "A real life example of stacks."
+  },
+  {
+    "id": "N18",
+    "label": "Stack of Coins",
+    "description": "A real life example of stacks."
+  },
+  {
+    "id": "N19",
+    "label": "Access Object",
+    "description": "To retrieve an object, usually the top most one in a stack example."
+  },
+  {
+    "id": "N20",
+    "label": "Add Object",
+    "description": "To place an object, usually at the top most place in a stack example."
+  },
+  {
+    "id": "N21",
+    "label": "Glass Jar Analogy",
+    "description": "A way to imagine a stack where objects are placed inside, making it easier to visualize restrictions."
+  },
+  {
+    "id": "N22",
+    "label": "Closed at Bottom",
+    "description": "A characteristic of the glass jar in the analogy, implying no access from below."
+  },
+  {
+    "id": "N23",
+    "label": "Opened at Top",
+    "description": "A characteristic of the glass jar in the analogy, implying access from above."
+  },
+  {
+    "id": "N24",
+    "label": "One Way to Insert/Delete",
+    "description": "The singular method for modifying objects in a stack (from the top)."
+  },
+  {
+    "id": "N25",
+    "label": "User Point of View",
+    "description": "The perspective from which stack operations are considered when defining a stack as an ADT."
+  },
+  {
+    "id": "N26",
+    "label": "Implementation Details",
+    "description": "How stack operations are performed, which is not of interest when defining a stack as an ADT from a user's perspective."
+  },
+  {
+    "id": "N27",
+    "label": "Push Operation",
+    "description": "A primary stack operation which actually allows us to insert data onto stack."
+  },
+  {
+    "id": "N28",
+    "label": "Pop Operation",
+    "description": "A primary stack operation which simply deletes the last inserted element from the stack."
+  },
+  {
+    "id": "N29",
+    "label": "Top Operation",
+    "description": "A secondary stack operation which simply returns the last inserted element without removing it."
+  },
+  {
+    "id": "N30",
+    "label": "Size Operation",
+    "description": "A secondary stack operation which simply returns the size or the number of elements in the stack."
+  },
+  {
+    "id": "N31",
+    "label": "IsEmpty Function",
+    "description": "A secondary stack operation which simply returns true if the stack is empty, else it returns false."
+  },
+  {
+    "id": "N32",
+    "label": "IsFull Function",
+    "description": "A secondary stack operation which simply returns true if the stack is full, else it returns false."
+  },
+  {
+    "id": "N33",
+    "label": "List of Commands",
+    "description": "A sequence of stack commands to be executed."
+  },
+  {
+    "id": "N34",
+    "label": "Push(1)",
+    "description": "A command to push the element '1' inside the stack."
+  },
+  {
+    "id": "N35",
+    "label": "Push(2)",
+    "description": "A command to push the element '2' inside the stack."
+  },
+  {
+    "id": "N36",
+    "label": "Push(3)",
+    "description": "A command to push the element '3' onto the stack."
+  },
+  {
+    "id": "N37",
+    "label": "Pop()",
+    "description": "A command to delete the top most element from the stack."
+  },
+  {
+    "id": "N38",
+    "label": "IsFull()",
+    "description": "A command to check if the stack is full."
+  }
+]

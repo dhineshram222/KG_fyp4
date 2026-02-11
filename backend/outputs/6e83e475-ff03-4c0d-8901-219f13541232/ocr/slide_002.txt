@@ -1,0 +1,8 @@
+Data Abstraction
+
+% Primary goal: store and retrieve.
+¥ Convenient and efficient.
+
+¥ Complex data structures.
+
+wv Hiding the com;

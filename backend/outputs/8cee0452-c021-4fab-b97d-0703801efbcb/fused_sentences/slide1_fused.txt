@@ -1,0 +1,24 @@
+Slide Content:
+. About Data, Structure & Data Objects.
+. About Data Structure
+
+. Why Data Structure?
+
+. Classification of Data Structure.
+
+. Operations on Data Structure
+
+precesers: siee
+
+4. Classification of Data Structure.
+
+3. Why Data Structure?
+
+2. About Data Structure
+
+1. About Data, Structure & Data Objects.
+
+Course Outline
+
+Diagram Description:
+a circle with the words in different languages

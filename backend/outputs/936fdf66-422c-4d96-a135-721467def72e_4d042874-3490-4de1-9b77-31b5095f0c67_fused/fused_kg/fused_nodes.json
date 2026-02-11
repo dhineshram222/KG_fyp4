@@ -1,0 +1,282 @@
+[
+  {
+    "id": "N1",
+    "label": "Network Topologies",
+    "description": "Refers to the arrangement of different elements like nodes, links, and devices in a network; defines how these components are connected and interact with each other."
+  },
+  {
+    "id": "N2",
+    "label": "Types of Network Topologies",
+    "description": "Categories of network topologies, including point-to-point, bus, ring, star, mesh, tree, and hybrid."
+  },
+  {
+    "id": "N3",
+    "label": "Network Topology Applications",
+    "description": "Used in network designing algorithms, routing algorithms in operating systems, image recognition, data compression, and database management systems."
+  },
+  {
+    "id": "N4",
+    "label": "Point to Point Topology",
+    "description": "A network topology that connects two nodes or devices, where one acts as a sender and the other as a receiver, providing high bandwidth and high speed."
+  },
+  {
+    "id": "N5",
+    "label": "Bluetooth Connection",
+    "description": "An example of Point to Point Topology for file transfer between two devices."
+  },
+  {
+    "id": "N6",
+    "label": "Cable Connection (Two Computers)",
+    "description": "An example of Point to Point Topology for direct connection between two computers."
+  },
+  {
+    "id": "N7",
+    "label": "Telephonic Line Connection",
+    "description": "An example of Point to Point Topology for a telephone line connection between two modems."
+  },
+  {
+    "id": "N8",
+    "label": "Satellite Communication Link",
+    "description": "An example of Point to Point Topology for communication link between two ground stations."
+  },
+  {
+    "id": "N9",
+    "label": "Bus Topology",
+    "description": "A topology where every device is connected to a single coaxial cable called the backbone cable, allowing only one device to send information at a time."
+  },
+  {
+    "id": "N10",
+    "label": "CSMA Technique",
+    "description": "A technique used in Bus Topology to handle data flow and guarantee data integrity."
+  },
+  {
+    "id": "N11",
+    "label": "Collision Avoidance (CSMA/CA)",
+    "description": "A CSMA technique where the sender waits until the transmission media becomes idle if it is busy."
+  },
+  {
+    "id": "N12",
+    "label": "Collision Detection (CSMA/CD)",
+    "description": "A CSMA technique where the sender stops transmitting data if a collision is detected, working on 'recovery after the collision'."
+  },
+  {
+    "id": "N13",
+    "label": "Ethernet LAN Cable",
+    "description": "An example of Bus Topology commonly used in LAN and small offices."
+  },
+  {
+    "id": "N14",
+    "label": "Bus Topology Advantages",
+    "description": "Works excellently in small networks, has low cable and installation cost, supports up to 10 Mbps, and a single node failure does not affect others."
+  },
+  {
+    "id": "N15",
+    "label": "Bus Topology Disadvantages",
+    "description": "Common cable failure crashes the whole system, adding devices slows down the network, low privacy, and high chance of data loss with many connected devices."
+  },
+  {
+    "id": "N16",
+    "label": "Ring Topology",
+    "description": "A topology where all PCs are connected with each other in the form of a ring, and data moves from one node to another either clockwise or anticlockwise."
+  },
+  {
+    "id": "N17",
+    "label": "Token Passing",
+    "description": "A method of transferring data in Ring Topology where the sender modifies a token with the destination address and data, which is passed until it matches the destination."
+  },
+  {
+    "id": "N18",
+    "label": "Ring Topology Advantages",
+    "description": "High-speed data transmission, inexpensive twisted pair cabling with low installation cost, easy device addition/removal, and reduced collision chances due to unidirectional flow."
+  },
+  {
+    "id": "N19",
+    "label": "Ring Topology Disadvantages",
+    "description": "A single fault in the main cable disrupts communication for all nodes, failure of a single node causes the entire network to fail, and communication delay is proportional to the number of nodes."
+  },
+  {
+    "id": "N20",
+    "label": "Star Topology",
+    "description": "A configuration where all nodes are connected to a central hub using a communication link, with the hub functioning as a server."
+  },
+  {
+    "id": "N21",
+    "label": "Hub (Star Topology)",
+    "description": "A central point in Star Topology that functions as a server to control and manage the entire network."
+  },
+  {
+    "id": "N22",
+    "label": "Star Topology Advantages",
+    "description": "Easy network maintenance and management, simple addition of new devices, support for bandwidth up to 100 Mbps, and easy expandability."
+  },
+  {
+    "id": "N23",
+    "label": "Star Topology Disadvantages",
+    "description": "Failure of the central hub brings down the entire network, higher cable requirements, and being more expensive than bus and ring topologies."
+  },
+  {
+    "id": "N24",
+    "label": "Mesh Topology",
+    "description": "A topology where all computers are interconnected with each other through various redundant connections, providing multiple paths for sending and receiving data."
+  },
+  {
+    "id": "N25",
+    "label": "Internet",
+    "description": "One of the best examples of Mesh Topology."
+  },
+  {
+    "id": "N26",
+    "label": "Wi-Fi Router",
+    "description": "An example of Mesh Topology."
+  },
+  {
+    "id": "N27",
+    "label": "Smart Home Systems",
+    "description": "An example of Mesh Topology where multiple smart devices are interconnected."
+  },
+  {
+    "id": "N28",
+    "label": "Mesh Topology Advantages",
+    "description": "Very fast communication speed by choosing the shortest path, non-disruptive addition of new devices, and easier fault diagnosis."
+  },
+  {
+    "id": "N29",
+    "label": "Mesh Topology Disadvantages",
+    "description": "Difficult installation and configuration, and high cost for installation and maintenance."
+  },
+  {
+    "id": "N30",
+    "label": "Tree Topology",
+    "description": "A topology that combines characteristics of bus and star topologies, connecting computers in a hierarchical fashion with point-to-point or point-to-multipoint links."
+  },
+  {
+    "id": "N31",
+    "label": "Root Node",
+    "description": "The main node in a Tree Topology, at the top of the hierarchy."
+  },
+  {
+    "id": "N32",
+    "label": "Child Node",
+    "description": "Nodes connected to a root node or other child nodes in a Tree Topology, forming a hierarchical structure."
+  },
+  {
+    "id": "N33",
+    "label": "Tree Topology Advantages",
+    "description": "Suitability for long-distance data transmission, easy network expansion and management, and very easy error detection and correction due to sub-parts."
+  },
+  {
+    "id": "N34",
+    "label": "Tree Topology Disadvantages",
+    "description": "Failure of the central hub (root node) causes the entire system to fail, and high cost due to extensive cabling."
+  },
+  {
+    "id": "N35",
+    "label": "Hybrid Topology",
+    "description": "A combination of various different topologies, created based on the specific requirements of the network."
+  },
+  {
+    "id": "N36",
+    "label": "Star-Ring Topology",
+    "description": "A commonly used hybrid topology that combines star and ring topologies."
+  },
+  {
+    "id": "N37",
+    "label": "Star-Bus Topology",
+    "description": "A commonly used hybrid topology that combines star and bus topologies."
+  },
+  {
+    "id": "N38",
+    "label": "Hybrid Topology Advantages",
+    "description": "Very flexible, easily expandable by adding new devices, and designable according to network requirements."
+  },
+  {
+    "id": "N39",
+    "label": "Hybrid Topology Disadvantages",
+    "description": "Very difficult to design the architecture and very expensive."
+  },
+  {
+    "id": "N40",
+    "label": "Network Topology",
+    "description": "Arrangement of nodes of a computer network, viewed as a layout of a computer network."
+  },
+  {
+    "id": "N41",
+    "label": "Nodes",
+    "description": "Components that need to be arranged to establish communication in a network."
+  },
+  {
+    "id": "N42",
+    "label": "Communication",
+    "description": "The establishment of data exchange among all nodes in a network."
+  },
+  {
+    "id": "N43",
+    "label": "Physical Topology",
+    "description": "The placement of various nodes in a network."
+  },
+  {
+    "id": "N44",
+    "label": "Logical Topology",
+    "description": "How the data is going to flow in the network."
+  },
+  {
+    "id": "N45",
+    "label": "Common Transmission Medium (Bus)",
+    "description": "A single wire or cable in bus topology capable of sending and receiving data bidirectionally."
+  },
+  {
+    "id": "N46",
+    "label": "Advantages of Bus Topology",
+    "description": "Benefits of bus topology, including less expense, suitability for temporary networks, and node failures not affecting others."
+  },
+  {
+    "id": "N47",
+    "label": "Disadvantages of Bus Topology",
+    "description": "Drawbacks of bus topology, including not being fault tolerant, limited cable length, and no security."
+  },
+  {
+    "id": "N48",
+    "label": "Token (Ring Topology)",
+    "description": "A mechanism in ring topology that dictates which node gets to send data, circulated throughout the network."
+  },
+  {
+    "id": "N49",
+    "label": "Advantages of Ring Topology",
+    "description": "Benefits of ring topology, including better performance than bus topology and all nodes having equal access."
+  },
+  {
+    "id": "N50",
+    "label": "Disadvantages of Ring Topology",
+    "description": "Drawbacks of ring topology, including unidirectional communication, single point of failure affecting the whole network, performance degradation with high load, and no security."
+  },
+  {
+    "id": "N51",
+    "label": "Central Node (Hub/Switch)",
+    "description": "A central device in a star topology that performs centralized administration and through which all network traffic passes."
+  },
+  {
+    "id": "N52",
+    "label": "Advantages of Star Topology",
+    "description": "Benefits of star topology, including ease of design and implementation, centralized administration, and scalability."
+  },
+  {
+    "id": "N53",
+    "label": "Disadvantages of Star Topology",
+    "description": "Drawbacks of star topology, including a single point of failure affecting the whole network, bottlenecks due to overloaded hub/switch, and increased cost."
+  },
+  {
+    "id": "N54",
+    "label": "Extended Star Topology",
+    "description": "A variation of star topology where two or more star topologies are connected."
+  },
+  {
+    "id": "N55",
+    "label": "Advantages of Mesh Topology",
+    "description": "Benefits of mesh topology, including being fault tolerant and reliable."
+  },
+  {
+    "id": "N56",
+    "label": "Disadvantages of Mesh Topology",
+    "description": "Drawbacks of mesh topology, including issues with broadcasting messages, being expensive, and impractical for large networks."
+  }
+]

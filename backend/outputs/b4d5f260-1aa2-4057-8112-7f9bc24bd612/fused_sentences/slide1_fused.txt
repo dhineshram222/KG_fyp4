@@ -1,0 +1,12 @@
+Slide Content:
+OUTCOMES
+
+Upon the completion of this session, the learner will be able to
+w
+
+% Understand LAN, MAN and WAN.
+%* Know various devices involved in LAN, MAN and WAN.
+
+* Know the new trends in computer networks.
+
+Diagram Description:

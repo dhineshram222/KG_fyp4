@@ -1,0 +1,12 @@
+Slide Timeline
+========================================
+Slide 000: Start 0.00s - End 7.00s
+Slide 001: Start 7.00s - End 36.00s
+Slide 002: Start 36.00s - End 62.00s
+Slide 003: Start 62.00s - End 188.00s
+Slide 004: Start 188.00s - End 221.00s
+Slide 005: Start 221.00s - End 338.00s
+Slide 006: Start 338.00s - End 449.00s
+Slide 007: Start 449.00s - End 615.00s
+End: 622.00s
+Total Slides: 8

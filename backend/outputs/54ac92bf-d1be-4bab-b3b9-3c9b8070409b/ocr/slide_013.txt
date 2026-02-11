@@ -1,0 +1,30 @@
+Lexical Analyzer:
+ee.
+
+Recognizes tokens using
+Regexs
+
+Eg, Regex for identifier
+Wed] Cled}?
+Tsletter
+
+d:digit
+—tunderseore
+
+Lexemes
+
+Tokens
+
+dentifier
+
+operator
+
+identifier
+
+‘operator
+
+identifier
+
+operotor
+
+identifier

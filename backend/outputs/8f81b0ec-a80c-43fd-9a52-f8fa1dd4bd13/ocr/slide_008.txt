@@ -1,0 +1,27 @@
++ This uses Bluetooth, WI-FI and Zighee as technology
+
++ Types of PAN:
+1. Wireless Personal Area Networ
+
+WiFi, Bnetooth emp a
+USB 4
+
+2. Wired Personal Area Networ
+
++ Types of PAN:
+1. Wireless Personal Area Networ
+
+WiFi, Buetooth aim ~
+
++ Ithas a connectivity range of upto 10 metres.
++ Itcovers an area of upto 30 feet.
+
++ Transmission speed is very high with very easy maintenance and very low cost.
+* This uses Bluetooth, WI-FI and Zigbee as technology
+
++ Through PAN, smartphones. tablets, laptops and wearables to communicate and share data with
+each other.
+
+Persenal Area Network (PAN)
+
++ It designed to connect devices within a short range. typically around one person.

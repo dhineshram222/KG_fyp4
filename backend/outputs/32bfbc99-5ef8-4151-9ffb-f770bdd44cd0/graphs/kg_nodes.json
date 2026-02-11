@@ -1,0 +1,97 @@
+[
+  {
+    "id": "N1",
+    "label": "Data Abstraction",
+    "description": "The process of hiding irrelevant details from the user. It shows only necessary information to the user and hiding all the irrelevant details from the user."
+  },
+  {
+    "id": "N2",
+    "label": "Data Independence",
+    "description": "Users and data should not directly interact with each other."
+  },
+  {
+    "id": "N3",
+    "label": "Database Management System (DBMS)",
+    "description": "A system where data abstraction will work."
+  },
+  {
+    "id": "N4",
+    "label": "Levels of Data Abstraction",
+    "description": "Total three levels in database management system: View level, conceptual level and physical level."
+  },
+  {
+    "id": "N5",
+    "label": "Physical Level",
+    "description": "The lowest level of data abstraction. It defines how data are stored, decides location in memory, and whether data will be centralized or distributed."
+  },
+  {
+    "id": "N6",
+    "label": "Conceptual Level",
+    "description": "Defines what data are stored into the database and what are the relationships exist among this data. It decides the structure of entire database."
+  },
+  {
+    "id": "N7",
+    "label": "View Level",
+    "description": "Tells the application about how data should be shown to the user. There are multiple views of the same database."
+  },
+  {
+    "id": "N8",
+    "label": "Database Administrator (DBA)",
+    "description": "Decides which data should be kept at which particular disk drive. Handles physical level, conceptual level and logical level."
+  },
+  {
+    "id": "N9",
+    "label": "Irrelevant Details",
+    "description": "Details hidden from the user by data abstraction, such as where data will be physically stored or what types of data model will be used."
+  },
+  {
+    "id": "N10",
+    "label": "Necessary Information",
+    "description": "Essential information that users know, not the irrelevant details."
+  },
+  {
+    "id": "N11",
+    "label": "User",
+    "description": "Present on the view level. Users are not directly interact with the physical level."
+  },
+  {
+    "id": "N12",
+    "label": "Database",
+    "description": "Directly connected to the physical level. Physical data will be stored at physical level."
+  },
+  {
+    "id": "N13",
+    "label": "Programmer/Developer",
+    "description": "Handle conceptual level and logical level."
+  },
+  {
+    "id": "N14",
+    "label": "Database Structure",
+    "description": "The structure of entire database, including tables and their columns, and relationships between tables, decided in the logical level."
+  },
+  {
+    "id": "N15",
+    "label": "Database Queries",
+    "description": "Different types of queries like Select, Insert, Update, Delete performed in logical level."
+  },
+  {
+    "id": "N16",
+    "label": "Front End System",
+    "description": "Term used for View level."
+  },
+  {
+    "id": "N17",
+    "label": "Back End System",
+    "description": "Term used for Physical level."
+  },
+  {
+    "id": "N18",
+    "label": "Security",
+    "description": "Increases in the view level because authority for editing, changes, and modification is given to specific roles."
+  },
+  {
+    "id": "N19",
+    "label": "Server",
+    "description": "Is a logical level. Fetches the answer of information through the database."
+  }
+]

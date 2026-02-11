@@ -1,0 +1,23 @@
+2. Easily expanded by adding new devices.
+3. Designed according to the requirements.
+
++ Disadvantages of Hybrid Topology:
+1. Very difficult to design the architecture
+2. Very expensive
+
+1. Mery difficull to design the architecture
+2. Very expensive
+
+1, Very flexible.
+2. Easily expanded by adding new devices.
+3. Designed according to the requirements.
+
+> Advantages of IMybrid Topology:
+
++ The creation of such a configuration depends on the requirement of the network.
+
++ Two most commonly used hybrid topologies are star-ring and star-but
+
++ The combination of various different topologies is known as Hybrid topology.
+
+/, Hybrid lopology

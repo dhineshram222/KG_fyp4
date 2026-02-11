@@ -1,0 +1,25 @@
+{
+  "summary": "Network topologies used in different network designing algorithm, routing algorithm in operating system, then image recognization, data compression purpose and database management system. There are total seven types of network topologies like point to point, burst, ring, star, mesh, tree and hybrid topologies. In burst topology, only one device send information at a time, okay. At the end of this session you will learn about different network topology with example and at the end we will discuss a question bank. Full video transcript is available at the bottom of the page. For confidential support call the Samaritans on 08457 90 90 90, visit a local Samaritans branch or see www.samaritans.org. In the U.S. call the National Suicide Prevention Line on 1-800-273-8255.",
+  "reference_summary": "Network topology refers to the physical or logical arrangement of nodes used to establish communication within a computer network. Point-to-point connects two devices directly, while bus topology links all nodes to a single shared cable, offering low cost but high risk if the main cable fails. Ring topology arranges nodes in a closed loop using \"token passing\" for data flow, whereas star topology centers all connections around a hub or switch for better management and scalability. Mesh topology features interconnected nodes with multiple paths for data, ensuring high reliability despite increased installation costs. Tree topology utilizes a hierarchical structure combining bus and star traits, while hybrid topology integrates multiple different layouts to meet specific organizational needs. Each arrangement varies significantly in terms of cost, complexity, and fault tolerance.",
+  "evaluation": {
+    "rouge": {
+      "rouge1": {
+        "precision": 0.2755905511811024,
+        "recall": 0.2692307692307692,
+        "fmeasure": 0.2723735408560311
+      },
+      "rougeL": {
+        "precision": 0.13385826771653545,
+        "recall": 0.13076923076923078,
+        "fmeasure": 0.13229571984435798
+      }
+    },
+    "keyword_coverage": 0.1,
+    "bertscore": {
+      "precision": -0.10121007263660431,
+      "recall": -0.01904275082051754,
+      "f1": -0.0587477870285511
+    },
+    "sentence_cosine": 0.6163538098335266
+  }
+}

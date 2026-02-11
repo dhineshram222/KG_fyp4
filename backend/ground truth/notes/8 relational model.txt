@@ -1,0 +1,51 @@
+1. Overview of the Relational Model
+
+• Definition: A data model is a conceptual tool used to describe data, relationships, semantics, and constraints. The relational model represents these elements using a collection of tables.
+• Purpose: It is designed for simplicity, scalability, and the ability to represent both data and the relationships among that data.
+• Popular Systems: Common Relational Database Management Systems (RDBMS) include Oracle, MySQL, and Microsoft SQL Server.
+
+2. Core Terminology
+
+In the relational model, specific terms are used to describe the components of a table:
+• Relation: The formal term for a table.
+• Attribute: A column in a relation, representing a specific property (e.g., Roll Number or Name).
+• Tuple: A row in a relation, representing a single record or a set of related values.
+• Degree: The total number of attributes (columns) in a relation.
+• Cardinality: The total number of tuples (rows) in a relation.
+
+3. Key Concepts
+
+• Relation Schema: This refers to the structural design of the relation, defining the attributes and their types.
+• Relation Instance: This is the specific set of data present in the database at any given moment. Instances can change as data is updated or deleted.
+• Domain: The set of permitted values for an attribute. For example, a bank branch domain might only permit specific city names.
+• Atomic Values: A domain is considered atomic if its elements are indivisible. For instance, a phone number is atomic if treated as a single unit, but non-atomic if split into country and area codes.
+• Null Values: A special marker used to represent data that is unknown or does not exist. It is not the same as a zero or a blank space.
+
+4. Properties of Relations
+
+• Uniqueness: Each relation must have a distinct name, and no two tuples within a relation can be identical (no duplicate rows).
+• Atomicity: Every attribute in a tuple must contain exactly one atomic value.
+• Ordering: Relations are generally unsorted in physical storage. While data can be sorted for display purposes, new records are typically added without maintaining a specific order.
+
+5. Relationships Between Tables
+
+• Relationships are maintained by creating specific relations that link other tables together.
+• Example: In a university database, an "Advisor" relation might link a "Student" ID to an "Instructor" ID to show which teacher advises which student.
+
+6. Basic Operations
+
+The relational model supports several core operations to manage data:
+• Insert: Adding new information to a table.
+• Update: Modifying or updating existing data.
+• Delete: Removing specific tuples or records.
+• Select: Retrieving or viewing specific information from the database.
+
+7. Advantages and Disadvantages
+
+• Advantages:
+    ◦ Simplicity: The table-based format is easy for users to understand.
+    ◦ Data Integrity: Constraints ensure data remains accurate and consistent.
+    ◦ Scalability: The model can handle increasing amounts of data efficiently.
+• Disadvantages:
+    ◦ Fixed Field Lengths: Some implementations have limits on the size of data fields.
+    ◦ Complexity: Managing very large systems with many relationships can become complex.

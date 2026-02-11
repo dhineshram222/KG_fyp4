@@ -1,0 +1,320 @@
+============================================================
+FULL VIDEO TRANSCRIPT
+============================================================
+
+Good morning everyone, I am Rishalli Thanokar, Assistant Professor IT Department. In my last video, we will learn about the advantages of database management system over file system. Hope you have watched that video. Now in this video, we will learn about our next topic in the first unit that is data abstraction and data independence. So let us see how exactly data abstraction will be work in database management system. So our following points are covered in this video, which includes data abstraction, levels of data abstraction, then data independence and there are types of data abstraction and examples of data abstraction in database management system. So let us see one by one. The first point is what is min by data abstraction. So what is min by data abstraction? Data abstraction refers the process of hiding irrelevant details from the user. It shows only necessary information to the user and hiding all the irrelevant details from the user. This concept is called as data abstraction. For example, we all are access our Gmail account. But we don't know where the data will be physically stored. We don't know about data presented in India or USA. Then what types of data model will be used? We are not concentrated on those things. We are just concentrated about send and receive mail. So this is the data abstraction. Means users know only essential information, not the irrelevant details. So this is the concept of data abstraction. Next. Now the levels of data abstraction and data independence. Basically, in database management system, there are total three levels. View level, conceptual level and physical level. So I will explain this level one by one in detail. See in this diagram, suppose this is your first level. That is physical level and physical level is directly connected to the database. Next one is conceptual level and next one is view level. There is multiple views of the same database. Now what is meant by data independence? Data independence means users and data should not directly interact with each other. See here, users are present on the view level and physically data will be stored at physical level. Right? Users are not directly interact with the physical level. So this is the concept of data independence. Suppose you should modify anything or any information in physical level. It will be directly reflect at the conceptual level and if you change any information in conceptual level, it will be reflected in the view level. So this is the concept of data independence. So I will explain this concept through the levels of data abstraction. Next. So first level of data abstraction is physical level. Now what is meant by physical level? So physical level is the lowest level of data abstraction. It defines how data are stored. See physical level decide that whether your data will be stored, it decide location in memory of your database. And whether your data will be centralized or distributed. So these all things are decided in the physical level and that will be decided by the database administrator. Database administrator decide that which data should be kept at which particular disk drive. How data has to be arranged, whether the data is to be stored, these all things are done by the database administrator. So simply physical level decide location of database in memory, then how data will be stored, whether your database will be centralized and distributed. So physical level completely handled by the database administrator. Next. Now the next level of database data abstraction is conceptual level or logical level. This is your second level. In this level database administrator, programmer or developer, they handle conceptual level and logical level. So logical level defines that what data are stored into the database and what are the relationships exist among this data. Logical level decide the structure of entire database. For example, see here. Suppose you need to create student table in your database. So student table that is a table name, then there are multiple columns, right? Student name, student age, mail ID, role number, right? So this is a structure of your table that will be decided in the logical level. And you need to perform different queries, right? Select, insert, update, delete. This all types of queries in logical level. For example, suppose in your database there are multiple tables that is student table, teacher table, book table, okay? So the relationship between those table are also decided into the logical level, okay? So logical level decides structure of your entire database. Then we need to perform different queries on that database in logical level and logical level also decide relationship between the tables. And this logical level are handled by the database administrator, programmer or we can say developer. Clear? So this is the concept of logical level. Next. Now, the next level of database abstraction is view level or we can say external schema. So view level is called as front end system and physical level is called as backend system, okay? So view level, this level generally tells the application about how data should be shown to the user, okay? There is only one database and there are multiple views of this same database towards the user. So users are directly interact only with view level and database has user friendly approach through this view level. Let's see the example. See here. Suppose the login ID and password in university system, okay? University system has a particular login ID and password of the student. So student can view their marks, view their attendance, mark list, field structure in university login, right? And another side faculty of university again has their login and ID and password, okay? But faculty of university have different view of this same database. So faculty of university edit the marks, then they edit the attendance of the students, right? And faculty of university also show the salary information, right? This database will be same, but views are different. Student view is different and faculty view is different, right? So this is the view level and in the view level, security of the system also increases, right? Because for editing, changes and modification, this authority will be given to the faculty only, not the students, right? This is called a privileges and this is called a view level or external schema. Means there is only one database and multiple views of the same database given to the user as per their priority. Clear? This is the concept of view level. Next. So these are the some just examples of data abstraction in database management system as per their levels. See here, suppose this is your physical level. In physical level, you should decide the memory, then how length of particular instruction, right? This is your physical level. On conceptual level, you should arrange a account number, account name, amount, variables like numeric type, character type, data, etc. Right? Means actual queries, actual logic will be applied in conceptual level. So this account had different views. Account holder had view about account name and amount, but manager has different view, manager has view about account number, account name, type, etc. Right? So this is the example of database abstraction. Now see, this is just structure way. Physical level means database, logical level means actual table in tabular format and view level means different views as per their priority. Right? Again, this is another example. See here, this is client or we can say user, okay? Client has the view level, that is external level. So client sends some information to the server. Server is a logical level. So server fetch the answer of those information through the database. So database is an internal level, right? So this is, these are the examples of data abstraction in database management system. So you understood about the concept of data abstraction, levels of data abstraction and data independence. Keep practicing.
+
+============================================================
+SLIDE CONTENTS (OCR Text + Diagrams)
+============================================================
+
+--- slide0_fused ---
+Slide Content:
+Ms. Vrushali Dhanokar
+M.Tech CSE
+
+Assistant Professor
+
+IT Department
+dhanokarvrushali@gmail.com
+
+IT Department
+
+| Assistant Professor
+
+M.Tech CSE
+
+Ms. Vrushali Dhanokar
+
+1.2 Data Abstraction & Data Independence
+(Physical Level, Conceptual Level & Logical Level)
+
+* bk
+
+SPPU SE IT : Database Management Sy
+
+Unit 1: Introduction to DBMS
+
+SPPU SEIT : Database Management System
+
+Diagram Description:
+a diagram of a computer system the logo of the indian air force a diagram showing the different types of the system a diagram of a computer system a diagram showing the different levels of each level a diagram showing the different levels of each level a diagram showing the different levels of the system a diagram showing the different types of the device a diagram with people working on laptops and a man in a suit a diagram with three people working on laptops a whiteboard with pink writing on it a drawing of a cylinder a whiteboard with a red marker marker on it a whiteboard with purple writing on it a whiteboard with a diagram on it a man in a suit holding a clipboard a diagram of a computer system the logo of the indian air force
+
+--- slide1_fused ---
+Slide Content:
+Levels of Data Abstractign
+
+Data Independence
+
+Level 1: Physical Level or Internal Schema
+Level 2: Conceptual Level or Logical Level
+Level 3: View Level or External Schema
+
+Examples of Data Abstraction in DBMS
+
+6. Level 3: View Level or External Schema
+
+—$— $$ — — Physical Level
+
+5. Level 2: Conceptual Level or Logical Level
+
+4. Level 1: Physical Level or Internal Schema
+
+3. Data Independence
+
+Levels of Data Abstractign
+Ol DBMS
+
+1.
+
+Data Abstraction
+
+Course Outline
+
+Diagram Description:
+a diagram showing the different types of the system
+
+--- slide2_fused ---
+Slide Content:
+used front end system.
+
+* So, information like these i.e. location of data and data models are irrelevant to us and we just
+
+¢ We are only concerned with our email.
+
+store that data? We are not concerned about these things.
+
+physically stored i.e is the data present in India or USA or what data model has been used to
+
+¢ If we want to access_any mail from our Gmail then we don't know where that data_is
+
+> Example:
+
+Data Abstraction refers to the process of hiding irrelevant details from the user.
+
+> Definition:
+
+Data Abstraction
+
+Diagram Description:
+
+--- slide3_fused ---
+Slide Content:
+chieve Data Independence.
+
+1. View Level
+2. Conceptual Level
+
+3. Physical Level
+
+El le
+
+Mowteen | View 1
+
+View 2
+
+View 3
+
+View 4
+
+(Cogical Leven
+
+Conceptual Level
+
+((ntera1 Schema)
+
+Physical Level
+
+Levels of Dala Abstraction
+
+2. Conceptual Level
+
+(Intemal Schema}
+
+(Logical Level}
+
+1. View Level
+
+achieve Data Independence.
+
+¢ There are mainly three levels of data abstraction and we divide it into three levels in order to
+
+the database system without altering the schema at the next higher level.
+
+¢ Data independence refers characteristic of being able to modify the schema at one level of
+
+¢ The user should be at a different level and the data should be present at some other level.
+
+* Data Independence means users and datashould not directly interact with each other.
+
+Levels of Data Abstraction & Data Independence
+
+Diagram Description:
+a diagram of a computer system
+
+--- slide4_fused ---
+Slide Content:
+¢ It totally depends on the DBA, how he/she manages the database at the physical level.
+
+¢ They decide if the data has to be centralized or distributed.
+
+disk drive, how the data has to be arranged, where it has to be stored ete.
+
+Level 1: Physical Level or Internal Schema == —
+* Lowest level of Data Abstraction.
+¢ It defines how data are stored.
+2 Bos
+
+¢ It tells the actual location of the data that is being stored by the user.
+°
+
+¢ The Database Administrators(DBA) decide that which data should be kept at which particular
+
+¢ It tells the actual location of the data that is being stored by the user.
+
+¢ It defines how data are stored.
+
+¢ Lowest level of Data Abstraction.
+
+Level 1: Physical Level or Internal Schema
+
+Diagram Description:
+a diagram showing the different levels of each level
+
+--- slide5_fused ---
+Slide Content:
+¢ Though the data is stored in the database but the structure of the tables like the student table.
+
+teacher table, books table, etc are defined here in the conceptual level or logical level.
+
+¢ Also, how the tables are related to each other are defined here.
+
+¢ This level defines what data are stored in database &
+
+What relationship exists among these data.
+
+* Logical levels decide structure of entire database.
+
+¢ DBA use the logical level for abstraction purpose.
+
+Example: 2D aa
+¢ Let us take an example where we use the relational model for storing the data.
+
+¢ We have to store the data of a student, the columns in the student table will be student_name.
+
+age, mail id, roll_no ete.
+
+¢ Let us take an example where we use the relational model for storing the data.
+
+Example:
+
+¢ DBA use the logical level for abstraction purpose.
+
+* Logical levels decide structure of entire database.
+
+What relationship exists among these data.
+
+¢ This level defines what data are stored in database &
+
+Level 2: Conceptual Level or Logical Level
+
+Diagram Description:
+a diagram showing the different levels of each level
+
+--- slide6_fused ---
+Slide Content:
+* In this examplé, the student can't edit his marks but the faculty who is authorized to edit the
+marks can edit the student's marks.
+
+* By doing so, the security of the system also increases.
+
+* So, both the student and the faculty have a different view.
+
+* This level tells the application about how the data should be '
+
+shown to the user.
+
+* Different views of same database can be created for user to Logical Levet
+
+interact with database for user friendly approach.
+
+Physical Level
+
+= os
+
+Example:
+
+* If we have a login-id and password in a university system, then as a student, we can view our
+marks, attendance, fee structure, etc. But the faculty of the university will have a different
+
+view.
+
+* He will have options like salary, edit marks of a student, enter attendance of the students, etc.
+
+Example:
+
+interact with database for user friendly approach.
+
+* Different views of same database can be created for user to
+
+shown to the user.
+
+* This level tells the application about how the data should be
+
+Level 3: View Level or External Schema
+
+Diagram Description:
+a diagram showing the different levels of the system
+
+--- slide7_fused ---
+Slide Content:
+Physical
+
+ASE ~byeacisy,
+
+‘OfFechaoy
+
+Level
+
+~ oO
+
+ised ake “
+
+View
+Weay wear Level
+Re.
+AC_Name | Be. Nowe
+| Perms | pee |
+
+TGetcepuat | Lopal vies
+
+Reno. Temes (15), Logical
+
+| Lepicod Level
+
+~ fa]
+
+Raed Ps Varo View
+View 2. [ews | Wie Wear Level
+” oe | | RC Ne |
+
+|AC-Name | Ac eine
+
+LArmaant | pType
+
+Views | [Views
+
+J
+
+Examples of Data Abstraction in DBMS
+
+Diagram Description:
+a diagram showing the different types of the device a diagram with people working on laptops and a man in a suit a diagram with three people working on laptops a whiteboard with pink writing on it a drawing of a cylinder a whiteboard with a red marker marker on it a whiteboard with purple writing on it a whiteboard with a diagram on it a man in a suit holding a clipboard
+
+--- slide8_fused ---
+Slide Content:
+Thank You...
+
+o—-_
+
+Diagram Description:

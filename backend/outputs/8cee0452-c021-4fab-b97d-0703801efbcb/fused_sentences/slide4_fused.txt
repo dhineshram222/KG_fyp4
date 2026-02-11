@@ -1,0 +1,16 @@
+Slide Content:
+» Provide solution for Time Complexity.
+
+» Provide solution for Space Complexity.
+
+» Provide efficient solution of complex problem.
+
+» Provide fastest solution of human requirements.
+
+* To solve the complex requirements in efficient way we need this study.
+
+* Human requirement with computer are going to complex day by day.
+
+Why Data Structure?
+
+Diagram Description:

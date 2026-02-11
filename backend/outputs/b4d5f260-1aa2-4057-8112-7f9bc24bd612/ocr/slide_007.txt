@@ -1,0 +1,4 @@
+3. Wipe AREA Network (WAN)
+
+A wide area network (WAN) is a telecommunications network that extends over a
+large geographical area for the primary purpose of computer networking.

@@ -1,0 +1,21 @@
+Slide Content:
+eee
+
+Is by ¥rushali
+
+5. Code Generator: When the memory is full or proper registers are not allocated
+6. Symbol tables: Exror of multiple declared identifiers
+
+3. Intermediate code generator: Mismatched operands for an operator
+4, Code Optimizer: When the statement is not reachable
+
+Jn the compiler design process error may occur in all the below-given phases:
+Wrongly spelled tokens
+2. Syntax analyzer: Missing parenthesis / Operator
+
+1. Lexical analy,
+
+Error Handling Routine
+
+Diagram Description:
+an image of a laptop with a document on the screen

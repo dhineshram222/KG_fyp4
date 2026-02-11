@@ -1,0 +1,27 @@
+Slide Timeline
+========================================
+Slide 000: Start 0.00s - End 0.00s
+Slide 001: Start 0.00s - End 21.00s
+Slide 002: Start 21.00s - End 32.00s
+Slide 003: Start 32.00s - End 106.00s
+Slide 004: Start 106.00s - End 155.00s
+Slide 005: Start 155.00s - End 168.00s
+Slide 006: Start 168.00s - End 176.00s
+Slide 007: Start 176.00s - End 198.00s
+Slide 008: Start 198.00s - End 226.00s
+Slide 009: Start 226.00s - End 284.00s
+Slide 010: Start 284.00s - End 350.00s
+Slide 011: Start 350.00s - End 374.00s
+Slide 012: Start 374.00s - End 380.00s
+Slide 013: Start 380.00s - End 420.00s
+Slide 014: Start 420.00s - End 426.00s
+Slide 015: Start 426.00s - End 431.00s
+Slide 016: Start 431.00s - End 496.00s
+Slide 017: Start 496.00s - End 517.00s
+Slide 018: Start 517.00s - End 544.00s
+Slide 019: Start 544.00s - End 583.00s
+Slide 020: Start 583.00s - End 592.00s
+Slide 021: Start 592.00s - End 607.00s
+Slide 022: Start 607.00s - End 663.00s
+End: 677.20s
+Total Slides: 23

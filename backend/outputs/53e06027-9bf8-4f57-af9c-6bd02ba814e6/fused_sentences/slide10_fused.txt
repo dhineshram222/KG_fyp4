@@ -1,0 +1,22 @@
+Slide Content:
+5. Gives applications of stack.
+
+4. Explain the concept of Implicit & Explicit Stack & give its importance.
+
+6M
+
+3.
+
+What is importance of stack in recursion? Explain with examples.
+
+4M
+
+2. Explain implementation of stack using ADT.
+
+1. What is Stack?
+
+By SPPU Exam Pattern:
+
+Important Questions
+
+Diagram Description:

@@ -1,0 +1,23 @@
+Syntax Analyzer:
+
+Leremes
+
+Tokens
+
+identiRer
+
+‘operator
+
+identifier
+
+‘operator
+
+identifier
+
+‘operotor
+
+identifier
+
+nesoacage to
+
+oo

@@ -1,0 +1,29 @@
+4. All the data is stored in a single server computer, if it can be a
+can cause a serious data security threat
+
+3. LAN administrator can see personal data files & Internet history of each LAN user. So, the
+privacy of the users are violated.
+
+2. Itis restricted in size and cover only a limited area
+
+LAN offers a much higher speed (around 1000 mbps).
+Supports Ethernet, fiber and wireless transmission medias.
+
+|. Easy installation, Low cost & maintenances.
+
+wp
+
++ Disadvantages of LAN:
+. Initial serup costs of installing LAN is high, Special software required to make a server.
+
+> Disadvantages of LAN:
+
+3. Easy installation, Low cost & maintenances.
+
+2. Supports Ethemet, fiber and wireless transmission medias
+
+. LAN offers a much higher speed (around 1000 mbps).
+
+Local Area Network (LAN)
+
+Advantages of LAN:

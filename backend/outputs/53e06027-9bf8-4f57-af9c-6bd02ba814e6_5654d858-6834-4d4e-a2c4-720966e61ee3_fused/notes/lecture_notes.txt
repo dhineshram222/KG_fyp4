@@ -1,0 +1,128 @@
+LECTURE NOTES
+=============
+
+
+1. Data Structure And Algorithm Subject
+Definition: The subject where stack and queue are covered in unit three.
+1.1 Unit 3
+Contains topics such as stack and queue.
+  - Stack: An abstract data type, commonly used in most programming languages. A linear data structure that follows a particular order (LIFO/FILO).
+  - Queue: A data structure topic covered in unit three.
+Visual Representation:
+Figure 1: Diagram illustrating: The subject where stack and queue are covered in unit three.
+
+2. Lifo (Last In First Out)
+Definition: The particular order in which operations are performed on a stack, where the last item added is the first one out.
+  - FILO (First In Last Out): An order that is the same as LIFO.
+
+3. Filo (First In Last Out)
+Definition: An order that is the same as LIFO.
+
+4. Top Of The Stack
+Definition: The location where elements are added to and removed from; the most recently added items are placed here.
+Visual Representation:
+Figure 4: Diagram illustrating: An abstract data type, commonly used in most programming languages. A linear data structure that follows a particular order (LIFO/FILO).
+
+5. Stack Implementation Methods
+Definition: Ways to implement a stack, including by means of Array, Structure, Pointer, and Linked List.
+
+6. Important Questions (Sppu Exam)
+Definition: Frequently asked questions in the SPPU exam pattern, covering stack definition, implementation, implicit/explicit stack, recursion importance, and applications of stack.
+  - Stack: An abstract data type, commonly used in most programming languages. A linear data structure that follows a particular order (LIFO/FILO).
+  - Stack Implementation Methods: Ways to implement a stack, including by means of Array, Structure, Pointer, and Linked List.
+  - Types of Stack: Mainly two types: implicit stack and explicit stack.
+  - Recursion: A functionality implemented by the compiler using the implicit stack; also relevant to explicit stack algorithms and an important question topic.
+  - Applications of Stack in Data Structure: Includes converting infix expression to postfix and prefix, evaluating postfix expressions, reversing strings, checking well-formed parentheses, processing subprogram/function calls, parsing, decimal to binary conversion, and backtracking algorithms.
+
+7. Recursion
+Definition: A functionality implemented by the compiler using the implicit stack; also relevant to explicit stack algorithms and an important question topic.
+
+8. Stacks
+Definition: A new chapter introduced in the presentation.
+  - Definition of Stack: What a stack is all about.
+  - Glass Jar Analogy: A way to imagine a stack where objects are placed inside, making it easier to visualize restrictions.
+Visual Representation:
+Figure 8: Diagram illustrating: An abstract data type, commonly used in most programming languages. A linear data structure that follows a particular order (LIFO/FILO).
+
+9. Presentation
+Definition: Introduces the concepts of stacks.
+  - Outline of Presentation: The outline of this presentation.
+  - Stacks: A new chapter introduced in the presentation.
+
+10. Definition Of Stack
+Definition: What a stack is all about.
+  - Linear Data Structure: All the data or elements are arranged in a sequential manner or in linear fashion.
+  - Insertions: Allowed only at the end called the top of the stack in a stack.
+  - Deletions: Allowed only at the end called the top of the stack in a stack.
+
+11. Real Life Examples Of Stacks
+Definition: Some real life examples of stacks.
+  - Stack of Books: A real life example of stacks.
+  - Stack of Coins: A real life example of stacks.
+
+12. Stack As An Adt
+Definition: What is a stack as an ADT (Abstract Data Type).
+  - Abstract Data Type (ADT): Means stack uses different types of operations, whose theory allows direct use of push and pop operations during implementation.
+  - User Point of View: The perspective from which stack operations are considered when defining a stack as an ADT.
+  - Implementation Details: How stack operations are performed, which is not of interest when defining a stack as an ADT from a user's perspective.
+
+13. Stack Operations
+Definition: Primary and secondary operations supported in case of stack.
+  - Primary Operations: A category of stack operations.
+  - Secondary Operations: Another category of stack operations.
+
+14. Insertions
+Definition: Allowed only at the end called the top of the stack in a stack.
+  - Top of the Stack: The location where elements are added to and removed from; the most recently added items are placed here.
+
+15. Deletions
+Definition: Allowed only at the end called the top of the stack in a stack.
+  - Top of the Stack: The location where elements are added to and removed from; the most recently added items are placed here.
+
+16. Array
+Definition: A type of linear data structure, like stack or linked list.
+
+17. Linked List
+Definition: A type of linear data structure, like stack or array.
+
+18. Access Object
+Definition: To retrieve an object, usually the top most one in a stack example.
+
+19. Add Object
+Definition: To place an object, usually at the top most place in a stack example.
+
+20. Glass Jar Analogy
+Definition: A way to imagine a stack where objects are placed inside, making it easier to visualize restrictions.
+  - Closed at Bottom: A characteristic of the glass jar in the analogy, implying no access from below.
+  - Opened at Top: A characteristic of the glass jar in the analogy, implying access from above.
+  - One Way to Insert/Delete: The singular method for modifying objects in a stack (from the top).
+
+21. Closed At Bottom
+Definition: A characteristic of the glass jar in the analogy, implying no access from below.
+
+22. Opened At Top
+Definition: A characteristic of the glass jar in the analogy, implying access from above.
+
+23. One Way To Insert/Delete
+Definition: The singular method for modifying objects in a stack (from the top).
+
+24. User Point Of View
+Definition: The perspective from which stack operations are considered when defining a stack as an ADT.
+
+25. Implementation Details
+Definition: How stack operations are performed, which is not of interest when defining a stack as an ADT from a user's perspective.
+
+26. Top Operation
+Definition: A secondary stack operation which simply returns the last inserted element without removing it.
+  - Top of the Stack: The location where elements are added to and removed from; the most recently added items are placed here.
+
+27. Size Operation
+Definition: A secondary stack operation which simply returns the size or the number of elements in the stack.
+
+28. List Of Commands
+Definition: A sequence of stack commands to be executed.
+  - Push(1): A command to push the element '1' inside the stack.
+  - Push(2): A command to push the element '2' inside the stack.
+  - Push(3): A command to push the element '3' onto the stack.
+  - Pop(): A command to delete the top most element from the stack.
+  - IsFull(): A command to check if the stack is full.

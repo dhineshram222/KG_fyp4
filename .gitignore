@@ -1,0 +1,21 @@
+# Agent-generated content (CRITICAL)
+.agent/
+.gemini/
+.gsd/
+
+# Python
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+
+# Logs & temp
+*.log
+*.tmp

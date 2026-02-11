@@ -1,0 +1,17 @@
+Tools for Practical implementation:
+
+ee
+
+| Anal
+
+Syntax Analysis,
+
+Semantic Analysis Front-End
+
+Intermediate Cade
+Generation
+Code Optimization
+
+Target Code BackEnd
+
+Generation

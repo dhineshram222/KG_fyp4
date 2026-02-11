@@ -1,0 +1,14 @@
+Slide Content:
+@o@e@e@eeeee8e 0
+List of commands
+push(1)
+push(2)
+
+push(3)
+
+pon)
+
+isFull()
+
+Diagram Description:
+a piece of paper with the words list on it

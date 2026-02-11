@@ -1,0 +1,9 @@
+Slide Content:
+SECONDARY STACK OPERATIONS
+
+top(): returns the last inserted element without removing it.
+
+TOP
+
+Diagram Description:
+a diagram showing the number of different layers

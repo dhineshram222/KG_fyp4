@@ -1,0 +1,27 @@
+Example Input:
+"============================================================\nFULL VIDEO TRANSCRIPT\n============================================================\n\nToday we will see network topology."
+
+Example Output:
+{"nodes": [{"id": "N1", "label": "FULL", "description": ""}, {"id": "N2", "label": "VIDEO", "description": ""}, {"id": "N3", "label": "TRANSCRIPT", "description": ""}, {"id": "N4", "label": "Today", "description": ""}], "edges": [{"source": "N1", "target": "N2", "relation": "related_to"}, {"source": "N1", "target": "N3", "relation": "related_to"}, {"source": "N1", "target": "N4", "relation": "related_to"}]}
+
+
+Example Input:
+"Upon the completion of this session, we will be able to understand various network topologies like bus, star, ring, mesh and hybrid."
+
+Example Output:
+{"nodes": [{"id": "N1", "label": "Upon", "description": ""}, {"id": "N2", "label": "the", "description": ""}, {"id": "N3", "label": "completion", "description": ""}, {"id": "N4", "label": "this", "description": ""}], "edges": [{"source": "N1", "target": "N2", "relation": "related_to"}, {"source": "N1", "target": "N3", "relation": "related_to"}, {"source": "N1", "target": "N4", "relation": "related_to"}]}
+
+
+Example Input:
+"We will also understand what are the advantages and disadvantages of bus, star, ring, mesh and hybrid topologies."
+
+Example Output:
+{"nodes": [{"id": "N1", "label": "will", "description": ""}, {"id": "N2", "label": "also", "description": ""}, {"id": "N3", "label": "understand", "description": ""}, {"id": "N4", "label": "what", "description": ""}], "edges": [{"source": "N1", "target": "N2", "relation": "related_to"}, {"source": "N1", "target": "N3", "relation": "related_to"}, {"source": "N1", "target": "N4", "relation": "related_to"}]}
+
+
+Example Input:
+"Firstly, we will start with what is a network topology."
+
+Example Output:
+{"nodes": [{"id": "N1", "label": "Firstly", "description": ""}, {"id": "N2", "label": "will", "description": ""}, {"id": "N3", "label": "start", "description": ""}, {"id": "N4", "label": "with", "description": ""}], "edges": [{"source": "N1", "target": "N2", "relation": "related_to"}, {"source": "N1", "target": "N3", "relation": "related_to"}, {"source": "N1", "target": "N4", "relation": "related_to"}]}
+

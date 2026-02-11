@@ -1,0 +1,6 @@
+DEFINITION OF STACK
+
+A stack is a linear data structure in which insertions and deletions are
+allowed only at the end, called the top of the stack.
+
+Stack of books Stack of coins

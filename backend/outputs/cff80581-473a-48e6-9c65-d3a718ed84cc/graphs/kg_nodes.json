@@ -1,0 +1,132 @@
+[
+  {
+    "id": "N1",
+    "label": "Data Structures (Subject)",
+    "description": "a new subject that is data structures."
+  },
+  {
+    "id": "N2",
+    "label": "Data (Core Concept)",
+    "description": "a prerequisite before understanding what data structure is."
+  },
+  {
+    "id": "N3",
+    "label": "Data (Dictionary Definition)",
+    "description": "quantities, characters or symbols on which operations are performed by a computer, which may be stored and transmitted in the form of electrical signals and recorded on magnetic, optical or mechanical recording media."
+  },
+  {
+    "id": "N4",
+    "label": "Operations on Data",
+    "description": "operations performed by a computer on quantities, characters or symbols."
+  },
+  {
+    "id": "N5",
+    "label": "Storage and Transmission of Data",
+    "description": "data may be stored and transmitted in the form of electrical signals and recorded on magnetic, optical or mechanical recording media."
+  },
+  {
+    "id": "N6",
+    "label": "Information",
+    "description": "meaningful or processed data."
+  },
+  {
+    "id": "N7",
+    "label": "Data vs. Information Distinction",
+    "description": "a distinction between data and an information, which is a very confusing topic."
+  },
+  {
+    "id": "N8",
+    "label": "Unprocessed Data (Example)",
+    "description": "just a collection of characters or symbols where one won't be able to understand it properly."
+  },
+  {
+    "id": "N9",
+    "label": "Processed Data",
+    "description": "data that has been manipulated, such as reversing a whole string, to make it understandable."
+  },
+  {
+    "id": "N10",
+    "label": "Meaningful Information (Goal)",
+    "description": "information from which some meaning can be extracted, making it quite understandable."
+  },
+  {
+    "id": "N11",
+    "label": "Systematic Data Arrangement",
+    "description": "arranging data in a systematic way so that it gets a structure and becomes meaningful."
+  },
+  {
+    "id": "N12",
+    "label": "Data Management",
+    "description": "managing data in such a way so that it can produce some meaningful information."
+  },
+  {
+    "id": "N13",
+    "label": "Data Structure (Definition)",
+    "description": "the systematic way to organize data so that it can be used efficiently."
+  },
+  {
+    "id": "N14",
+    "label": "Efficiency (Time/Space)",
+    "description": "using data efficiently in terms of time as well as space."
+  },
+  {
+    "id": "N15",
+    "label": "Arrays (Example Data Structure)",
+    "description": "a classical data structure, thought of as a sequence or collection of some symbols, characters, integers, or floats."
+  },
+  {
+    "id": "N16",
+    "label": "Stack Data Structure",
+    "description": "a data structure used in implementing the redo and undo feature."
+  },
+  {
+    "id": "N17",
+    "label": "Undo/Redo Feature",
+    "description": "a famous feature in applications like Google Docs, PowerPoint, or Microsoft Word that uses stack data structures."
+  },
+  {
+    "id": "N18",
+    "label": "Undo Stack",
+    "description": "a stack where each information entered gets stored; elements are popped out when control z (undo) is pressed."
+  },
+  {
+    "id": "N19",
+    "label": "Redo Stack",
+    "description": "a stack where elements popped from the undo stack are placed; used when control y (redo) is pressed to get the operation again."
+  },
+  {
+    "id": "N20",
+    "label": "Bitmap Images",
+    "description": "images stored as a series of tiny dots called pixels."
+  },
+  {
+    "id": "N21",
+    "label": "Pixels",
+    "description": "tiny dots or small squares, each assigned a color and then arranged in a pattern to form an image."
+  },
+  {
+    "id": "N22",
+    "label": "Two-Dimensional Array",
+    "description": "a data structure (e.g., 37x40) used to store pixel information (each pixel's color) for bitmap images."
+  },
+  {
+    "id": "N23",
+    "label": "Graph Data Structure",
+    "description": "a data structure used to store friendship information on social networking sites."
+  },
+  {
+    "id": "N24",
+    "label": "Graph Nodes",
+    "description": "individuals (e.g., James, Mark, Leah, Lucy) represented in a graph data structure."
+  },
+  {
+    "id": "N25",
+    "label": "Graph Edges",
+    "description": "connections or relationships between individuals (nodes) represented in a graph data structure."
+  },
+  {
+    "id": "N26",
+    "label": "Data Structures Importance",
+    "description": "the reason why companies are preferring this subject over other subjects, as it is very important and useful in day-to-day life and used more frequently."
+  }
+]

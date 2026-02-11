@@ -1,0 +1,8 @@
+Slide Content:
+PHYSICAL TOPOLOGY AND LOGICAL TOPOLOGY
+
+Physical Topolagy ~ Placement of various nodes.
+
+Logical topology - Deals with the data flow in the network.
+
+Diagram Description:

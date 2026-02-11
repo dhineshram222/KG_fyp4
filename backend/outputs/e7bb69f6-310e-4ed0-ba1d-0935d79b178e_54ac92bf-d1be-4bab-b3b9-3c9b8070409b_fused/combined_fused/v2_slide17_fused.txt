@@ -1,0 +1,27 @@
+Slide Content:
+Syntax Analyzer:
+
+Leremes
+
+Tokens
+
+identiRer
+
+‘operator
+
+identifier
+
+‘operator
+
+identifier
+
+‘operotor
+
+identifier
+
+nesoacage to
+
+oo
+
+Diagram Description:
+a blackboard with the words x and y on it

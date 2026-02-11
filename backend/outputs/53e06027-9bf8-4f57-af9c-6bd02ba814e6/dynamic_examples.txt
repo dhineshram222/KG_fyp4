@@ -1,0 +1,27 @@
+Example Input:
+"============================================================\nFULL VIDEO TRANSCRIPT\n============================================================\n\nGood morning everyone, I am Rishal Vanokar, Assistant Professor IT Department."
+
+Example Output:
+{"nodes": [{"id": "N1", "label": "FULL", "description": ""}, {"id": "N2", "label": "VIDEO", "description": ""}, {"id": "N3", "label": "TRANSCRIPT", "description": ""}, {"id": "N4", "label": "Good", "description": ""}], "edges": [{"source": "N1", "target": "N2", "relation": "related_to"}, {"source": "N1", "target": "N3", "relation": "related_to"}, {"source": "N1", "target": "N4", "relation": "related_to"}]}
+
+
+Example Input:
+"So from in this video we will start our third unit of data structure and algorithm subject diets stack and queue."
+
+Example Output:
+{"nodes": [{"id": "N1", "label": "from", "description": ""}, {"id": "N2", "label": "this", "description": ""}, {"id": "N3", "label": "video", "description": ""}, {"id": "N4", "label": "will", "description": ""}], "edges": [{"source": "N1", "target": "N2", "relation": "related_to"}, {"source": "N1", "target": "N3", "relation": "related_to"}, {"source": "N1", "target": "N4", "relation": "related_to"}]}
+
+
+Example Input:
+"And the first topic in this unit is introduction of stack."
+
+Example Output:
+{"nodes": [{"id": "N1", "label": "And", "description": ""}, {"id": "N2", "label": "the", "description": ""}, {"id": "N3", "label": "first", "description": ""}, {"id": "N4", "label": "topic", "description": ""}], "edges": [{"source": "N1", "target": "N2", "relation": "related_to"}, {"source": "N1", "target": "N3", "relation": "related_to"}, {"source": "N1", "target": "N4", "relation": "related_to"}]}
+
+
+Example Input:
+"So let's see what is mean by stack."
+
+Example Output:
+{"nodes": [{"id": "N1", "label": "let", "description": ""}, {"id": "N2", "label": "see", "description": ""}, {"id": "N3", "label": "what", "description": ""}, {"id": "N4", "label": "mean", "description": ""}], "edges": [{"source": "N1", "target": "N2", "relation": "related_to"}, {"source": "N1", "target": "N3", "relation": "related_to"}, {"source": "N1", "target": "N4", "relation": "related_to"}]}
+

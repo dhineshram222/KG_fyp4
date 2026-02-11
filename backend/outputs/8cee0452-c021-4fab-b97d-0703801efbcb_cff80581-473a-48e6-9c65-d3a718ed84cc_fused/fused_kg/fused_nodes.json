@@ -1,0 +1,377 @@
+[
+  {
+    "id": "N1",
+    "label": "Data",
+    "description": "Are simply a value are set of values of different type which is called data types like string, integer, char etc. or collection of information."
+  },
+  {
+    "id": "N2",
+    "label": "Structure (Concept)",
+    "description": "Way of organizing information, so that it is easier to use."
+  },
+  {
+    "id": "N3",
+    "label": "Data Objects",
+    "description": "A unique location in computer memory that contains the values."
+  },
+  {
+    "id": "N4",
+    "label": "Algorithm",
+    "description": "Step by Step procedure to solve a particular function."
+  },
+  {
+    "id": "N5",
+    "label": "Program",
+    "description": "Algorithm + Data Structure."
+  },
+  {
+    "id": "N6",
+    "label": "Data Structure",
+    "description": "A particular way of organizing data in a computer so that it can be used efficiently."
+  },
+  {
+    "id": "N7",
+    "label": "Efficiency",
+    "description": "Allows data to be used efficiently."
+  },
+  {
+    "id": "N8",
+    "label": "Element Relationship",
+    "description": "Consideration of elements stored and their relationship to each other."
+  },
+  {
+    "id": "N9",
+    "label": "Data Manipulation",
+    "description": "A scheme for organizing related pieces of information that can be manipulated."
+  },
+  {
+    "id": "N10",
+    "label": "Why Data Structure",
+    "description": "Necessity to solve complex requirements in an efficient way."
+  },
+  {
+    "id": "N11",
+    "label": "Complex Human Requirements",
+    "description": "Human requirement with computer are going to complex day by day."
+  },
+  {
+    "id": "N12",
+    "label": "Fastest Solutions",
+    "description": "Provides fastest solution of human requirements."
+  },
+  {
+    "id": "N13",
+    "label": "Efficient Solutions for Complex Problems",
+    "description": "Provides efficient solution of complex problem."
+  },
+  {
+    "id": "N14",
+    "label": "Space Complexity Solution",
+    "description": "Provides solution for Space Complexity."
+  },
+  {
+    "id": "N15",
+    "label": "Time Complexity Solution",
+    "description": "Provides solution for Time Complexity."
+  },
+  {
+    "id": "N16",
+    "label": "Logical/Mathematical Description",
+    "description": "Logical or mathematical description of the structure."
+  },
+  {
+    "id": "N17",
+    "label": "Structure Implementation",
+    "description": "Implementation of structure on a computer using different computer languages."
+  },
+  {
+    "id": "N18",
+    "label": "C++ Language",
+    "description": "A computer language mentioned for implementation purpose in the syllabus."
+  },
+  {
+    "id": "N19",
+    "label": "Quantitative Analysis",
+    "description": "Determining the amount of memory needed to store the structure and the time required to process the structure."
+  },
+  {
+    "id": "N20",
+    "label": "Data Structure Classification",
+    "description": "Categorization of data structures into types."
+  },
+  {
+    "id": "N21",
+    "label": "Primitive Data Structure",
+    "description": "Data structures that are directly operated upon the machine-level instructions."
+  },
+  {
+    "id": "N22",
+    "label": "Built-in/Predefined Data Types",
+    "description": "Standard / Predefine/ Built data types in of any one of the computer languages."
+  },
+  {
+    "id": "N23",
+    "label": "Non-Primitive Data Structure",
+    "description": "Data structures that are derived from the primitive data structures."
+  },
+  {
+    "id": "N24",
+    "label": "User-Designed",
+    "description": "Can be designed by user."
+  },
+  {
+    "id": "N25",
+    "label": "Homogeneous/Heterogeneous Grouping",
+    "description": "Structuring of a group of homogeneous (same type) or heterogeneous (different type) data items."
+  },
+  {
+    "id": "N26",
+    "label": "Linear Data Structure",
+    "description": "A data structure that has homogeneous elements and where elements are in a sequence."
+  },
+  {
+    "id": "N27",
+    "label": "Elements in a Sequence",
+    "description": "Elements are in a sequence and form a liner series."
+  },
+  {
+    "id": "N28",
+    "label": "Non-Linear Data Structure",
+    "description": "A data structure in which data item is connected to several other data items."
+  },
+  {
+    "id": "N29",
+    "label": "Hierarchical/Parent-Child Relationship",
+    "description": "May exhibit either a hierarchical relationship or parent child relationship."
+  },
+  {
+    "id": "N30",
+    "label": "Static Data Structure",
+    "description": "The size of the structure is fixed."
+  },
+  {
+    "id": "N31",
+    "label": "Dynamic Data Structure",
+    "description": "The size of the structure in not fixed and can be modified during the operations performed on it."
+  },
+  {
+    "id": "N32",
+    "label": "Data Structure Operations",
+    "description": "Commonly used operations performed on data structure."
+  },
+  {
+    "id": "N33",
+    "label": "Traversing",
+    "description": "Processing each element in the list."
+  },
+  {
+    "id": "N34",
+    "label": "Search",
+    "description": "Finding the location of the element with a given value or the Selection record with a given key."
+  },
+  {
+    "id": "N35",
+    "label": "Insertion",
+    "description": "Adding a new element to the list."
+  },
+  {
+    "id": "N36",
+    "label": "Deletion",
+    "description": "Removing an elements from the list."
+  },
+  {
+    "id": "N37",
+    "label": "Sorting",
+    "description": "Arranging the elements in some type of order."
+  },
+  {
+    "id": "N38",
+    "label": "Merging",
+    "description": "Combining two list into a single list."
+  },
+  {
+    "id": "N39",
+    "label": "Array",
+    "description": "A non-primitive data structure that includes single dimensional and multi-dimensional types, and is an example of static and linear data structures."
+  },
+  {
+    "id": "N40",
+    "label": "Linked List",
+    "description": "A non-primitive data structure, an example of dynamic and linear data structures."
+  },
+  {
+    "id": "N41",
+    "label": "Stack",
+    "description": "An example of a linear data structure."
+  },
+  {
+    "id": "N42",
+    "label": "Queue",
+    "description": "An example of a linear data structure."
+  },
+  {
+    "id": "N43",
+    "label": "Tree",
+    "description": "An example of a non-linear data structure."
+  },
+  {
+    "id": "N44",
+    "label": "Graph",
+    "description": "An example of a non-linear data structure."
+  },
+  {
+    "id": "N45",
+    "label": "Hash Table",
+    "description": "An example of a non-linear data structure."
+  },
+  {
+    "id": "N46",
+    "label": "Integer",
+    "description": "A type of primitive data structure."
+  },
+  {
+    "id": "N47",
+    "label": "Character",
+    "description": "A type of primitive data structure."
+  },
+  {
+    "id": "N48",
+    "label": "Float",
+    "description": "A type of primitive data structure."
+  },
+  {
+    "id": "N49",
+    "label": "Pointers",
+    "description": "A type of primitive data structure."
+  },
+  {
+    "id": "N50",
+    "label": "Data Structures (Subject)",
+    "description": "a new subject that is data structures."
+  },
+  {
+    "id": "N51",
+    "label": "Data (Core Concept)",
+    "description": "a prerequisite before understanding what data structure is."
+  },
+  {
+    "id": "N52",
+    "label": "Data (Dictionary Definition)",
+    "description": "quantities, characters or symbols on which operations are performed by a computer, which may be stored and transmitted in the form of electrical signals and recorded on magnetic, optical or mechanical recording media."
+  },
+  {
+    "id": "N53",
+    "label": "Operations on Data",
+    "description": "operations performed by a computer on quantities, characters or symbols."
+  },
+  {
+    "id": "N54",
+    "label": "Storage and Transmission of Data",
+    "description": "data may be stored and transmitted in the form of electrical signals and recorded on magnetic, optical or mechanical recording media."
+  },
+  {
+    "id": "N55",
+    "label": "Information",
+    "description": "meaningful or processed data."
+  },
+  {
+    "id": "N56",
+    "label": "Data vs. Information Distinction",
+    "description": "a distinction between data and an information, which is a very confusing topic."
+  },
+  {
+    "id": "N57",
+    "label": "Unprocessed Data (Example)",
+    "description": "just a collection of characters or symbols where one won't be able to understand it properly."
+  },
+  {
+    "id": "N58",
+    "label": "Processed Data",
+    "description": "data that has been manipulated, such as reversing a whole string, to make it understandable."
+  },
+  {
+    "id": "N59",
+    "label": "Meaningful Information (Goal)",
+    "description": "information from which some meaning can be extracted, making it quite understandable."
+  },
+  {
+    "id": "N60",
+    "label": "Systematic Data Arrangement",
+    "description": "arranging data in a systematic way so that it gets a structure and becomes meaningful."
+  },
+  {
+    "id": "N61",
+    "label": "Data Management",
+    "description": "managing data in such a way so that it can produce some meaningful information."
+  },
+  {
+    "id": "N62",
+    "label": "Data Structure (Definition)",
+    "description": "the systematic way to organize data so that it can be used efficiently."
+  },
+  {
+    "id": "N63",
+    "label": "Efficiency (Time/Space)",
+    "description": "using data efficiently in terms of time as well as space."
+  },
+  {
+    "id": "N64",
+    "label": "Arrays (Example Data Structure)",
+    "description": "a classical data structure, thought of as a sequence or collection of some symbols, characters, integers, or floats."
+  },
+  {
+    "id": "N65",
+    "label": "Stack Data Structure",
+    "description": "a data structure used in implementing the redo and undo feature."
+  },
+  {
+    "id": "N66",
+    "label": "Undo/Redo Feature",
+    "description": "a famous feature in applications like Google Docs, PowerPoint, or Microsoft Word that uses stack data structures."
+  },
+  {
+    "id": "N67",
+    "label": "Undo Stack",
+    "description": "a stack where each information entered gets stored; elements are popped out when control z (undo) is pressed."
+  },
+  {
+    "id": "N68",
+    "label": "Redo Stack",
+    "description": "a stack where elements popped from the undo stack are placed; used when control y (redo) is pressed to get the operation again."
+  },
+  {
+    "id": "N69",
+    "label": "Bitmap Images",
+    "description": "images stored as a series of tiny dots called pixels."
+  },
+  {
+    "id": "N70",
+    "label": "Pixels",
+    "description": "tiny dots or small squares, each assigned a color and then arranged in a pattern to form an image."
+  },
+  {
+    "id": "N71",
+    "label": "Two-Dimensional Array",
+    "description": "a data structure (e.g., 37x40) used to store pixel information (each pixel's color) for bitmap images."
+  },
+  {
+    "id": "N72",
+    "label": "Graph Data Structure",
+    "description": "a data structure used to store friendship information on social networking sites."
+  },
+  {
+    "id": "N73",
+    "label": "Graph Nodes",
+    "description": "individuals (e.g., James, Mark, Leah, Lucy) represented in a graph data structure."
+  },
+  {
+    "id": "N74",
+    "label": "Graph Edges",
+    "description": "connections or relationships between individuals (nodes) represented in a graph data structure."
+  },
+  {
+    "id": "N75",
+    "label": "Data Structures Importance",
+    "description": "the reason why companies are preferring this subject over other subjects, as it is very important and useful in day-to-day life and used more frequently."
+  }
+]

@@ -1,0 +1,29 @@
+Slide Content:
+3. Itallows centralized management and control of the network.
+
+4, It easier to monitor and manage network resources and security.
+
+» Disadvantages of MAN:
+1. Architecture is quite complicated. Se it is hard to design and maintais-——————
+2. This highly expensive because it required the high cost to set up fiber optics.
+
+3. The Data transfer rate in MAN is ow when compare to LANs.
+
+> Disadvantages of MAN:
+
+4, It easier to monitor and manage network resources and securily.
+
+3
+
+'s centralized management and contro! of the network.
+
+2. The security level in MAN is high and strict as compared to WAN.
+
+. Ithas high-speed connectivity in which the speed ranges from 50-100 Mbps.
+
+Metropolitan Area Network (MAN)
+
+Advantages of MAN:
+
+Diagram Description:
+a diagram of a network

@@ -1,0 +1,24 @@
+Slide Content:
+6, Scalability:
++ We can extend the network by adding new devices.
+
+7. Rel
+
++ It can use alternative source for data communication & techniques in case of any hardware
+failure.
+
++ We can extend the network by adding new devices.
+
++ Tt ensuring that the user has the right to access the certain files and applications.
+
+5. Security:
+
++ We do not need to install the software on every machine.
+
++ In CN, install ali applications on the main server, So user can access the applications centrally.
+
+Features of Computer Network
+
+Software and [ardware sharing:
+
+Diagram Description:

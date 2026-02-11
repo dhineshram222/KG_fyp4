@@ -1,0 +1,10 @@
+Slide Content:
+o 9 8 ¢
+J
+
+Definition of Examples Stack as an Stack
+
+Stack ADT Operations
+
+Diagram Description:
+a pillow with the word online written on it

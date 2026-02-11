@@ -1,0 +1,42 @@
+I. Introduction to Network Topology
+
+• Definition: Network topology is the arrangement, structure, or layout of various nodes (computers, printers, etc.) in a computer network to establish communication.
+• Types of Topology:
+    ◦ Physical Topology: Refers to the actual physical placement of nodes, such as their location in a building.
+    ◦ Logical Topology: Refers to how data flows from one node to another within the network.
+• Applications: Topologies are used in network design, routing algorithms, database management, and even image recognition.
+
+
+II. Common Network Topologies
+
+1. Point-to-Point Topology
+• Structure: The most basic form, consisting of only two devices where one acts as a sender and the other as a receiver.
+• Characteristics: Provides high speed and high bandwidth.
+• Examples: Bluetooth file transfers, a cable between two computers, or a satellite link between ground stations.
+2. Bus Topology
+• Structure: All nodes are connected to a single common transmission medium (usually a coaxial cable).
+• Mechanism: Uses the CSMA (Carrier Sense Multiple Access) technique to handle data flow and avoid collisions.
+• Advantages: Low cable/installation costs; ideal for small or temporary networks; failure of one node does not affect others.
+• Disadvantages: If the main cable fails, the entire network crashes; limited cable length; security issues as all nodes receive a copy of the data.
+3. Ring Topology
+• Structure: Nodes are connected in a closed loop; each node has exactly two neighbors.
+• Mechanism: Uses "token passing" where a device must hold a digital token to send data.
+• Advantages: Reduced data collisions; inexpensive twisted-pair cabling; data transmission is generally high speed.
+• Disadvantages: Typically unidirectional (data flows in one direction), leading to communication delays; a single point of failure in the cable or a node disrupts the entire network.
+4. Star Topology
+• Structure: All nodes are personally connected to a centralized node, such as a hub or switch.
+• Advantages: Easy to manage and scale (nodes can be added easily to hub ports); if one node's cable fails, others are unaffected; provides better privacy.
+• Disadvantages: If the central hub fails, the entire network goes down; more expensive due to the high volume of cabling required.
+5. Mesh Topology
+• Structure: Each node is interconnected with every other node through various connections.
+• Advantages: Highly reliable and 100% fault-tolerant; if one path fails, data can take multiple alternative paths; very fast communication speed.
+• Disadvantages: Very high cost and complex installation/maintenance; impractical for very large networks (e.g., thousands of nodes).
+6. Tree Topology
+• Structure: A hierarchical structure that combines characteristics of bus and star topologies.
+• Hierarchy: Features a root node with branching child nodes.
+• Advantages: Excellent for long-distance communication; easy error detection and correction because the network is divided into sub-parts.
+• Disadvantages: If the root node or main central hub fails, the entire system crashes; high cable requirements.
+7. Hybrid Topology
+• Structure: A combination of two or more different topologies (e.g., star-bus or star-ring).
+• Advantages: Extremely flexible and can be designed specifically to meet an organization's unique requirements.
+• Disadvantages: Complex to design and expensive to implement.

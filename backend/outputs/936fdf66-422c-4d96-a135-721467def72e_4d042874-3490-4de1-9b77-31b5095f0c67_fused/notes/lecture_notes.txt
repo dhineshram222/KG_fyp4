@@ -1,0 +1,103 @@
+LECTURE NOTES
+=============
+
+
+1. Network Topologies
+Definition: Refers to the arrangement of different elements like nodes, links, and devices in a network; defines how these components are connected and interact with each other.
+1.1 Types of Network Topologies
+Categories of network topologies, including point-to-point, bus, ring, star, mesh, tree, and hybrid.
+  - Point to Point Topology: A network topology that connects two nodes or devices, where one acts as a sender and the other as a receiver, providing high bandwidth and high speed.
+  - Bus Topology: A topology where every device is connected to a single coaxial cable called the backbone cable, allowing only one device to send information at a time.
+  - Ring Topology: A topology where all PCs are connected with each other in the form of a ring, and data moves from one node to another either clockwise or anticlockwise.
+  - Star Topology: A configuration where all nodes are connected to a central hub using a communication link, with the hub functioning as a server.
+  - Mesh Topology: A topology where all computers are interconnected with each other through various redundant connections, providing multiple paths for sending and receiving data.
+  - Tree Topology: A topology that combines characteristics of bus and star topologies, connecting computers in a hierarchical fashion with point-to-point or point-to-multipoint links.
+  - Hybrid Topology: A combination of various different topologies, created based on the specific requirements of the network.
+  - Network Topology Applications: Used in network designing algorithms, routing algorithms in operating systems, image recognition, data compression, and database management systems.
+Visual Representation:
+Figure 1: Diagram illustrating: Refers to the arrangement of different elements like nodes, links, and devices in a network; defines how these components are connected and interact with each other.
+
+2. Network Topology Applications
+Definition: Used in network designing algorithms, routing algorithms in operating systems, image recognition, data compression, and database management systems.
+Visual Representation:
+Figure 2: Diagram illustrating: Used in network designing algorithms, routing algorithms in operating systems, image recognition, data compression, and database management systems.
+
+3. Bluetooth Connection
+Definition: An example of Point to Point Topology for file transfer between two devices.
+
+4. Cable Connection (Two Computers)
+Definition: An example of Point to Point Topology for direct connection between two computers.
+Visual Representation:
+Figure 4: Diagram illustrating: An example of Point to Point Topology for direct connection between two computers.
+
+5. Telephonic Line Connection
+Definition: An example of Point to Point Topology for a telephone line connection between two modems.
+
+6. Satellite Communication Link
+Definition: An example of Point to Point Topology for communication link between two ground stations.
+Visual Representation:
+Figure 6: Diagram illustrating: An example of Point to Point Topology for communication link between two ground stations.
+
+7. Csma Technique
+Definition: A technique used in Bus Topology to handle data flow and guarantee data integrity.
+  - Collision Avoidance (CSMA/CA): A CSMA technique where the sender waits until the transmission media becomes idle if it is busy.
+  - Collision Detection (CSMA/CD): A CSMA technique where the sender stops transmitting data if a collision is detected, working on 'recovery after the collision'.
+
+8. Ethernet Lan Cable
+Definition: An example of Bus Topology commonly used in LAN and small offices.
+
+9. Token Passing
+Definition: A method of transferring data in Ring Topology where the sender modifies a token with the destination address and data, which is passed until it matches the destination.
+
+10. Hub (Star Topology)
+Definition: A central point in Star Topology that functions as a server to control and manage the entire network.
+
+11. Internet
+Definition: One of the best examples of Mesh Topology.
+Visual Representation:
+Figure 11: Diagram illustrating: One of the best examples of Mesh Topology.
+
+12. Smart Home Systems
+Definition: An example of Mesh Topology where multiple smart devices are interconnected.
+
+13. Child Node
+Definition: Nodes connected to a root node or other child nodes in a Tree Topology, forming a hierarchical structure.
+
+14. Network Topology
+Definition: Arrangement of nodes of a computer network, viewed as a layout of a computer network.
+  - Nodes: Components that need to be arranged to establish communication in a network.
+  - Communication: The establishment of data exchange among all nodes in a network.
+  - Physical Topology: The placement of various nodes in a network.
+  - Logical Topology: How the data is going to flow in the network.
+  - Bus Topology: A topology where every device is connected to a single coaxial cable called the backbone cable, allowing only one device to send information at a time.
+Visual Representation:
+Figure 14: Diagram illustrating: Used in network designing algorithms, routing algorithms in operating systems, image recognition, data compression, and database management systems.
+
+15. Nodes
+Definition: Components that need to be arranged to establish communication in a network.
+
+16. Communication
+Definition: The establishment of data exchange among all nodes in a network.
+
+17. Physical Topology
+Definition: The placement of various nodes in a network.
+  - Nodes: Components that need to be arranged to establish communication in a network.
+
+18. Logical Topology
+Definition: How the data is going to flow in the network.
+  - Communication: The establishment of data exchange among all nodes in a network.
+
+19. Common Transmission Medium (Bus)
+Definition: A single wire or cable in bus topology capable of sending and receiving data bidirectionally.
+
+20. Token (Ring Topology)
+Definition: A mechanism in ring topology that dictates which node gets to send data, circulated throughout the network.
+Visual Representation:
+Figure 20: Diagram illustrating: A topology where all PCs are connected with each other in the form of a ring, and data moves from one node to another either clockwise or anticlockwise.
+
+21. Central Node (Hub/Switch)
+Definition: A central device in a star topology that performs centralized administration and through which all network traffic passes.
+  - Star Topology: A configuration where all nodes are connected to a central hub using a communication link, with the hub functioning as a server.
+
+22. Extended Star Topology
+Definition: A variation of star topology where two or more star topologies are connected.

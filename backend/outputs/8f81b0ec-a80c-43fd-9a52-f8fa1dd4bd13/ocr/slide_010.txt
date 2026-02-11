@@ -1,0 +1,31 @@
+Home.
+School & Colleges
+Offices
+
+Libraries & Laboratory ete
+
+ee PE
+
+4. Libraries & Laboratory ete
+
+3. Offices
+
+& Used En:
+i. Home,
+2. School & Colleges
+
+. Home.
+
+Used In:
+
++ It provides higher security with Less cost.
+
++ Itranges up to 2km & transmission speed is very high with easy maintenance,
+
++ It uses Ethernet or Token-ring technology & Wi-Fi,
+
++ Communication medium in LAN such as pwisted pair, coaxial cable ctc.
+
++ LAN is a group of computers connected to cach other in a small limited area.
+
+Local Area Network (LAN)

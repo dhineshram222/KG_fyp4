@@ -1,0 +1,122 @@
+LECTURE NOTES
+=============
+
+
+1. Data Abstraction
+Definition: The process of hiding irrelevant details from the user. It shows only necessary information to the user and hiding all the irrelevant details from the user.
+1.1 Levels of Data Abstraction
+Total three levels in database management system: View level, conceptual level and physical level.
+  - Physical Level: The lowest level of data abstraction. It defines how data are stored, decides location in memory, and whether data will be centralized or distributed.
+  - Conceptual Level: Defines what data are stored into the database and what are the relationships exist among this data. It decides the structure of entire database.
+  - View Level: Tells the application about how data should be shown to the user. There are multiple views of the same database.
+  - Logical Level: Deals with what data are actually stored and the relationship among data stored.
+  - Data Independence: Users and data should not directly interact with each other.
+  - Database Management System (DBMS): A system where data abstraction will work.
+  - Irrelevant Details: Details hidden from the user by data abstraction, such as where data will be physically stored or what types of data model will be used.
+  - Necessary Information: Essential information that users know, not the irrelevant details.
+  - Complexity: Information to be hidden by data abstraction.
+  - Essential Details: Provided when hiding complexity.
+
+2. Database Management System (Dbms)
+Definition: A system where data abstraction will work.
+
+3. Database Administrator (Dba)
+Definition: Decides which data should be kept at which particular disk drive. Handles physical level, conceptual level and logical level.
+
+4. Irrelevant Details
+Definition: Details hidden from the user by data abstraction, such as where data will be physically stored or what types of data model will be used.
+
+5. Necessary Information
+Definition: Essential information that users know, not the irrelevant details.
+
+6. User
+Definition: Present on the view level. Users are not directly interact with the physical level.
+  - View Level: Tells the application about how data should be shown to the user. There are multiple views of the same database.
+  - Physical Level: The lowest level of data abstraction. It defines how data are stored, decides location in memory, and whether data will be centralized or distributed.
+  - Server: Is a logical level. Fetches the answer of information through the database.
+Visual Representation:
+Figure 6: Diagram illustrating: Present on the view level. Users are not directly interact with the physical level.
+
+7. Database
+Definition: Directly connected to the physical level. Physical data will be stored at physical level.
+
+8. Programmer/Developer
+Definition: Handle conceptual level and logical level.
+
+9. Database Structure
+Definition: The structure of entire database, including tables and their columns, and relationships between tables, decided in the logical level.
+
+10. Database Queries
+Definition: Different types of queries like Select, Insert, Update, Delete performed in logical level.
+
+11. Security
+Definition: Increases in the view level because authority for editing, changes, and modification is given to specific roles.
+
+12. Server
+Definition: Is a logical level. Fetches the answer of information through the database.
+  - Conceptual Level: Defines what data are stored into the database and what are the relationships exist among this data. It decides the structure of entire database.
+  - Database: Directly connected to the physical level. Physical data will be stored at physical level.
+
+13. 3 Tier Architecture
+Definition: An architecture seen in the last presentation.
+  - Levels of Data Abstraction: Total three levels in database management system: View level, conceptual level and physical level.
+Visual Representation:
+Figure 13: Diagram illustrating: An architecture seen in the last presentation.
+
+14. View Of Data
+Definition: The focus of this presentation.
+  - Multiple Views: Views existing at the presentation level; reasons for needing them are revealed in this presentation.
+  - Data Abstraction: The process of hiding irrelevant details from the user. It shows only necessary information to the user and hiding all the irrelevant details from the user.
+Visual Representation:
+Figure 14: Diagram illustrating: The focus of this presentation.
+
+15. Database Goal
+Definition: To store and retrieve data conveniently and effectively.
+  - Data Storage: Involved for storing and retrieving data.
+
+16. Data Storage
+Definition: Involved for storing and retrieving data.
+  - Storage Data Structures: May involve simple or complex data structures for data storage.
+
+17. Storage Data Structures
+Definition: May involve simple or complex data structures for data storage.
+
+18. Complexity
+Definition: Information to be hidden by data abstraction.
+
+19. Abstract Data
+Definition: A short and sweet answer; desired over complete data.
+  - Complete Data: Not desired; involves encountered complexities.
+
+20. Low Level Data Structures
+Definition: Used at the physical level, especially for multimedia data.
+
+21. What Data Stored
+Definition: Describes the data actually to be stored in the databases.
+
+22. Data Relationships
+Definition: Describes the relationship among the data stored in the database.
+
+23. Physical Data Independence
+Definition: Exists so that if any changes are made in the logical level, it will not affect the physical level.
+
+24. Application Level
+Definition: Where the logical level is, and applications reside.
+  - Schema: The structure of the database.
+
+25. Database Administrator
+Definition: Involved in all levels; writes all the logic, especially at the logical level.
+  - Logical Level: Deals with what data are actually stored and the relationship among data stored.
+
+26. User Access
+Definition: Granting privileges to users, managed at the view level.
+
+27. User-System Interaction
+Definition: Done at the view level through interfaces.
+  - Interfaces: Web, mobile, GUI; used for user interaction with the system.
+
+28. Interfaces
+Definition: Web, mobile, GUI; used for user interaction with the system.
+
+29. Security Of Multiple Views
+Definition: An important aspect to focus on at the view level.

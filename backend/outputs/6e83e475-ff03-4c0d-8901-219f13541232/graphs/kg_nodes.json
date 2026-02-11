@@ -1,0 +1,122 @@
+[
+  {
+    "id": "N1",
+    "label": "3 Tier Architecture",
+    "description": "A database architecture discussed in the last presentation."
+  },
+  {
+    "id": "N2",
+    "label": "View of Data",
+    "description": "The main focus of the current presentation."
+  },
+  {
+    "id": "N3",
+    "label": "Multiple Views",
+    "description": "Different perspectives of data existing at the presentation level."
+  },
+  {
+    "id": "N4",
+    "label": "Data Abstraction",
+    "description": "The concept of hiding complexity and providing only essential details."
+  },
+  {
+    "id": "N5",
+    "label": "Primary Goal of Database",
+    "description": "To store and retrieve data conveniently and effectively."
+  },
+  {
+    "id": "N6",
+    "label": "Storage",
+    "description": "Required for storing and retrieving data, potentially involving simple or complex data structures."
+  },
+  {
+    "id": "N7",
+    "label": "Hiding Complexity",
+    "description": "A core principle of data abstraction."
+  },
+  {
+    "id": "N8",
+    "label": "Essential Details",
+    "description": "The desired outcome from data abstraction, providing a short and sweet answer."
+  },
+  {
+    "id": "N9",
+    "label": "Levels of Abstraction",
+    "description": "Several layers used to achieve data abstraction."
+  },
+  {
+    "id": "N10",
+    "label": "Physical Level",
+    "description": "The lowest level of data abstraction."
+  },
+  {
+    "id": "N11",
+    "label": "Logical Level",
+    "description": "The middle level of data abstraction, dealing with what data are stored and their relationships."
+  },
+  {
+    "id": "N12",
+    "label": "View Level",
+    "description": "The topmost and highest level of data abstraction, interacting directly with users."
+  },
+  {
+    "id": "N13",
+    "label": "How Data Stored",
+    "description": "The concern of the physical level, dealing with how data are stored."
+  },
+  {
+    "id": "N14",
+    "label": "Data Structures (Physical Level)",
+    "description": "Data structures used at the physical level, which can be low-level, simple or complex."
+  },
+  {
+    "id": "N15",
+    "label": "What Data Stored",
+    "description": "The concern of the logical level, dealing with what data are stored."
+  },
+  {
+    "id": "N16",
+    "label": "Relationship Among Data",
+    "description": "The relationship among data stored in the database, described at the logical level."
+  },
+  {
+    "id": "N17",
+    "label": "Data Structures (Logical Level)",
+    "description": "Simple data structures used at the logical level."
+  },
+  {
+    "id": "N18",
+    "label": "Physical Data Independence",
+    "description": "A concept where applications do not depend on the physical level or physical schema, allowing changes in logical structure without affecting physical structure."
+  },
+  {
+    "id": "N19",
+    "label": "Schema",
+    "description": "The structure of the database."
+  },
+  {
+    "id": "N20",
+    "label": "Database Administrator (DBA)",
+    "description": "Responsible for defining what and how data are stored, involved in all levels, especially in the logical level."
+  },
+  {
+    "id": "N21",
+    "label": "User Interaction",
+    "description": "Interaction with the system, done at the view level."
+  },
+  {
+    "id": "N22",
+    "label": "Interfaces",
+    "description": "Means by which users interact with the system, such as web, mobile, or graphical user interfaces (GUI)."
+  },
+  {
+    "id": "N23",
+    "label": "Security",
+    "description": "An important aspect achieved at the view level by providing restricted access to data for users."
+  },
+  {
+    "id": "N24",
+    "label": "Application Level",
+    "description": "Another name for the logical level."
+  }
+]

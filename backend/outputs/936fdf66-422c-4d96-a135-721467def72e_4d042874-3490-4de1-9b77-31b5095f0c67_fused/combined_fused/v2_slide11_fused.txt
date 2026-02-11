@@ -1,0 +1,18 @@
+Slide Content:
+STAR TOPOLOGY
+
+Advantages Disodvantages
+
+Easy to design and implement. Single point of failure affects the whole
+network.
+
+Centralized administration. Bottlenecks due to overloaded
+switeh/Hub.
+
+Sealoble. Increased cost due to switch/hub.
+
+ss
+2
+
+Diagram Description:
+a black background with white squares and squares on it

@@ -1,0 +1,21 @@
+Slide Content:
+a Lexical Analyse
+
+y Syntax Analysis
+
+Semantic Analysis
+
+Compiler Intermediate Code
+
+Generation
+
+y Code Optimization
+
+lil
+
+Target Cade,Generaton
+
+eee rm #8 Tong #1
+Tent ey O18 fone
+
+Diagram Description:

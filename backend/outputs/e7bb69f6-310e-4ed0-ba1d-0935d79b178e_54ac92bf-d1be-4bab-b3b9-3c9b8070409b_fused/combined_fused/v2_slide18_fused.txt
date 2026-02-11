@@ -1,0 +1,25 @@
+Slide Content:
+Syntax Analyzer:
+
+Lexemes
+
+Tokens
+
+identiRer
+
+‘operator
+
+identifier
+
+‘operator
+
+Syntox Analysis
+
+identifier
+
+‘operator
+
+identifier
+
+Diagram Description:
+a blackboard with a whiteboard and a blue screen a computer screen showing a table with a number of items

@@ -1,0 +1,30 @@
+MOVE [d3, R2
+MULE #50.0, 82
+MOVE 142, R2
+ADDF R2RL
+MOVE RI, fd
+
+Generated Code
+
+Generated Code
+
+MULF 450.0, R2
+
+Lal = 142 + Jag * a4 / Const MOVE [d2, R2
+
+Sum
+
+unt + rate * 50 MOVE [d3, R2
+MULF 450.0, R2 iggy baad
+
+Examples:
+
++ Code generator translates the intermediate code into the machine code of the specified
+computer.
+
++ It sclect and allocate memory space and registers to program contains,
+
++ Code generation is the final stage of the compilation process,
++ Ittakes the optimized intermediate code as input.
+
+Phase 6 : Code Generation

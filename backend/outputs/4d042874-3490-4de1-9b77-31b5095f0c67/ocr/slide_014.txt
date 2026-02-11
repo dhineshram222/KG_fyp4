@@ -1,0 +1,8 @@
+MESH TOPOLOGY
+
+Advantages Disadvantages
+
+Fault tolerant. issues with broadcasting messages.
+.
+Reliable. Expensive ond impractical for large
+networks.

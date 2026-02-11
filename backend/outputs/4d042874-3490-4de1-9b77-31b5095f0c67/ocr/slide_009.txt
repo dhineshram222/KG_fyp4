@@ -1,0 +1,10 @@
+RING TOPOLOGY
+
+Advantages Disadvantages
+Performance better than Bus Unidirectional. Single point of failure
+topology. will affect the whate network.
+
+Can cause bottleneck due to weak —_f infoad ~ | in performance.
+links.
+
+All nodes with equal access. No security.

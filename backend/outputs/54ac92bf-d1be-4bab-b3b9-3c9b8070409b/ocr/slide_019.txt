@@ -1,0 +1,23 @@
+Syntax Analyzer:
+
+Lenemes
+
+Tokens
+
+identifier
+
+‘operotor
+
+identifier
+
+‘operator
+
+identifier
+
+‘operotor
+
+identifier
+
+> Gam)
+
+Parse Tree

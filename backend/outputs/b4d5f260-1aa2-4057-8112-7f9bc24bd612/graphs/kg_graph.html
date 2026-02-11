@@ -1,0 +1,155 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 750px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "description": "The subject area covered by the course.", "id": "N1", "label": "Computer Networks", "shape": "dot", "size": 10, "title": "The subject area covered by the course."}, {"color": "#97c2fc", "description": "Emerging trends in the computer networking field.", "id": "N18", "label": "New Trends in Computer Networks", "shape": "dot", "size": 10, "title": "Emerging trends in the computer networking field."}, {"color": "#97c2fc", "description": "The categorization method for computer networks discussed in the session.", "id": "N2", "label": "Classification of Computer Networks", "shape": "dot", "size": 10, "title": "The categorization method for computer networks discussed in the session."}, {"color": "#97c2fc", "description": "A computer network that interconnects computers within a limited area.", "id": "N3", "label": "Local Area Network (LAN)", "shape": "dot", "size": 10, "title": "A computer network that interconnects computers within a limited area."}, {"color": "#97c2fc", "description": "A computer network that interconnects users or computers in a geographic region of the size of a metropolitan area (City).", "id": "N4", "label": "Metropolitan Area Network (MAN)", "shape": "dot", "size": 10, "title": "A computer network that interconnects users or computers in a geographic region of the size of a metropolitan area (City)."}, {"color": "#97c2fc", "description": "A telecommunications network that extends over a large geographical area for the primary purpose of computer networking.", "id": "N5", "label": "Wide Area Network (WAN)", "shape": "dot", "size": 10, "title": "A telecommunications network that extends over a large geographical area for the primary purpose of computer networking."}, {"color": "#97c2fc", "description": "A type of Local Area Network that uses cables.", "id": "N6", "label": "Wired LAN", "shape": "dot", "size": 10, "title": "A type of Local Area Network that uses cables."}, {"color": "#97c2fc", "description": "A type of Local Area Network that is wireless.", "id": "N7", "label": "Wireless LAN", "shape": "dot", "size": 10, "title": "A type of Local Area Network that is wireless."}, {"color": "#97c2fc", "description": "A device needed to connect two local area networks.", "id": "N14", "label": "Router", "shape": "dot", "size": 10, "title": "A device needed to connect two local area networks."}, {"color": "#97c2fc", "description": "A device needed to connect two local area networks.", "id": "N15", "label": "Bridge", "shape": "dot", "size": 10, "title": "A device needed to connect two local area networks."}, {"color": "#97c2fc", "description": "Any communications at a distance.", "id": "N16", "label": "Telecommunications Network", "shape": "dot", "size": 10, "title": "Any communications at a distance."}, {"color": "#97c2fc", "description": "The well known and most popular technology in wired LAN, used to connect two or more nodes.", "id": "N8", "label": "Ethernet", "shape": "dot", "size": 10, "title": "The well known and most popular technology in wired LAN, used to connect two or more nodes."}, {"color": "#97c2fc", "description": "An intermediary device in a wired local area network.", "id": "N11", "label": "Hub", "shape": "dot", "size": 10, "title": "An intermediary device in a wired local area network."}, {"color": "#97c2fc", "description": "An intermediary device in a wired local area network.", "id": "N12", "label": "Switch", "shape": "dot", "size": 10, "title": "An intermediary device in a wired local area network."}, {"color": "#97c2fc", "description": "An example technology for a wireless LAN.", "id": "N13", "label": "Wi-Fi", "shape": "dot", "size": 10, "title": "An example technology for a wireless LAN."}, {"color": "#97c2fc", "description": "A cable used to connect devices of different kinds.", "id": "N9", "label": "Ethernet Straight Through Cable", "shape": "dot", "size": 10, "title": "A cable used to connect devices of different kinds."}, {"color": "#97c2fc", "description": "A cable used to connect a computer with another computer directly.", "id": "N10", "label": "Ethernet Crossover Cable", "shape": "dot", "size": 10, "title": "A cable used to connect a computer with another computer directly."}, {"color": "#97c2fc", "description": "A wide wide area network where many local area networks, metropolitan area networks, and wide area networks across the world are connected to each other.", "id": "N17", "label": "Internet", "shape": "dot", "size": 10, "title": "A wide wide area network where many local area networks, metropolitan area networks, and wide area networks across the world are connected to each other."}, {"color": "#97c2fc", "description": "A scenario where employees are encouraged by their employers to bring their own device and connect to the office network.", "id": "N19", "label": "Bring Your Own Device (BYOD)", "shape": "dot", "size": 10, "title": "A scenario where employees are encouraged by their employers to bring their own device and connect to the office network."}, {"color": "#97c2fc", "description": "The ability for participants to collaborate with others from wherever they are with the help of computer networks.", "id": "N20", "label": "Online Collaboration", "shape": "dot", "size": 10, "title": "The ability for participants to collaborate with others from wherever they are with the help of computer networks."}, {"color": "#97c2fc", "description": "The on-demand availability of computer resources, especially data storage and computing power, without direct active management by the user.", "id": "N21", "label": "Cloud Computing", "shape": "dot", "size": 10, "title": "The on-demand availability of computer resources, especially data storage and computing power, without direct active management by the user."}, {"color": "#97c2fc", "description": "An example of cloud computing where one can store files and folders.", "id": "N22", "label": "Google Drive", "shape": "dot", "size": 10, "title": "An example of cloud computing where one can store files and folders."}]);
+                  edges = new vis.DataSet([{"arrows": "to", "from": "N1", "label": "has_trends", "title": "has_trends", "to": "N18", "width": 1}, {"arrows": "to", "from": "N2", "label": "categorizes", "title": "categorizes", "to": "N1", "width": 1}, {"arrows": "to", "from": "N2", "label": "includes", "title": "includes", "to": "N3", "width": 1}, {"arrows": "to", "from": "N2", "label": "includes", "title": "includes", "to": "N4", "width": 1}, {"arrows": "to", "from": "N2", "label": "includes", "title": "includes", "to": "N5", "width": 1}, {"arrows": "to", "from": "N3", "label": "can_be_of_type", "title": "can_be_of_type", "to": "N6", "width": 1}, {"arrows": "to", "from": "N3", "label": "can_be_of_type", "title": "can_be_of_type", "to": "N7", "width": 1}, {"arrows": "to", "from": "N4", "label": "interconnects_multiple", "title": "interconnects_multiple", "to": "N3", "width": 1}, {"arrows": "to", "from": "N4", "label": "uses_device", "title": "uses_device", "to": "N14", "width": 1}, {"arrows": "to", "from": "N4", "label": "uses_device", "title": "uses_device", "to": "N15", "width": 1}, {"arrows": "to", "from": "N5", "label": "is_a_type_of", "title": "is_a_type_of", "to": "N16", "width": 1}, {"arrows": "to", "from": "N5", "label": "interconnects_multiple", "title": "interconnects_multiple", "to": "N3", "width": 1}, {"arrows": "to", "from": "N6", "label": "uses_technology", "title": "uses_technology", "to": "N8", "width": 1}, {"arrows": "to", "from": "N6", "label": "uses_device", "title": "uses_device", "to": "N11", "width": 1}, {"arrows": "to", "from": "N6", "label": "uses_device", "title": "uses_device", "to": "N12", "width": 1}, {"arrows": "to", "from": "N7", "label": "example_technology_is", "title": "example_technology_is", "to": "N13", "width": 1}, {"arrows": "to", "from": "N8", "label": "uses_cable", "title": "uses_cable", "to": "N9", "width": 1}, {"arrows": "to", "from": "N8", "label": "uses_cable", "title": "uses_cable", "to": "N10", "width": 1}, {"arrows": "to", "from": "N17", "label": "connects_globally", "title": "connects_globally", "to": "N5", "width": 1}, {"arrows": "to", "from": "N17", "label": "connects_globally", "title": "connects_globally", "to": "N3", "width": 1}, {"arrows": "to", "from": "N17", "label": "connects_globally", "title": "connects_globally", "to": "N4", "width": 1}, {"arrows": "to", "from": "N18", "label": "includes", "title": "includes", "to": "N19", "width": 1}, {"arrows": "to", "from": "N18", "label": "includes", "title": "includes", "to": "N20", "width": 1}, {"arrows": "to", "from": "N18", "label": "includes", "title": "includes", "to": "N21", "width": 1}, {"arrows": "to", "from": "N21", "label": "example_is", "title": "example_is", "to": "N22", "width": 1}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>
