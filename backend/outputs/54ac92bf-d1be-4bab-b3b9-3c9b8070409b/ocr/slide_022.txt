@@ -1,3 +1,0 @@
-Intermediate Code Generator:
-_—————
-.

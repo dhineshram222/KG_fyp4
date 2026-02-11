@@ -1,9 +1,0 @@
-Slide Content:
-Levels of Data Abstraction
-
-NN
-
-nesoacademy.org
-
-Diagram Description:
-a diagram showing the location of an object

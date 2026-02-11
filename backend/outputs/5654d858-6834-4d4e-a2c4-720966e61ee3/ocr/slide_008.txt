@@ -1,3 +1,0 @@
-PRIMARY STACK OPERATIONS
-
-push (data): Inserts data onto stack.

@@ -19,3 +19,19 @@ node_modules/
 # Logs & temp
 *.log
 *.tmp
+
+# Runtime / generated media
+*.mp4
+*.webm
+*.wav
+*.mp3
+*.png
+*.jpg
+*.jpeg
+
+# Output folders
+output/
+outputs/
+runs/
+data_output/
+backend/outputs/

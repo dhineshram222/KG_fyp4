@@ -1,3 +1,0 @@
-SECONDARY STACK OPERATIONS
-
-isFull(): returns TRUE if the stack is full, else returns FALSE.

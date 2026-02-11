@@ -1,5 +1,0 @@
-Slide Content:
-Classification of Data Structure
-
-Diagram Description:
-a diagram of the structure of a computer system

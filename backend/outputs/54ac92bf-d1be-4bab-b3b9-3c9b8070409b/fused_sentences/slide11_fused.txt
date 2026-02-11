@@ -1,5 +1,0 @@
-Slide Content:
-Lexical Analyzer:
-———
-
-Diagram Description:

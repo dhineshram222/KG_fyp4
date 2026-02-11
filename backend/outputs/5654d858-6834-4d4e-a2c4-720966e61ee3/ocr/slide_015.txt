@@ -1,3 +1,0 @@
-SECONDARY STACK OPERATIONS
-
-isEmpty(): returns TRUE if the stack is empty, else returns FALSE.

@@ -1,6 +1,0 @@
-+ Computer Network is a group of computers connected with cach other through wires, optical
-fibres or optical links.
-
-+ They share data, recourses & messages with each other.
-
-What is Computer Network?

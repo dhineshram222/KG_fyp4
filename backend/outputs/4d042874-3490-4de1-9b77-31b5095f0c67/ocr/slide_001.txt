@@ -1,8 +1,0 @@
-Outcomes
-Upon the completion of this segsion, the learner will be able to
-
-Understand various network topologies such as bus, star, ring, mesh
-
-cand hybrid.
-
-% Understand the advantages and and disadvantages of each topology.

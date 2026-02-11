@@ -1,9 +1,0 @@
-Bus TOPOLOGY
-
-Advantages Disadvantages
-Only one wire - Less expensive. Not fault toleront (No redundancy).
-Suited for temporary network. Limited cable length.
-
-Node failures does not affect others. Nosecurity.
-
-Terminator Terminator

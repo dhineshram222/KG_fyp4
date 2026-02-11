@@ -1,5 +1,0 @@
-Pure HLL
-
-Compiler
-
-Assembly Lenguoge

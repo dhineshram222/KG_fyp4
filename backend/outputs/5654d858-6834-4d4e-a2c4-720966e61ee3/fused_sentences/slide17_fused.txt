@@ -1,7 +1,0 @@
-Slide Content:
-SECONDARY STACK OPERATIONS
-
-isFull(): returns TRUE if the stack is full, else returns FALSE.
-
-Diagram Description:
-a black background with a white border and a yellow border on the bottom of the border is a green border

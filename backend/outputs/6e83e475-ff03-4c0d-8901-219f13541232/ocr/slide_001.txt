@@ -1,5 +1,0 @@
-Data Abstraction
-
-vv Primary goal: store and retrieve.
-
-El ¥ © | Gnesoacademy

@@ -1,6 +1,0 @@
-Bitmap images are stored as a Series of tiny dots called pixels.
-
-Here, each pixel is agtually a small square that is assigned a color and then
-arranged in a pattern to form an image like the following
-
-37 x 40

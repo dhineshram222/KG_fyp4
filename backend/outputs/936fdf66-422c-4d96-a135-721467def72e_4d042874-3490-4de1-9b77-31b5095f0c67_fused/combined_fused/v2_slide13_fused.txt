@@ -1,8 +1,0 @@
-Slide Content:
-MESH TOPOLOGY
-%* Each node is directly connected to every other nodes in the network.
-
-* Fault tolerant and reliable.
-
-Diagram Description:
-an image of a computer screen with a green light on it

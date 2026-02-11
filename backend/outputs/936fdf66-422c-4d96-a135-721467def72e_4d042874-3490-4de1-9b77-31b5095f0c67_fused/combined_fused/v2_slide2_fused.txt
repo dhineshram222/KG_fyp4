@@ -1,8 +1,0 @@
-Slide Content:
-Network TOPOLOGY
-
-Arrangement of nodes of a computer network.
-
-Topology = Layout.
-
-Diagram Description:

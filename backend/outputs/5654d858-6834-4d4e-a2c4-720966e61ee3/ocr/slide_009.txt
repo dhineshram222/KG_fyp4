@@ -1,3 +1,0 @@
-PRIMARY STACK OPERATIONS
-
-pop(): Deletes the last inserted element from the stack.

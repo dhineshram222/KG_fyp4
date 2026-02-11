@@ -1,9 +1,0 @@
-Slide Content:
-STACK AS AN ADT
-
-When we define a stack as an ADT (or Abstract Data Type), then we are
-only interested in knowing the stack operations from the user point of view.
-
-nesoacademy.org
-
-Diagram Description:

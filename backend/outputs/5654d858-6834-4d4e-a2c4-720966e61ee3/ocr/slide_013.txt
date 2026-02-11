@@ -1,3 +1,0 @@
-SECONDARY STACK OPERATIONS
-
-size(): returns the size or the number of elements in the stack.

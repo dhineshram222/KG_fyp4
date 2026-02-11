@@ -1,9 +1,0 @@
-STAR TOPOLOGY
-
-% Every node is connected to a central node called a hub or switch.
-
-%* CentralizedManagement.
-* Alltroffic must pass through the hub or switch.
-
-x
-{

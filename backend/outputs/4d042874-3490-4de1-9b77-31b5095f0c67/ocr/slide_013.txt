@@ -1,4 +1,0 @@
-MESH TOPOLOGY
-%* Each node is directly connected to every other nodes in the network.
-
-* Fault tolerant and reliable.

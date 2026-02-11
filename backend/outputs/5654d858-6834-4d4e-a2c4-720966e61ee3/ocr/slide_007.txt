@@ -1,8 +1,0 @@
-STACK AS AN ADT
-
-When we define a stack as an ADT (or Abstract Data Type), then we are
-only interested in knowing the stack operations from the user point of view.
-
-Meang we are not interested in knowing the implementation details at this
-moment. We are only interested in knowing what type of operations we can
-perform on stack.

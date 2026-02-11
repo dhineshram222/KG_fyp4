@@ -1,7 +1,0 @@
-Slide Content:
-SECONDARY STACK OPERATIONS
-
-size(): returns the size or the number of elements in the stack.
-
-Diagram Description:
-a black background with a white border and a green border with the number one on it

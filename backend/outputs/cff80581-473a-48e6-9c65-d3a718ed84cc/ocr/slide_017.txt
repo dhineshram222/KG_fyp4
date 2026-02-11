@@ -1,4 +1,0 @@
-EXAMPLE 2
-
-: Which data structure is used to store an image as a:
-bitmap?

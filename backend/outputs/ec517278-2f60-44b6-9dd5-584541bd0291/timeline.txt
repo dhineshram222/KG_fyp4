@@ -1,7 +1,0 @@
-Slide Timeline
-========================================
-Slide 000: Start 0.00s - End 0.00s
-Slide 001: Start 0.00s - End 17.00s
-Slide 002: Start 17.00s - End 25.00s
-Slide 003: Start 25.00s - End 32.00s
-Slide 004: Start 32.00s - End 88.00s

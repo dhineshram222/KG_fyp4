@@ -1,6 +1,0 @@
-Lexical Analyzer:
-ee.
-
-¥
-
-Levemgs Tokens

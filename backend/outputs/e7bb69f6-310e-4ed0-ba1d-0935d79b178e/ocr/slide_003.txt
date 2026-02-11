@@ -1,3 +1,0 @@
-Phases of Compiler
-
-pal tle
