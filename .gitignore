@@ -1,11 +1,19 @@
+# Secrets / environment
+.env
+.env.*
+*.env
+*.env.txt
+
 # Agent-generated content (CRITICAL)
 .agent/
 .gemini/
+.gsd/
 
 
 # Python
 venv/
 env/
+kg/backend/.env.txt
 __pycache__/
 *.pyc
 
