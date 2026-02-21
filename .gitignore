@@ -4,16 +4,14 @@
 *.env
 *.env.txt
 
-# Agent-generated content (CRITICAL)
+# Agent-generated content
 .agent/
 .gemini/
 .gsd/
 
-
 # Python
 venv/
 env/
-kg/backend/.env.txt
 __pycache__/
 *.pyc
 
@@ -44,9 +42,10 @@ runs/
 data_output/
 backend/outputs/
 
-# Python bytecode
-__pycache__/
-*.pyc
-
 # Ground truth / datasets
 backend/ground truth/
+
+# Ralph loop
+progress.txt
+PRD.md
+TASKS.md
