@@ -103,7 +103,7 @@ nltk.download('stopwords', quiet=True)
 
 # ---------- Configuration ----------
 BASE_DIR = Path(__file__).parent.resolve()
-OUTPUTS_DIR = BASE_DIR / "outputs"
+OUTPUTS_DIR = BASE_DIR.parent.parent / "outputs"
 OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Sympy transformations for formula parsing

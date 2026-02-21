@@ -29,10 +29,10 @@ app.add_middleware(
 
 # ------------------ Paths ------------------
 BASE_DIR = Path(__file__).parent.resolve()
-OUTPUTS_DIR = BASE_DIR / "outputs"
+OUTPUTS_DIR = BASE_DIR.parent.parent / "outputs"
 OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
 
-app.mount("/static", StaticFiles(directory="outputs"), name="static")
+app.mount("/static", StaticFiles(directory=str(OUTPUTS_DIR)), name="static")
 
 # Serve all generated outputs (slides, audio, transcripts, OCR, formulas, diagrams, summaries, graphs)
 app.mount("/outputs", StaticFiles(directory=str(OUTPUTS_DIR)), name="outputs")
