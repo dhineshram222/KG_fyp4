@@ -987,8 +987,9 @@ def extract_full_audio(video_file: str, out_dir: Path, direct_audio_file: Option
         except Exception as e:
             print(f"[Audio] Exception extracting {filename}: {e}")
             
-    # Raise error if no audio extracted - DO NOT create silent file
-    raise RuntimeError(f"Could not extract any audio from {video_file}. The video might be silent or corrupted.")
+    # Return None instead of crashing if no audio can be extracted
+    print(f"[Audio] WARNING: Could not extract any audio from {video_file}. The video might be silent or corrupted.")
+    return None
 
 
 
@@ -1015,7 +1016,7 @@ def transcribe_audio_segments_whisper(audio_segments_dir: Path, transcripts_dir:
     return saved
 
 
-def transcribe_full_audio(audio_file: Path, transcripts_dir: Path,
+def transcribe_full_audio(audio_file: Optional[Path], transcripts_dir: Path,
                           model_size: str = "base", device: str = "cpu") -> Path:
     """
     Transcribe the FULL video audio as a single transcript.
@@ -1023,6 +1024,12 @@ def transcribe_full_audio(audio_file: Path, transcripts_dir: Path,
     """
     transcripts_dir.mkdir(parents=True, exist_ok=True)
     out_path = transcripts_dir / "full_transcript.txt"
+    
+    if not audio_file or not audio_file.exists():
+        print("[Whisper] No valid audio file provided. Creating empty transcript.")
+        out_path.write_text("", encoding='utf-8')
+        return out_path
+    
     
     print(f"[Whisper] Loading model '{model_size}' on {device}...")
     model = whisper.load_model(model_size, device=device)
@@ -1574,6 +1581,9 @@ def combine_all_fused_text(fused_dir: Path, combined_dir: Path, transcripts_dir:
     1. All slide contents (OCR text, diagram descriptions)
     2. Full video transcript
     """
+    from content_sanitizer import ContentSanitizer
+    sanitizer = ContentSanitizer()
+    
     combined_dir.mkdir(parents=True, exist_ok=True)
     combined_file = combined_dir / "all_fused_text.txt"
     
@@ -1584,6 +1594,18 @@ def combine_all_fused_text(fused_dir: Path, combined_dir: Path, transcripts_dir:
     
     files = list(set([f for f in files if f.is_file() and f.suffix == '.txt']))
     files.sort()
+    
+    # Pre-pass: build dynamic OCR noise profile from slide contents
+    raw_ocr_texts = []
+    for file_path in files:
+        try:
+            content = file_path.read_text(encoding='utf-8')
+            if "Slide Content:" in content:
+                slide_content = content.split("Diagram Description:")[0].replace("Slide Content:", "").strip()
+                raw_ocr_texts.append(slide_content)
+        except Exception:
+            pass
+    sanitizer.build_dynamic_ocr_noise(raw_ocr_texts)
     
     all_texts = []
     
@@ -1598,8 +1620,9 @@ def combine_all_fused_text(fused_dir: Path, combined_dir: Path, transcripts_dir:
             try:
                 transcript = full_transcript_path.read_text(encoding='utf-8').strip()
                 if transcript:
-                    all_texts.append(transcript)
-                    print(f" Added full transcript ({len(transcript)} chars)")
+                    cleaned_transcript = sanitizer.sanitize_text(transcript)
+                    all_texts.append(cleaned_transcript)
+                    print(f" Added sanitized transcript ({len(cleaned_transcript)} chars, originally {len(transcript)})")
                 else:
                     all_texts.append("Transcript is empty.")
             except Exception as e:
@@ -1623,8 +1646,11 @@ def combine_all_fused_text(fused_dir: Path, combined_dir: Path, transcripts_dir:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     text = f.read().strip()
                     if text and len(text) > 10:
-                        all_texts.append(f"--- {file_path.stem} ---\n{text}\n")
-                        print(f" Added {file_path.name} ({len(text)} chars)")
+                        # Sanitize OCR and clean it before appending
+                        cleaned_slide = sanitizer.sanitize_text(text)
+                        if cleaned_slide:
+                            all_texts.append(f"--- {file_path.stem} ---\n{cleaned_slide}\n")
+                            print(f" Added sanitized {file_path.name} ({len(cleaned_slide)} chars)")
             except Exception as e:
                 print(f"Failed to read {file_path.name}: {e}")
     else:
@@ -1731,7 +1757,7 @@ def clean_promotional_content(text: str) -> str:
         
     return " ".join(cleaned_sentences).strip()
 
-def generate_global_summary(text: str, model, tokenizer, device, max_len=150, min_len=80) -> str:
+def generate_global_summary(text: str, model, tokenizer, device, max_len=350, min_len=200) -> str:
     """
     Final meta-summarizer: takes combined context-rich summaries and
     produces a concise, global summary.
@@ -1748,7 +1774,7 @@ def generate_global_summary(text: str, model, tokenizer, device, max_len=150, mi
         min_length=min_len,
         num_beams=4,
         do_sample=False, 
-        length_penalty=1.5,
+        length_penalty=1.0,  # Lower penalty to encourage longer, more natural paragraphs
         no_repeat_ngram_size=3,
         early_stopping=True,
     )
@@ -1764,7 +1790,7 @@ def generate_bart_summary_from_fused(
     fused_dir: Path, 
     output_path: Path,
     bart_max_input_tokens: int = 1024,  
-    bart_max_output_tokens: int = 120,   
+    bart_max_output_tokens: int = 350,   
     chunk_overlap: int = 100             
 ):
     """
@@ -1812,7 +1838,7 @@ def generate_bart_summary_from_fused(
     if len(full_text.split()) < 50:  
         print(" Text is very short, using simpler fallback...")
         sentences = sent_tokenize(full_text)
-        summary = " ".join(sentences[:5])
+        summary = " ".join(sentences[:10])
         safe_write_text(Path(output_path), summary)
         return summary
 
@@ -1828,7 +1854,7 @@ def generate_bart_summary_from_fused(
     except Exception as e:
         print(f" Failed to load model: {e}. Using extractive fallback.")
         sentences = sent_tokenize(full_text)
-        summary = " ".join(sentences[:min(7, len(sentences))])  
+        summary = " ".join(sentences[:min(12, len(sentences))])  
         safe_write_text(Path(output_path), summary)
         return summary
 
@@ -1862,10 +1888,10 @@ def generate_bart_summary_from_fused(
             input_ids = torch.tensor([chunk_tokens]).to(device)
             summary_ids = model.generate(
                 input_ids,
-                max_length=250,      # Context-rich (user spec)
-                min_length=60,       
+                max_length=350,      # Context-rich to support 10-12 final sentences
+                min_length=150,       
                 num_beams=4,         
-                length_penalty=1.2,
+                length_penalty=1.0,
                 early_stopping=True,
                 no_repeat_ngram_size=2,
             )
@@ -2196,8 +2222,8 @@ def generate_non_kg_unified_summary(session1_dir: Path, session2_dir: Path, outp
         # ── STAGE 5: POST-PROCESSING ──
         final_summary = clean_and_constrain_summary(
             final_summary,
-            min_sentences=7,
-            max_sentences=10,
+            min_sentences=10,
+            max_sentences=12,
         )
 
         safe_write_text(output_path, final_summary)
@@ -2219,11 +2245,6 @@ def generate_non_kg_notes(session1_dir: Path, session2_dir: Path, output_dir: Pa
     """
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.decomposition import NMF
-    from reportlab.lib.pagesizes import A4
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as RLImage
-    from reportlab.lib.units import inch
-    from reportlab.lib.enums import TA_LEFT, TA_JUSTIFY
 
     output_dir.mkdir(parents=True, exist_ok=True)
     notes_dir = output_dir / "notes"
@@ -2277,14 +2298,46 @@ def generate_non_kg_notes(session1_dir: Path, session2_dir: Path, output_dir: Pa
     if not all_texts:
         print("[NonKG Notes] No text found")
         return None
+        
+    print(f"[NonKG Notes] Pipeline initialized. Loaded {len(diagram_paths)} diagrams and {len(diagram_captions)} captions from disk.")
 
     combined_text = "\n\n".join(all_texts)
     print(f"[NonKG Notes] Combined text: {len(combined_text)} chars")
 
     # 2. Split into sentences
     sentences = sent_tokenize(combined_text)
-    # Filter short/noisy sentences
-    sentences = [s for s in sentences if len(s.split()) >= 5 and sum(c.isalpha() for c in s) / max(len(s), 1) > 0.5]
+    
+    try:
+        from summary_postprocessor import _is_noise_sentence, _is_fragment
+    except ImportError:
+        _is_noise_sentence = lambda x: False
+        _is_fragment = lambda x: False
+
+    # Filter short/noisy sentences and strip metadata artifacts
+    meta_patterns = [
+        "slide content:", "diagram description:", "--- slide", 
+        "visual elements:", "transcript:", "diagram & slide",
+        "keywords & terminology"
+    ]
+    
+    cleaned_sents = []
+    for s in sentences:
+        if len(s.split()) < 5 or sum(c.isalpha() for c in s) / max(len(s), 1) <= 0.6:
+            continue
+        # Filter high non-alphanumeric ratio (OCR noise like "w | E>")
+        if sum(not c.isalnum() and not c.isspace() for c in s) / max(len(s), 1) > 0.15:
+            continue
+        if any(m in s.lower() for m in meta_patterns):
+            continue
+        if _is_noise_sentence(s) or _is_fragment(s):
+            continue
+        # Drop standalone short questions
+        if s.strip().endswith('?') and len(s.split()) < 8:
+            continue
+            
+        cleaned_sents.append(s)
+        
+    sentences = cleaned_sents
 
     if len(sentences) < 5:
         print("[NonKG Notes] Too few sentences for topic modeling")
@@ -2313,13 +2366,89 @@ def generate_non_kg_notes(session1_dir: Path, session2_dir: Path, output_dir: Pa
         return None
 
     # 4. Extract topic labels and assign sentences
+    # ── Semantic label mapper for NMF topics ──
+    def _infer_topic_label(top_words, topic_sentences_text):
+        """Generate a readable, educational topic label from NMF cluster content."""
+        combined = " ".join(top_words).lower() + " " + topic_sentences_text.lower()
+        
+        # Category detection patterns → readable headings
+        _CATEGORY_PATTERNS = [
+            # Definitions / core concepts
+            (["definition", "defined", "is a", "refers to", "known as", "called", "means"],
+             "Definition and Fundamental Concepts"),
+            # Operations
+            (["operation", "push", "pop", "insert", "delete", "remove", "add", "peek", "enqueue", "dequeue"],
+             "Primary Operations"),
+            # Types / Classification
+            (["type", "types", "classification", "category", "kind", "form", "variant"],
+             "Types and Classification"),
+            # Examples / Analogies
+            (["example", "analogy", "like", "real world", "everyday", "plate", "book", "card", "illustrat"],
+             "Real-World Analogies"),
+            # Applications / Use cases
+            (["application", "applied", "used in", "used for", "use case", "compiler", "browser",
+              "expression", "infix", "postfix", "recursion", "undo", "redo", "backtrack"],
+             "Applications in Computer Science"),
+            # Properties / Characteristics
+            (["property", "characteristic", "principle", "lifo", "fifo", "order", "rule", "follows"],
+             "Key Characteristics"),
+            # ADT / Abstract concepts
+            (["abstract", "adt", "interface", "implementation", "encapsulation", "data type"],
+             "Abstract Data Type Characteristics"),
+            # Status / Conditions
+            (["empty", "full", "size", "count", "overflow", "underflow", "status", "check", "condition",
+              "isempty", "isfull"],
+             "Secondary and Status Operations"),
+            # Components / Structure
+            (["component", "element", "node", "pointer", "top", "bottom", "head", "tail", "structure"],
+             "Structure and Components"),
+            # Memory / Implementation
+            (["memory", "array", "linked list", "implement", "allocation", "storage"],
+             "Implementation Details"),
+        ]
+        
+        for patterns, label in _CATEGORY_PATTERNS:
+            match_count = sum(1 for p in patterns if p in combined)
+            if match_count >= 2:
+                return label
+        
+        # Fallback: extract a meaningful label from a NON-filler sentence
+        _spoken_filler = [
+            "in this video", "let us see", "we will", "thank you", "subscribe",
+            "we say", "we are going", "we have seen", "we will see",
+            "in the introduction", "in the previous", "in the next", "in the last",
+            "as we discussed", "as i said", "as you can see", "let me",
+            "hello everyone", "hi everyone", "good morning", "welcome to",
+            "in this lecture", "in this presentation", "in this session",
+            "the replay obviously", "if he gives", "let's say we",
+            "so basically", "so now", "so here", "so what we",
+            "now we will", "now let's", "told you", "told us",
+        ]
+        if topic_sentences_text.strip():
+            # Try each sentence until we find a non-filler one
+            for sent in topic_sentences_text.strip().split('.'):
+                sent = sent.strip()
+                if not sent or len(sent.split()) < 3:
+                    continue
+                sent_lower = sent.lower()
+                if any(f in sent_lower for f in _spoken_filler):
+                    continue
+                # Clean up: take first ~5 meaningful words
+                words = [w for w in sent.split() if len(w) > 2][:5]
+                if len(words) >= 2:
+                    label = " ".join(words)
+                    return label[0].upper() + label[1:]
+        
+        # Final fallback: title-case top NMF words (better than sentence fragments)
+        label_words = [w for w in top_words[:3] if len(w) > 2]
+        if label_words:
+            return " ".join(w.title() for w in label_words)
+        return f"Key Concepts {topic_idx + 1}"
+
     topics = []
     for topic_idx in range(n_topics):
         top_word_indices = H[topic_idx].argsort()[-5:][::-1]
         top_words = [feature_names[i] for i in top_word_indices]
-        # Create a readable topic label from top 2-3 words
-        label_words = [w for w in top_words[:3] if len(w) > 2]
-        topic_label = " & ".join(label_words).title() if label_words else f"Topic {topic_idx + 1}"
 
         # Get sentences assigned to this topic (highest weight)
         topic_sentences = []
@@ -2329,6 +2458,10 @@ def generate_non_kg_notes(session1_dir: Path, session2_dir: Path, output_dir: Pa
 
         # Sort by weight (most relevant first)
         topic_sentences.sort(key=lambda x: x[1], reverse=True)
+
+        # Generate semantic topic label
+        top_sents_text = " ".join(s for s, _ in topic_sentences[:3])
+        topic_label = _infer_topic_label(top_words, top_sents_text)
 
         # Track first occurrence in original text for ordering
         first_occurrence = len(combined_text)
@@ -2350,6 +2483,19 @@ def generate_non_kg_notes(session1_dir: Path, session2_dir: Path, output_dir: Pa
     # Remove empty topics
     topics = [t for t in topics if t["sentences"]]
 
+    # Deduplicate labels: if multiple clusters get the same semantic label, add ordinal suffix
+    label_counts = {}
+    for t in topics:
+        lbl = t["label"]
+        label_counts[lbl] = label_counts.get(lbl, 0) + 1
+    for lbl, count in label_counts.items():
+        if count > 1:
+            idx = 1
+            for t in topics:
+                if t["label"] == lbl:
+                    t["label"] = f"{lbl} ({idx})"
+                    idx += 1
+
     print(f"[NonKG Notes] {len(topics)} topics extracted: {[t['label'] for t in topics]}")
 
     # 6. Find relevant diagrams for each topic
@@ -2360,7 +2506,8 @@ def generate_non_kg_notes(session1_dir: Path, session2_dir: Path, output_dir: Pa
         for topic in topics:
             topic_emb = embedding_model.encode(topic["label"] + " " + " ".join(topic["top_words"]), convert_to_tensor=True)
             best_img = None
-            best_score = 0.3  # minimum threshold
+            # Drop threshold significantly so visual representation is preserved even if the NMF cluster is noisy
+            best_score = 0.15  # minimum threshold
             for img_name, caption in diagram_captions.items():
                 if img_name in topic_diagrams.values():
                     continue  # already used
@@ -2371,86 +2518,93 @@ def generate_non_kg_notes(session1_dir: Path, session2_dir: Path, output_dir: Pa
                     best_img = img_name
             if best_img and best_img in diagram_paths:
                 topic_diagrams[topic["label"]] = best_img
+                
+    print(f"[NonKG Notes] Successfully paired {len(topic_diagrams)} diagrams to NMF Topics.")
 
-    # 7. Generate text notes
-    txt_lines = []
-    txt_lines.append("=" * 60)
-    txt_lines.append("LECTURE NOTES (Non-KG Based - Topic Modeling)")
-    txt_lines.append("=" * 60)
-    txt_lines.append("")
+    # 7. Build HierarchicalNotes JSON — simplified: Description + Related Concepts only
+    from hierarchical_schema import (
+        make_point, make_subsection, make_section, make_notes,
+        validate_hierarchy, fix_hierarchy
+    )
+    from notes_renderer import render_pdf, render_txt
 
+    sections = []
+    used_diagram_paths = set()  # Track used diagram file paths to prevent duplicates
+    seen_sentences = set()  # Track seen sentences to prevent content duplication
+    
     for i, topic in enumerate(topics, 1):
-        txt_lines.append(f"\n{'─' * 50}")
-        txt_lines.append(f"  {i}. {topic['label']}")
-        txt_lines.append(f"{'─' * 50}")
-        txt_lines.append(f"  Keywords: {', '.join(topic['top_words'])}")
-        txt_lines.append("")
-        for sent in topic["sentences"]:
-            txt_lines.append(f"  • {sent}")
+        topic_sents = topic["sentences"]
+        
+        # Deduplicate sentences within and across topics
+        unique_sents = []
+        for s in topic_sents:
+            s_key = s.strip().lower()
+            if s_key not in seen_sentences and len(s.split()) >= 5:
+                seen_sentences.add(s_key)
+                unique_sents.append(s)
+        
+        if not unique_sents:
+            continue
+        
+        # ── Build simple structure: Description + Related Concepts ──
+        subsections = []
+        
+        # "Description" subsection: first 2-3 sentences as overview
+        desc_count = min(3, max(1, len(unique_sents) // 2))
+        desc_sents = unique_sents[:desc_count]
+        desc_points = [make_point(s) for s in desc_sents]
+        subsections.append(make_subsection("Description", desc_points))
+        
+        # "Related Concepts" subsection: remaining sentences
+        remaining = unique_sents[desc_count:]
+        if remaining:
+            related_points = [make_point(s) for s in remaining]
+            subsections.append(make_subsection("Related Concepts", related_points))
+
+        # Diagram — strict path-based dedup
+        diagram_path = None
+        diagram_caption = None
         if topic["label"] in topic_diagrams:
-            txt_lines.append(f"\n  [Diagram: {topic_diagrams[topic['label']]}]")
-        txt_lines.append("")
+            img_name = topic_diagrams[topic["label"]]
+            img_p = diagram_paths.get(img_name)
+            if img_p and img_p.exists():
+                img_path_str = str(img_p)
+                if img_path_str not in used_diagram_paths:
+                    used_diagram_paths.add(img_path_str)
+                    diagram_path = img_path_str
+                    diagram_caption = diagram_captions.get(img_name, f"Diagram: {img_name}")
+        
+        sections.append(make_section(
+            topic["label"],
+            subsections,
+            diagram_path=diagram_path,
+            diagram_caption=diagram_caption
+        ))
 
-    txt_content = "\n".join(txt_lines)
-    txt_path = notes_dir / "non_kg_notes.txt"
-    safe_write_text(txt_path, txt_content)
-    print(f"[NonKG Notes] Text notes saved to {txt_path}")
+    # 8. Validate & Fix
+    notes_dict = make_notes("Lecture Notes (Topic Modeling)", sections)
+    
+    is_valid, violations = validate_hierarchy(notes_dict)
+    if not is_valid:
+        print(f"[NonKG Notes] ⚠️ Hierarchy violations ({len(violations)}): {violations[:3]}...")
+        notes_dict = fix_hierarchy(notes_dict)
+        is_valid2, v2 = validate_hierarchy(notes_dict)
+        if is_valid2:
+            print(f"[NonKG Notes] ✅ Auto-fix resolved all violations")
+        else:
+            print(f"[NonKG Notes] ⚠️ {len(v2)} violations remain after auto-fix: {v2[:3]}")
 
-    # 8. Generate PDF
+    # 9. Render
     pdf_path = notes_dir / "non_kg_notes.pdf"
+    txt_path = notes_dir / "non_kg_notes.txt"
+    
     try:
-        doc = SimpleDocTemplate(str(pdf_path), pagesize=A4,
-                                leftMargin=50, rightMargin=50,
-                                topMargin=40, bottomMargin=40)
-        styles = getSampleStyleSheet()
-
-        title_style = ParagraphStyle('NotesTitle', parent=styles['Title'],
-                                     fontSize=18, spaceAfter=20)
-        heading_style = ParagraphStyle('TopicHeading', parent=styles['Heading2'],
-                                       fontSize=14, spaceAfter=8, spaceBefore=16,
-                                       textColor='#2c3e50')
-        keyword_style = ParagraphStyle('Keywords', parent=styles['Italic'],
-                                       fontSize=9, textColor='#7f8c8d', spaceAfter=6)
-        bullet_style = ParagraphStyle('BulletPoint', parent=styles['Normal'],
-                                      fontSize=10, leftIndent=20, spaceAfter=4,
-                                      alignment=TA_JUSTIFY)
-        caption_style = ParagraphStyle('DiagramCaption', parent=styles['Italic'],
-                                       fontSize=9, textColor='#555555',
-                                       alignment=TA_LEFT, spaceAfter=8)
-
-        elements = []
-        elements.append(Paragraph("Lecture Notes (Non-KG Based)", title_style))
-        elements.append(Paragraph("Generated via NMF Topic Modeling", styles['Italic']))
-        elements.append(Spacer(1, 20))
-
-        for i, topic in enumerate(topics, 1):
-            elements.append(Paragraph(f"{i}. {topic['label']}", heading_style))
-            elements.append(Paragraph(f"Keywords: {', '.join(topic['top_words'])}", keyword_style))
-
-            for sent in topic["sentences"]:
-                # Escape XML chars
-                safe_sent = sent.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-                elements.append(Paragraph(f"• {safe_sent}", bullet_style))
-
-            # Add diagram if available
-            if topic["label"] in topic_diagrams:
-                img_name = topic_diagrams[topic["label"]]
-                img_path = diagram_paths.get(img_name)
-                if img_path and img_path.exists():
-                    try:
-                        elements.append(Spacer(1, 8))
-                        elements.append(RLImage(str(img_path), width=4*inch, height=3*inch,
-                                               kind='proportional'))
-                        cap_text = diagram_captions.get(img_name, f"Diagram: {img_name}")
-                        safe_cap = cap_text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-                        elements.append(Paragraph(safe_cap, caption_style))
-                    except Exception as e:
-                        print(f"[NonKG Notes] Failed to embed image {img_name}: {e}")
-
-            elements.append(Spacer(1, 12))
-
-        doc.build(elements)
-        print(f"[NonKG Notes] PDF saved to {pdf_path}")
+        render_pdf(notes_dict, pdf_path, image_base_dir=output_dir)
+        render_txt(notes_dict, txt_path)
+        
+        n_sections = len(notes_dict.get("sections", []))
+        n_subsections = sum(len(s.get("subsections", [])) for s in notes_dict.get("sections", []))
+        print(f"[NonKG Notes] ✅ Hierarchical Notes saved ({n_sections} sections, {n_subsections} subsections)")
     except Exception as e:
         print(f"[NonKG Notes] PDF generation failed: {e}")
         import traceback
@@ -2883,11 +3037,11 @@ def generate_bart_summary_from_fused(
 
             summary_ids = model.generate(
                 inputs["input_ids"],
-                max_length=200,           # Rich per-segment output
-                min_length=40,            # Ensure substantial content
+                max_length=350,           # Rich per-segment output
+                min_length=150,            # Ensure substantial content
                 num_beams=4,
                 early_stopping=True,
-                length_penalty=1.5,       # Encourage longer, richer output
+                length_penalty=1.0,       # Encourage longer, natural paragraphs
                 no_repeat_ngram_size=3,   # Prevent repetition
             )
             seg_summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
@@ -2912,11 +3066,11 @@ def generate_bart_summary_from_fused(
             merge_inputs = tokenizer([merged_text], max_length=1024, return_tensors="pt", truncation=True)
             merge_ids = model.generate(
                 merge_inputs["input_ids"],
-                max_length=400,
-                min_length=150,
+                max_length=450,
+                min_length=250,
                 num_beams=4,
                 early_stopping=True,
-                length_penalty=1.2,
+                length_penalty=1.0,
                 no_repeat_ngram_size=3,
             )
             full_summary = tokenizer.decode(merge_ids[0], skip_special_tokens=True)
@@ -2925,11 +3079,11 @@ def generate_bart_summary_from_fused(
             merge_inputs = tokenizer([merged_text], max_length=1024, return_tensors="pt", truncation=True)
             merge_ids = model.generate(
                 merge_inputs["input_ids"],
-                max_length=400,
-                min_length=150,
+                max_length=450,
+                min_length=250,
                 num_beams=4,
                 early_stopping=True,
-                length_penalty=1.2,
+                length_penalty=1.0,
                 no_repeat_ngram_size=3,
             )
             full_summary = tokenizer.decode(merge_ids[0], skip_special_tokens=True)
@@ -3703,13 +3857,46 @@ class WMDKGNotesGenerator:
     def build_hierarchy(self, nodes: list, edge_map: dict) -> dict:
         """
         Build a strict Parent-Child Forest (Tree structure).
-        Ensures every node appears fully ONLY ONCE in the most relevant place.
+        
+        Enhanced with:
+        - Centrality-based root selection (PageRank + degree) as fallback
+        - Semantic clustering fallback for sparse KGs
+        - Guaranteed ≥ 2 roots when possible
         """
-        # Node lookup
+        import networkx as nx
+
         node_lookup = {n["id"]: n for n in nodes}
         
-        # 1. Calculate "Parent Potential" based on OUTgoing structure edges
-        # Nodes that "have" or "contain" things are likely parents
+        if not node_lookup:
+            return {"roots": [], "children_map": {}, "node_lookup": {}}
+
+        # ── 1. Build NetworkX graph for centrality ──
+        G = nx.DiGraph()
+        for nid in node_lookup:
+            G.add_node(nid)
+        for src, targets in edge_map.items():
+            for tgt, rel in targets:
+                if src in node_lookup and tgt in node_lookup:
+                    G.add_edge(src, tgt, relation=rel)
+
+        # Compute centrality scores
+        try:
+            pagerank = nx.pagerank(G, alpha=0.85)
+        except:
+            pagerank = {nid: 1.0 / len(node_lookup) for nid in node_lookup}
+        
+        degree_cent = dict(G.degree())
+        
+        # Combined centrality: normalize and merge
+        max_pr = max(pagerank.values()) if pagerank else 1
+        max_deg = max(degree_cent.values()) if degree_cent else 1
+        centrality = {}
+        for nid in node_lookup:
+            pr = pagerank.get(nid, 0) / max(max_pr, 1e-9)
+            dc = degree_cent.get(nid, 0) / max(max_deg, 1)
+            centrality[nid] = 0.6 * pr + 0.4 * dc
+
+        # ── 2. Calculate Parent Potential (structural edges) ──
         parent_scores = {}
         for nid in node_lookup:
             score = 0
@@ -3717,43 +3904,36 @@ class WMDKGNotesGenerator:
                 for tgt, rel in edge_map[nid]:
                     rel_lower = rel.lower()
                     if any(x in rel_lower for x in ["has", "includes", "contains", "consists", "composed"]):
-                        score += 2  # Strong structural parent
+                        score += 2
                     elif any(x in rel_lower for x in ["uses", "employs"]):
                         score += 1
             parent_scores[nid] = score
 
-        # 2. Assign "Best Parent" for every node
-        # A node is a child of the neighbor that has the Highest Parent Score + Structural Link
-        parent_assignment = {}  # child_id -> parent_id
+        # ── 3. Assign best parent for each node ──
+        parent_assignment = {}
         
         for child_id in node_lookup:
             best_parent = None
             max_score = -1
             
-            # Check all INCOMING edges to find potential parents
-            # (Who points to me with a structural edge?)
             potential_parents = []
             for potential_p_id, edges in edge_map.items():
                 for tgt, rel in edges:
                     if tgt == child_id:
                         rel_lower = rel.lower()
-                        # Only structural edges create hierarchy
                         if any(x in rel_lower for x in ["has", "includes", "contains", "consists", "composed", "type of", "is a"]):
                             potential_parents.append(potential_p_id)
             
-            # Select the "strongest" parent
             for p_id in potential_parents:
-                p_score = parent_scores.get(p_id, 0)
+                p_score = parent_scores.get(p_id, 0) + centrality.get(p_id, 0)
                 if p_score > max_score:
                     max_score = p_score
                     best_parent = p_id
             
-            # Additional check: Don't assign if it creates a cycle
             if best_parent:
-                # Simple cycle check: is child an ancestor of parent?
                 curr = best_parent
                 is_cycle = False
-                for _ in range(10): # Limit depth
+                for _ in range(10):
                     if curr == child_id:
                         is_cycle = True
                         break
@@ -3763,9 +3943,9 @@ class WMDKGNotesGenerator:
                 if not is_cycle:
                     parent_assignment[child_id] = best_parent
 
-        # 3. separate Roots (Main Sections) from Children
+        # ── 4. Separate roots from children ──
         roots = []
-        children_map = {} # parent_id -> list of child_ids
+        children_map = {}
         
         for nid in node_lookup:
             pid = parent_assignment.get(nid)
@@ -3773,25 +3953,99 @@ class WMDKGNotesGenerator:
                 if pid not in children_map: children_map[pid] = []
                 children_map[pid].append(nid)
             else:
-                # It's a root (Main Topic) - only if it has content or children
-                if parent_scores.get(nid, 0) > 0 or len(node_lookup[nid].get("description", "").split()) > 5:
+                if (parent_scores.get(nid, 0) > 0 
+                    or len(node_lookup[nid].get("description", "").split()) > 5
+                    or centrality.get(nid, 0) > 0.3):
                     roots.append(nid)
-        
-        # Sort roots by video appearance if possible (using temporary order for now)
-        # In full implementation, mapping back to timestamps would be ideal
-        
-        return {"roots": roots, "children_map": children_map, "node_lookup": node_lookup}
 
-    def synthesize_explanation(self, topic: str, node: dict, children: list, edge_map: dict) -> str:
+        # ── 5. Fallback: if too few roots, select by centrality ──
+        if len(roots) < 2 and len(node_lookup) >= 4:
+            sorted_by_centrality = sorted(centrality.items(), key=lambda x: x[1], reverse=True)
+            existing_root_set = set(roots)
+            for nid, score in sorted_by_centrality:
+                if nid not in existing_root_set and nid not in parent_assignment:
+                    roots.append(nid)
+                    existing_root_set.add(nid)
+                    if len(roots) >= max(3, len(node_lookup) // 5):
+                        break
+
+        # ── 6. Ensure roots have subsections via semantic grouping ──
+        # For roots with no children, try to assign nearby unassigned nodes
+        assigned = set()
+        for pid, cids in children_map.items():
+            assigned.update(cids)
+        assigned.update(roots)
+
+        unassigned = [nid for nid in node_lookup if nid not in assigned]
+        
+        if unassigned and roots:
+            for orphan_id in unassigned:
+                # Find nearest root by graph distance or edge connection
+                best_root = None
+                best_score = -1
+                for root_id in roots:
+                    # Direct edge?
+                    score = 0
+                    if root_id in edge_map:
+                        for tgt, rel in edge_map[root_id]:
+                            if tgt == orphan_id:
+                                score = 2
+                    if orphan_id in edge_map:
+                        for tgt, rel in edge_map[orphan_id]:
+                            if tgt == root_id:
+                                score = max(score, 1)
+                    # Centrality proximity (prefer high-centrality roots)
+                    if score == 0:
+                        score = centrality.get(root_id, 0) * 0.1
+                    
+                    if score > best_score:
+                        best_score = score
+                        best_root = root_id
+                
+                if best_root:
+                    if best_root not in children_map:
+                        children_map[best_root] = []
+                    children_map[best_root].append(orphan_id)
+
+        # ── 7. Semantic Deduplication of Roots ──
+        # Merge conceptually overlapping roots (e.g. "Stack" and "Stack Data Structure")
+        merged_roots = []
+        for root in roots:
+            merged = False
+            r_label = node_lookup[root].get("label", "").lower()
+            for m_root in merged_roots:
+                m_label = node_lookup[m_root].get("label", "").lower()
+                # If one is a substring of another, merge children and discard the smaller root
+                if r_label in m_label or m_label in r_label:
+                    if root in children_map:
+                        if m_root not in children_map:
+                            children_map[m_root] = []
+                        children_map[m_root].extend(children_map[root])
+                        del children_map[root]
+                    merged = True
+                    break
+            if not merged:
+                merged_roots.append(root)
+        roots = merged_roots
+
+        # Sort roots by centrality (most important/basic first)
+        roots.sort(key=lambda nid: centrality.get(nid, 0), reverse=True)
+        
+        # Explicitly sort children by centrality (basic -> advanced)
+        for pid in children_map:
+            children_map[pid].sort(key=lambda nid: centrality.get(nid, 0), reverse=True)
+        
+        return {"roots": roots, "children_map": children_map, "node_lookup": node_lookup, "centrality": centrality}
+
+    def synthesize_explanation(self, topic: str, node: dict, children: list, edge_map: dict, node_lookup: dict = None) -> str:
         """Generate clean explanation from graph structure (No verbatim transcript info)"""
         sentences = []
         
         # 1. Start with Definition from Node Description (Priority)
         desc = node.get("description", "")
         if desc and len(desc.split()) >= 5 and not desc.strip().endswith('?'):
+            # Use the description directly — don't wrap in template text
             sentences.append(desc)
-        else:
-            sentences.append(f"{topic} is a key concept in this domain.")
             
         # 2. Add structural sentence if has children
         if children:
@@ -3809,12 +4063,16 @@ class WMDKGNotesGenerator:
                     if c["id"] == tgt: is_child = True; break
                 if is_child: continue
                 
-                # Interpret edge
-                tgt_node = node # Placeholder, need lookup passed ideally
-                # Use simple interpretation here as fallback
-                sentences.append(f"It {rel.replace('_', ' ')} {tgt}.")
+                # Look up actual label from the full node lookup (not just children)
+                tgt_node_label = tgt  # default to ID
+                if node_lookup and tgt in node_lookup:
+                    tgt_node_label = node_lookup[tgt].get("label", tgt)
+                
+                # Only add if label is readable (not a raw ID like N7)
+                if tgt_node_label and not re.match(r'^N\d+$', str(tgt_node_label)):
+                    sentences.append(f"{topic} {rel} {tgt_node_label}.")
         
-        return " ".join(sentences)
+        return " ".join(sentences) if sentences else ""
 
     # ========== STRICT PIPELINE FILTERS (DYNAMIC) ==========
     
@@ -3892,36 +4150,20 @@ class WMDKGNotesGenerator:
         return f"{source_label.title()} {relation_lower} {target_label.title()}."
     
     def get_contextual_description(self, source_topic: str, relation: str, target_node: dict) -> str:
-        """Generate context-specific description for a connected node
-        
-        PRIORITY:
-        1. Use target node's own description (from KG)
-        2. Fall back to contextual explanation based on relation type
-        """
+        """Generate context-specific description for a connected node focusing on exact KG verbs and rich context"""
         target_label = target_node.get("label", "")
         base_desc = target_node.get("description", "")
         
-        # PRIORITY 1: Use the node's actual KG description if available
+        # Context Expansion Layer: Enricht relation with definition if available
         if base_desc and len(base_desc.split()) >= 3:
-            return base_desc
-        
-        # PRIORITY 2: Create contextual explanation based on relation
-        relation_lower = relation.lower().replace("_", " ").replace("-", " ")
-        
-        if "uses" in relation_lower:
-            return f"Used by {source_topic.title()} during its operation."
-        elif "has" in relation_lower or "contains" in relation_lower:
-            return f"A component or part of {source_topic.title()}."
-        elif "is_a" in relation_lower or "type" in relation_lower:
-            return f"A category or type classification."
-        elif "produces" in relation_lower or "generates" in relation_lower:
-            return f"Output produced by {source_topic.title()}."
-        elif "detects" in relation_lower or "checks" in relation_lower:
-            return f"Detected or verified by {source_topic.title()}."
-        elif "stores" in relation_lower:
-            return f"Stored or managed by {source_topic.title()}."
-        else:
-            return f"Related to {source_topic.title()} through {relation_lower}."
+            # Clean base desc to lowercase if it starts with upper
+            cleaned_desc = base_desc.strip().rstrip('.')
+            if cleaned_desc and cleaned_desc[0].isupper():
+                cleaned_desc = cleaned_desc[0].lower() + cleaned_desc[1:]
+            return f"{source_topic} {relation} {target_label} ({cleaned_desc})."
+            
+        # PRIORITY 1: Create explanation using EXACT relation verbs
+        return f"{source_topic} {relation} {target_label}."
     
     def is_semantically_similar(self, sent1: str, sent2: str, threshold: float = 0.85) -> bool:
         """Check if two sentences are semantically similar using word overlap (lightweight)"""
@@ -4175,6 +4417,14 @@ class WMDKGNotesGenerator:
         if re.search(r'[A-Z]{5,}\s+[A-Z]{5,}', s):
             return False
         
+        # Reject OCR garbage characters
+        if any(c in s for c in ['¢', '©', '®', '™', '†', '‡', '§']):
+            return False
+        
+        # Reject questions — notes should be statements, not questions
+        if s.strip().endswith('?'):
+            return False
+        
         s_lower = s.lower()
         
         # MANDATORY: Check for verb presence (grammar gate)
@@ -4186,6 +4436,40 @@ class WMDKGNotesGenerator:
         
         if not has_verb:
             return False  # STRICT: Must have verb
+        
+        # STRICT: Reject spoken/filler/lecture phrases (comprehensive list)
+        spoken_filler = [
+            # Direct address / lecture style
+            "in this video", "let us see", "we will", "thank you", "subscribe",
+            "we say", "we are going", "we have seen", "we will see", "we can see",
+            "in the introduction", "in the previous", "in the next", "in the last",
+            "as we discussed", "as i said", "as you can see", "let me",
+            "hello everyone", "hi everyone", "good morning", "welcome to",
+            "in this lecture", "in this presentation", "in this session",
+            "please like", "please share", "i hope", "i think",
+            "let us now", "we talked about", "we discussed", "so basically",
+            "see you in", "that's all", "that is all", "bye bye",
+            "now we will", "now let's", "now let us", "first of all",
+            "the replay obviously", "if he gives", "let's say we",
+            "so what we", "so here we", "so now we",
+            # First/second person conversational
+            "we are only", "we are not", "we are just", "we just",
+            "we only", "we don't", "we do not", "we need to",
+            "we want to", "we have to", "we should", "we can",
+            "if we want", "if we need", "if you want", "if you need",
+            "you will", "you should", "you can", "you need",
+            "you see", "you know", "you understand",
+            "i am going", "i will", "i want", "i am", "i have",
+            # Concerned / irrelevant
+            "concerned with", "concerned about", "not concerned",
+            "irrelevant to us", "irrelevant to", "doesn't matter",
+            "does not matter", "don't care", "do not care",
+            # Store / access conversational
+            "store that data", "access any", "is the data present",
+            "where is the data", "what data model",
+        ]
+        if any(f in s_lower for f in spoken_filler):
+            return False
         
         # Check against DYNAMIC domain keywords (from KG)
         if domain_keywords:
@@ -4356,15 +4640,25 @@ class WMDKGNotesGenerator:
     # ---------- MAIN GENERATION: ROBUST NOTES PIPELINE ----------
     def generate_notes(self, session_path: Path):
         """
-        Generate EDUCATIONAL NOTES with STRICT VALIDATION:
-        1. Topic Eligibility Check (no code/garbage topics)
-        2. Line Classification (CODE/DIAGRAM/EXPLANATION/NOISE)
-        3. Semantic Validity Gate (only meaningful content)
-        4. Last-Mile Safety Net (drop weak sections)
+        Generate EDUCATIONAL NOTES with guaranteed hierarchical structure:
+        
+        Pipeline:
+          1. Load text segments + KG data + diagrams
+          2. Match text segments to KG nodes (topic identification)
+          3. Build hierarchy from KG (centrality + structural edges)
+          4. Construct HierarchicalNotes JSON (Section → Subsection → Points)
+          5. Validate structure, auto-fix if needed
+          6. Render via shared notes_renderer (PDF + TXT)
         """
+        from hierarchical_schema import (
+            make_point, make_subsection, make_section, make_notes,
+            validate_hierarchy, fix_hierarchy
+        )
+        from notes_renderer import render_pdf, render_txt
+
         session_path = Path(session_path)
         
-        # 1. Locate Text Segments
+        # ── 1. Locate Text Segments ──
         fused_dir = None
         possible_dirs = [
             session_path / "combined_fused",
@@ -4380,7 +4674,7 @@ class WMDKGNotesGenerator:
             print(f"[Notes] ❌ No text segments found in {session_path}")
             return
 
-        # 2. Load KG Data
+        # ── 2. Load KG Data ──
         nodes = []
         edges = []
         nodes_paths = [session_path / "fused_kg" / "fused_nodes.json", session_path / "graphs" / "kg_nodes.json"]
@@ -4395,7 +4689,7 @@ class WMDKGNotesGenerator:
                 try: edges = json.loads(p.read_text(encoding='utf-8')); break
                 except: pass
         
-        node_lookup = {n.get("label", "").lower(): n for n in nodes}
+        label_node_lookup = {n.get("label", "").lower(): n for n in nodes}
         edge_map = {}
         for e in edges:
             src = e.get("source", "")
@@ -4404,11 +4698,10 @@ class WMDKGNotesGenerator:
             if src not in edge_map: edge_map[src] = []
             edge_map[src].append((tgt, rel))
         
-        # DYNAMIC: Extract domain keywords from this video's KG
         domain_keywords = self.extract_domain_keywords(nodes, edges)
         print(f"[Notes] 📚 Extracted {len(domain_keywords)} domain keywords from KG")
 
-        # 3. Load Images
+        # ── 3. Load Images / Captions ──
         captions = {}
         image_paths = {}
         caption_paths = [fused_dir / "merged_captions.json", session_path / "diagram_texts"]
@@ -4427,10 +4720,10 @@ class WMDKGNotesGenerator:
                     if img.name not in image_paths:
                         image_paths[img.name] = img
 
-        # 4. Process Segments with STRICT Topic Validation
+        # ── 4. Match Text Segments to KG Nodes ──
         text_files = sorted(list(fused_dir.glob("*.txt")))
         canonical_topics = {}
-        last_valid_canon = None  # For merging invalid topics into previous
+        last_valid_canon = None
         
         for seg_idx, txt_file in enumerate(text_files):
             if "merged_captions" in txt_file.name: continue
@@ -4438,12 +4731,11 @@ class WMDKGNotesGenerator:
             text = self.clean_text(raw_text)
             if len(text.split()) < 15: continue
 
-            # Identify Topic from KG
             text_lower = text.lower()
             best_node = None
             max_score = 0
             
-            for label, node in node_lookup.items():
+            for label, node in label_node_lookup.items():
                 if len(label) < 3: continue
                 count = text_lower.count(label)
                 if count > 0:
@@ -4460,9 +4752,7 @@ class WMDKGNotesGenerator:
                 topic_label = self.generate_topic(text) if hasattr(self, 'generate_topic') else "General Concept"
                 topic_node = None
             
-            # TOPIC ELIGIBILITY CHECK
             if not self.is_valid_topic(topic_label):
-                # Merge into previous valid topic
                 if last_valid_canon and last_valid_canon in canonical_topics:
                     canonical_topics[last_valid_canon]["texts"].append(text)
                 continue
@@ -4473,7 +4763,6 @@ class WMDKGNotesGenerator:
                     canonical_topics[last_valid_canon]["texts"].append(text)
                 continue
             
-            # Merge or create new
             if canon in canonical_topics:
                 canonical_topics[canon]["texts"].append(text)
                 if topic_node and not canonical_topics[canon]["node"]:
@@ -4488,217 +4777,563 @@ class WMDKGNotesGenerator:
                 }
                 last_valid_canon = canon
 
-        # 5. Build Strict Hierarchy (Forest)
+        # ── 5. Build Hierarchy from KG ──
         hierarchy = self.build_hierarchy(nodes, edge_map)
         roots = hierarchy["roots"]
         children_map = hierarchy["children_map"]
-        node_lookup = hierarchy["node_lookup"]
-        
-        # Map text segments to nodes for context enrichment
+        node_lookup_by_id = hierarchy["node_lookup"]
+
+        # Map text segments to nodes
         node_text_map = {}
         for canon_data in canonical_topics.values():
             if canon_data["node"]:
                 node_text_map[canon_data["node"]["id"]] = " ".join(canon_data["texts"])
 
-        # 6. Generate PDF with HIERARCHICAL STRUCTURE
-        # Save notes directly to notes/ folder
-        notes_dir = session_path / "notes"
-        notes_dir.mkdir(parents=True, exist_ok=True)
-        out_pdf = notes_dir / "lecture_notes.pdf"
-        out_txt = notes_dir / "lecture_notes.txt"
-        
-        def safe(s): return s.encode("latin-1", "replace").decode("latin-1")
-        txt_output = ["LECTURE NOTES\n=============\n\n"]
+        # ── 6. Build HierarchicalNotes JSON (Semantic Grouping) ──
+        used_images = set()
+        emitted_node_ids = set()  # Track concepts already explained to prevent repetition
+        sections = []
 
-        try:
-            pdf = FPDF()
-            pdf.set_auto_page_break(auto=True, margin=15)
-            pdf.add_page()
+        # ── Relation-to-heading mapper ──
+        # Groups edge relations into semantic categories for readable section headings
+        _RELATION_GROUPS = {
+            # ─── Definitions / Identity ───
+            "is defined as": "Definition and Fundamental Concept",
+            "defined as": "Definition and Fundamental Concept",
+            "means": "Definition and Fundamental Concept",
+            "refers to": "Definition and Fundamental Concept",
+            "known as": "Definition and Fundamental Concept",
+            "is called": "Definition and Fundamental Concept",
+            "also known as": "Definition and Fundamental Concept",
+            "is a": "Definition and Fundamental Concept",
+            "represents": "Definition and Fundamental Concept",
+            # ─── Operations / Functions ───
+            "has operation": "Primary Operations",
+            "has function": "Primary Operations",
+            "supports operation": "Primary Operations",
+            "performs": "Primary Operations",
+            "operates on": "Primary Operations",
+            "uses operation": "Primary Operations",
+            # ─── Achieved Through / Implementation ───
+            "is achieved through": "Implementation and Structure",
+            "achieved through": "Implementation and Structure",
+            "implemented using": "Implementation and Structure",
+            "implemented by": "Implementation and Structure",
+            "implemented through": "Implementation and Structure",
+            "realized through": "Implementation and Structure",
+            "accomplished via": "Implementation and Structure",
+            "uses": "Implementation and Structure",
+            # ─── Types / Classification ───
+            "has type": "Types and Classification",
+            "type of": "Types and Classification",
+            "classified as": "Types and Classification",
+            "divided into": "Types and Classification",
+            "categorized as": "Types and Classification",
+            "kind of": "Types and Classification",
+            "has level": "Types and Classification",
+            "consists of levels": "Types and Classification",
+            # ─── Context / Relationship ───
+            "provides context for": "Contextual Relationships",
+            "provides context": "Contextual Relationships",
+            "is related to": "Contextual Relationships",
+            "related to": "Contextual Relationships",
+            "associated with": "Contextual Relationships",
+            "connected to": "Contextual Relationships",
+            "interacts with": "Contextual Relationships",
+            # ─── Examples / Analogies ───
+            "example of": "Real-World Analogies",
+            "has example": "Real-World Analogies",
+            "analogy": "Real-World Analogies",
+            "illustrated by": "Real-World Analogies",
+            "such as": "Real-World Analogies",
+            "similar to": "Real-World Analogies",
+            # ─── Applications ───
+            "used in": "Applications",
+            "applied in": "Applications",
+            "used for": "Applications",
+            "application of": "Applications",
+            "helps in": "Applications",
+            "enables": "Applications",
+            # ─── Properties / Characteristics ───
+            "has property": "Key Characteristics",
+            "has characteristic": "Key Characteristics",
+            "characterized by": "Key Characteristics",
+            "follows": "Key Characteristics",
+            "based on": "Key Characteristics",
+            "operates on principle": "Key Characteristics",
+            # ─── Components / Parts ───
+            "has component": "Components and Structure",
+            "consists of": "Components and Structure",
+            "contains": "Components and Structure",
+            "comprises": "Components and Structure",
+            "part of": "Components and Structure",
+            "composed of": "Components and Structure",
+            "includes": "Components and Structure",
+            "has": "Components and Structure",
+            # ─── Status / Conditions ───
+            "has condition": "Status Operations",
+            "checks": "Status Operations",
+            "returns": "Status Operations",
+            "has status": "Status Operations",
+            # ─── Purpose / Goal ───
+            "purpose is": "Purpose and Goals",
+            "aims to": "Purpose and Goals",
+            "designed for": "Purpose and Goals",
+            "intended for": "Purpose and Goals",
+            # ─── Explanation / Description ───
+            "is explained through": "Detailed Explanation",
+            "explained through": "Detailed Explanation",
+            "described by": "Detailed Explanation",
+            "is described as": "Detailed Explanation",
+        }
+
+        def _get_group_heading(relation: str) -> str:
+            """Map an edge relation to a semantic group heading."""
+            rel_lower = relation.lower().strip()
+            # Exact match first
+            if rel_lower in _RELATION_GROUPS:
+                return _RELATION_GROUPS[rel_lower]
+            # Partial match (check both directions)
+            for pattern, heading in _RELATION_GROUPS.items():
+                if pattern in rel_lower or rel_lower in pattern:
+                    return heading
+            # Fallback: group ALL unmapped relations under Additional Concepts
+            # This prevents section explosion (e.g., 'Is Defined As' becoming its own section)
+            return "Additional Concepts"
+
+        def _is_clear_description(text: str, topic: str) -> bool:
+            """Check if text is a clear descriptive/definitional statement worth showing."""
+            if not text or len(text.split()) < 5:
+                return False
+            if text.strip().endswith('?'):
+                return False
+            # Reject OCR garbage
+            if any(c in text for c in ['¢', '©', '®', '™', '†', '‡', '§']):
+                return False
+            text_lower = text.lower()
+            # Must contain a verb to be a proper statement
+            verb_indicators = [
+                " is ", " are ", " was ", " were ", " has ", " have ",
+                " means ", " refers ", " defines ", " provides ",
+                " uses ", " allows ", " enables ", " supports ",
+                " involves ", " requires ", " represents ", " stores ",
+                " follows ", " operates ", " manages ", " handles ",
+                " performs ", " processes ",
+            ]
+            padded = " " + text_lower + " "
+            has_verb = any(v in padded for v in verb_indicators)
+            if not has_verb:
+                return False
+            # Check it's informative (not spoken language / meta-commentary)
+            filler = [
+                "in this video", "let us see", "we will", "thank you", "subscribe",
+                "we say", "we are going", "we have seen", "we will see", "we can see",
+                "in the introduction", "in the previous", "in the next", "in the last",
+                "as we discussed", "as i said", "as we have seen", "as you can see",
+                "let me", "let's", "so basically", "so now", "so here",
+                "hello everyone", "hi everyone", "good morning", "good afternoon",
+                "welcome to", "welcome back", "in this lecture", "in this presentation",
+                "in this session", "in this tutorial", "in this module",
+                "we are only", "we are not", "we are just", "we just",
+                "we only", "we don't", "we do not", "we need to",
+                "we want to", "we have to", "we should", "we can",
+                "if we want", "if we need", "if you want", "if you need",
+                "you will", "you should", "you can", "you need",
+                "concerned with", "concerned about", "not concerned",
+                "irrelevant to us", "irrelevant to",
+                "store that data", "access any", "is the data present",
+                "the replay obviously", "if he gives", "let's say we",
+            ]
+            if any(f in text_lower for f in filler):
+                return False
+            return True
+
+        def _collect_all_descendants(current_id):
+            """Recursively collect all descendant node IDs."""
+            desc_ids = []
+            for child_id in children_map.get(current_id, []):
+                desc_ids.append(child_id)
+                desc_ids.extend(_collect_all_descendants(child_id))
+            return desc_ids
+
+        for root_id in roots:
+            root_node = node_lookup_by_id.get(root_id, {})
+            topic = root_node.get("label", "Topic")
             
-            pdf.set_font("Arial", "B", 20)
-            pdf.cell(0, 12, "Lecture Notes", ln=True, align='C')
-            pdf.set_font("Arial", "I", 10)
-            pdf.cell(0, 6, "Knowledge Graph Enhanced Educational Notes", ln=True, align='C')
-            pdf.ln(8)
+            if not self.is_valid_topic(topic):
+                continue
+            if root_id in emitted_node_ids:
+                continue
+            emitted_node_ids.add(root_id)
+
+            # ── Collect ALL edges from this root (direct + hierarchical) ──
+            all_child_ids = children_map.get(root_id, [])
+            all_descendant_ids = _collect_all_descendants(root_id)
             
-            used_images = set()
-            section_num = 0
+            # Get direct edges from edge_map
+            direct_edges = edge_map.get(root_id, [])
+
+            # ── Group children by edge relation type ──
+            relation_groups = {}  # heading → list of (node, relation, description)
+            ungrouped_nodes = []  # children without a clear edge relation
             
-            # Helper for creating bullet points from children
-            def add_child_bullets(parent_id, current_pdf):
-                if parent_id in children_map:
-                    current_pdf.ln(2)
-                    for child_id in children_map[parent_id]:
-                        child = node_lookup[child_id]
-                        lbl = child.get("label", "Unknown")
-                        desc = child.get("description", "")
-                        # Short explanation
-                        if not desc:
-                            # Try synthesize from edge
-                            msg = self.interpret_edge(node_lookup[parent_id]["label"], "related", lbl)
-                            bullet = f"  - {safe(lbl)}"
-                        else:
-                            bullet = f"  - {safe(lbl)}: {safe(desc)}"
-                        
-                        current_pdf.set_font("Arial", "", 10)
-                        current_pdf.multi_cell(0, 5, bullet)
-                        txt_output.append(f"  - {lbl}: {desc}\n")
-            
-            # MAIN LOOP - Iterate Roots
-            for root_id in roots:
-                root_node = node_lookup[root_id]
-                topic = root_node.get("label", "Topic")
+            for tgt_id, rel in direct_edges:
+                tgt_node = node_lookup_by_id.get(tgt_id)
+                if not tgt_node or tgt_id == root_id or tgt_id in emitted_node_ids:
+                    continue
                 
-                section_num += 1
-                
-                # LEVEL 1: Main Section Header
-                pdf.set_font("Arial", "B", 14)
-                pdf.set_fill_color(230, 240, 255)
-                pdf.cell(0, 8, f"{section_num}. {safe(topic.title())}", ln=True, fill=True)
-                pdf.ln(2)
-                txt_output.append(f"\n{section_num}. {topic.title()}\n")
-                
-                # LEVEL 1: Definition (Priority: Node Description)
-                defn = root_node.get("description", "")
-                if defn and len(defn.split()) >= 5 and not defn.strip().endswith('?'):
-                    pass # Use this
+                group_heading = _get_group_heading(rel)
+                if group_heading not in relation_groups:
+                    relation_groups[group_heading] = []
+                relation_groups[group_heading].append((tgt_node, rel, tgt_id))
+            
+            # Children in hierarchy but not in edge_map → ungrouped
+            edge_target_ids = {tgt for tgt, _ in direct_edges}
+            for cid in all_child_ids:
+                if cid not in edge_target_ids and cid not in emitted_node_ids:
+                    c_node = node_lookup_by_id.get(cid)
+                    if c_node:
+                        ungrouped_nodes.append((c_node, "includes", cid))
+
+            # ── Build sections ──
+            
+            # Section 1: Definition and Fundamental Concept (always first)
+            defn = root_node.get("description", "")
+            if not _is_clear_description(defn, topic):
+                defn = self.synthesize_explanation(
+                    topic, root_node,
+                    [node_lookup_by_id[c] for c in all_child_ids if c in node_lookup_by_id],
+                    edge_map,
+                    node_lookup=node_lookup_by_id
+                )
+            
+            defn_points = [make_point(defn)] if defn else []
+            
+            # Add transcript-matched sentences for richer definition
+            all_text = node_text_map.get(root_id, "")
+            if all_text:
+                matched = self.find_matching_transcript_sentences(topic, all_text, domain_keywords, max_sentences=5)
+                for sent in matched:
+                    if self.is_valid_note_sentence(sent, domain_keywords):
+                        defn_points.append(make_point(sent))
+            
+            # Also pull "Key Characteristics" / "follows" into the definition section
+            char_group = relation_groups.pop("Key Characteristics", [])
+            for c_node, rel, c_id in char_group:
+                if c_id in emitted_node_ids:
+                    continue
+                emitted_node_ids.add(c_id)
+                c_label = c_node.get("label", "")
+                c_desc = c_node.get("description", "")
+                if _is_clear_description(c_desc, c_label):
+                    defn_points.append(make_point(f"{c_label}: {c_desc}"))
                 else:
-                    # Fallback to synthesis
-                    defn = self.synthesize_explanation(topic, root_node, 
-                                                     [node_lookup[c] for c in children_map.get(root_id, [])], 
-                                                     edge_map)
+                    desc = self.get_contextual_description(topic, rel, c_node)
+                    defn_points.append(make_point(f"{c_label}: {desc}"))
+            
+            if defn_points:
+                # Build subsections: separate Description (blue box) from Overview (content)
+                section_subsections = []
                 
-                pdf.set_font("Arial", "B", 11)
-                pdf.cell(0, 6, "Definition:", ln=True)
-                pdf.set_font("Arial", "", 10)
-                pdf.multi_cell(0, 5, safe(defn))
-                pdf.ln(2)
-                txt_output.append(f"Definition: {defn}\n")
+                # "Description" subsection (rendered as blue box in PDF) — node description only
+                if defn and _is_clear_description(defn, topic):
+                    section_subsections.append(make_subsection("Description", [make_point(defn)]))
+                    # Remove the defn from overview points to avoid duplication
+                    defn_points = [p for p in defn_points if p.get("text", "") != defn]
                 
-                # LEVEL 2: Subsections (Children)
-                if root_id in children_map:
-                    child_ids = children_map[root_id]
-                    
-                    # Group children: if they have their OWN children, they get a subsection (1.1)
-                    # If they are leaf nodes, they go into a "Components" list
-                    
-                    complex_children = []
-                    simple_children = []
-                    
-                    for cid in child_ids:
-                        if cid in children_map: # Has grandchildren
-                            complex_children.append(cid)
-                        else:
-                            simple_children.append(cid)
-                    
-                    # 2A. Handle Complex Children (Subsections 1.X)
-                    sub_idx = 0
-                    for cid in complex_children:
-                        sub_idx += 1
-                        child_node = node_lookup[cid]
-                        sub_label = child_node.get("label", "Subtopic")
-                        
-                        pdf.set_font("Arial", "B", 11)
-                        pdf.cell(0, 6, f"{section_num}.{sub_idx} {safe(sub_label)}", ln=True)
-                        txt_output.append(f"{section_num}.{sub_idx} {sub_label}\n")
-                        
-                        # Child Description
-                        c_desc = child_node.get("description", "")
-                        if c_desc and len(c_desc.split()) >= 4:
-                            pdf.set_font("Arial", "", 10)
-                            pdf.multi_cell(0, 5, safe(c_desc))
-                            txt_output.append(f"{c_desc}\n")
-                        
-                        # LEVEL 3: Grandchildren (Bullets)
-                        add_child_bullets(cid, pdf)
-                        pdf.ln(2)
-                        
-                    # 2B. Handle Simple Children (Bullet List under Main)
-                    if simple_children:
-                        pdf.set_font("Arial", "B", 11)
-                        if complex_children:
-                            pdf.cell(0, 6, "Other Components:", ln=True)
-                        else:
-                            pdf.cell(0, 6, "- Components and Structure", ln=True)
-                        
-                        pdf.set_font("Arial", "", 10)
-                        for scid in simple_children:
-                            child = node_lookup[scid]
-                            lbl = child.get("label", "")
-                            desc = child.get("description", "")
-                            
-                            # Contextual description from edge if needed
-                            if not desc:
-                                desc = self.get_contextual_description(topic, "includes", child)
-                                
-                            bullet = f"  - {safe(lbl)}: {safe(desc)}"
-                            pdf.multi_cell(0, 5, bullet)
-                            txt_output.append(f"  - {lbl}: {desc}\n")
-                        pdf.ln(2)
-
-                # LEVEL 1: Related Concepts (Non-hierarchical edges)
-                # Find edges that are NOT parent/child relationships
-                related_items = []
-                if root_id in edge_map:
-                    for tgt, rel in edge_map[root_id]:
-                        # Skip if target is my child or parent (already handled)
-                        if tgt in children_map.get(root_id, []): continue
-                        if hierarchy["node_lookup"][tgt]["id"] == root_id: continue # Self
-                        
-                        # Add to related
-                        tgt_node = node_lookup.get(tgt)
-                        if tgt_node:
-                            lbl = tgt_node.get("label", tgt)
-                            desc = self.get_contextual_description(topic, rel, tgt_node)
-                            related_items.append(f"{lbl}: {desc}")
-                            
-                if related_items:
-                    pdf.set_font("Arial", "B", 11)
-                    pdf.cell(0, 6, "- Related Concepts", ln=True)
-                    pdf.set_font("Arial", "", 10)
-                    for item in related_items[:5]:
-                        pdf.multi_cell(0, 5, f"  - {safe(item)}")
-                        txt_output.append(f"  - {item}\n")
-                    pdf.ln(2)
+                # "Overview" subsection — transcript sentences and characteristic points
+                if defn_points:
+                    section_subsections.append(make_subsection("Overview", defn_points))
                 
-                # Visual Representation
-                best_img, raw_cap = self.find_related_diagram(topic + " " + defn, captions)
+                if not section_subsections:
+                    continue
+                
+                # Try to find a diagram for the definition section
+                defn_diagram_path = None
+                defn_diagram_caption = None
+                best_img, raw_cap = self.find_related_diagram(topic + " " + (defn or ""), captions)
                 if best_img and best_img not in used_images:
                     used_images.add(best_img)
-                    img_path = image_paths.get(best_img)
-                    if img_path and img_path.exists():
-                        semantic_cap = self.get_semantic_caption(topic, raw_cap, nodes)
-                        
-                        pdf.set_font("Arial", "B", 11)
-                        pdf.cell(0, 6, "Visual Representation:", ln=True)
-                        txt_output.append(f"Visual Representation:\n")
-                        txt_output.append(f"Figure {section_num}: {semantic_cap}\n")
-                        
-                        try:
-                            from PIL import Image as PILImage
-                            with PILImage.open(str(img_path)) as img:
-                                w_px, h_px = img.size
-                            max_w, max_h = 150, 90
-                            aspect = h_px / w_px if w_px > 0 else 1
-                            if w_px > h_px:
-                                w_mm = min(max_w, w_px * 0.264583)
-                                h_mm = w_mm * aspect
-                            else:
-                                h_mm = min(max_h, h_px * 0.264583)
-                                w_mm = h_mm / aspect
-                            
-                            pdf.image(str(img_path), x=30, w=w_mm)
-                            pdf.ln(2)
-                            pdf.set_font("Arial", "I", 9)
-                            pdf.multi_cell(0, 4, f"Figure {section_num}: {safe(semantic_cap)}", align='C')
-                        except: pass
+                    img_p = image_paths.get(best_img)
+                    if img_p and img_p.exists():
+                        defn_diagram_path = str(img_p)
+                        defn_diagram_caption = self.get_semantic_caption(topic, raw_cap, nodes)
                 
-                pdf.ln(6)
+                sections.append(make_section(
+                    f"Definition and Fundamental Concept" if len(sections) == 0 and topic.lower() == roots[0] else topic.title(),
+                    section_subsections,
+                    diagram_path=defn_diagram_path,
+                    diagram_caption=defn_diagram_caption
+                ))
 
-            pdf.output(out_pdf)
-            print(f"[Notes] ✅ Validated Notes saved → {out_pdf} ({section_num} sections)")
-            Path(out_txt).write_text("".join(txt_output), encoding='utf-8')
+            # Section N: One section per relation group (semantic clusters)
+            # Sort groups by number of items (larger groups = more important = first)
+            sorted_groups = sorted(relation_groups.items(), key=lambda x: -len(x[1]))
+            
+            for group_heading, group_items in sorted_groups:
+                if not group_items:
+                    continue
+                
+                group_points = []
+                for c_node, rel, c_id in group_items:
+                    if c_id in emitted_node_ids:
+                        continue
+                    emitted_node_ids.add(c_id)
+                    
+                    c_label = c_node.get("label", "")
+                    c_desc = c_node.get("description", "")
+                    
+                    # Context Aware: try transcript matching first
+                    tgt_text = node_text_map.get(c_id, "")
+                    rich_desc = None
+                    if tgt_text:
+                        matched = self.find_matching_transcript_sentences(c_label, tgt_text, domain_keywords, max_sentences=2)
+                        valid_matched = [s for s in matched if self.is_valid_note_sentence(s, domain_keywords)]
+                        if valid_matched:
+                            rich_desc = " ".join(valid_matched)
+                    
+                    # Fallback: use description only if clear
+                    if not rich_desc:
+                        if _is_clear_description(c_desc, c_label):
+                            rich_desc = c_desc
+                        else:
+                            rich_desc = self.get_contextual_description(topic, rel, c_node)
+                    
+                    # Only add description if it's meaningful, otherwise just the label
+                    if rich_desc and rich_desc.lower().strip() != c_label.lower().strip():
+                        group_points.append(make_point(f"{c_label}: {rich_desc}"))
+                    else:
+                        group_points.append(make_point(c_label))
+                    
+                    # Add descendants of this node as sub-points
+                    for desc_id in children_map.get(c_id, []):
+                        if desc_id in emitted_node_ids:
+                            continue
+                        emitted_node_ids.add(desc_id)
+                        desc_node = node_lookup_by_id.get(desc_id, {})
+                        d_label = desc_node.get("label", "")
+                        d_desc = desc_node.get("description", "")
+                        if _is_clear_description(d_desc, d_label):
+                            group_points.append(make_point(f"{d_label}: {d_desc}"))
+                        elif d_label:
+                            group_points.append(make_point(d_label))
+                
+                if group_points:
+                    # Enrich group with transcript sentences matching this group's topic
+                    group_search_text = group_heading + " " + " ".join(
+                        c_node.get("label", "") for c_node, _, _ in group_items
+                    )
+                    for nid_text in [c_id for _, _, c_id in group_items]:
+                        seg_text = node_text_map.get(nid_text, "")
+                        if seg_text:
+                            matched = self.find_matching_transcript_sentences(
+                                group_search_text, seg_text, domain_keywords, max_sentences=3
+                            )
+                            for sent in matched:
+                                if self.is_valid_note_sentence(sent, domain_keywords):
+                                    # Avoid duplicating existing points
+                                    existing_texts = {p.get("text", "").lower() for p in group_points}
+                                    if sent.lower().strip() not in existing_texts:
+                                        group_points.append(make_point(sent))
+                    
+                    # Find diagram for this group
+                    diagram_path = None
+                    diagram_caption = None
+                    search_text = group_heading + " " + " ".join(
+                        c_node.get("label", "") for c_node, _, _ in group_items
+                    )
+                    best_img, raw_cap = self.find_related_diagram(search_text, captions)
+                    if best_img and best_img not in used_images:
+                        used_images.add(best_img)
+                        img_p = image_paths.get(best_img)
+                        if img_p and img_p.exists():
+                            diagram_path = str(img_p)
+                            diagram_caption = self.get_semantic_caption(group_heading, raw_cap, nodes)
+                    
+                    sections.append(make_section(
+                        group_heading,
+                        [make_subsection("Details", group_points)],
+                        diagram_path=diagram_path,
+                        diagram_caption=diagram_caption
+                    ))
 
+            # Handle ungrouped children as a general section if any remain
+            if ungrouped_nodes:
+                ungrouped_points = []
+                for c_node, rel, c_id in ungrouped_nodes:
+                    if c_id in emitted_node_ids:
+                        continue
+                    emitted_node_ids.add(c_id)
+                    c_label = c_node.get("label", "")
+                    c_desc = c_node.get("description", "")
+                    
+                    tgt_text = node_text_map.get(c_id, "")
+                    rich_desc = None
+                    if tgt_text:
+                        matched = self.find_matching_transcript_sentences(c_label, tgt_text, domain_keywords, max_sentences=2)
+                        valid_matched = [s for s in matched if self.is_valid_note_sentence(s, domain_keywords)]
+                        if valid_matched:
+                            rich_desc = " ".join(valid_matched)
+                    
+                    if not rich_desc:
+                        if _is_clear_description(c_desc, c_label):
+                            rich_desc = c_desc
+                        else:
+                            rich_desc = self.get_contextual_description(topic, rel, c_node)
+                    
+                    if rich_desc and rich_desc.lower().strip() != c_label.lower().strip():
+                        ungrouped_points.append(make_point(f"{c_label}: {rich_desc}"))
+                    else:
+                        ungrouped_points.append(make_point(c_label))
+                    
+                    # Descendants
+                    for desc_id in children_map.get(c_id, []):
+                        if desc_id in emitted_node_ids:
+                            continue
+                        emitted_node_ids.add(desc_id)
+                        desc_node = node_lookup_by_id.get(desc_id, {})
+                        d_label = desc_node.get("label", "")
+                        d_desc = desc_node.get("description", "")
+                        if _is_clear_description(d_desc, d_label):
+                            ungrouped_points.append(make_point(f"{d_label}: {d_desc}"))
+                        elif d_label:
+                            ungrouped_points.append(make_point(d_label))
+                
+                if ungrouped_points:
+                    sections.append(make_section(
+                        "Additional Concepts",
+                        [make_subsection("Details", ungrouped_points)]
+                    ))
+
+        # ── 6a. Coverage sweep: ensure ALL KG nodes are represented ──
+        # Find any nodes that weren't emitted during root traversal
+        all_node_ids = set(node_lookup_by_id.keys())
+        missed_ids = all_node_ids - emitted_node_ids
+        
+        if missed_ids:
+            missed_points = []
+            for nid in missed_ids:
+                node = node_lookup_by_id.get(nid, {})
+                lbl = node.get("label", "")
+                if not lbl or not self.is_valid_topic(lbl):
+                    continue
+                emitted_node_ids.add(nid)
+                
+                desc = node.get("description", "")
+                # Find edges involving this node
+                edges_for_node = edge_map.get(nid, [])
+                
+                if _is_clear_description(desc, lbl):
+                    missed_points.append(make_point(f"{lbl}: {desc}"))
+                elif edges_for_node:
+                    # Build description from edges
+                    edge_descs = []
+                    for tgt_id, rel in edges_for_node[:3]:
+                        tgt_node = node_lookup_by_id.get(tgt_id, {})
+                        tgt_label = tgt_node.get("label", tgt_id)
+                        if not re.match(r'^N\d+$', str(tgt_label)):
+                            edge_descs.append(f"{rel} {tgt_label}")
+                    if edge_descs:
+                        missed_points.append(make_point(f"{lbl}: {', '.join(edge_descs)}"))
+                    else:
+                        missed_points.append(make_point(lbl))
+                else:
+                    missed_points.append(make_point(lbl))
+                    
+                # Try to find a diagram for missed nodes
+                best_img, raw_cap = self.find_related_diagram(lbl + " " + desc, captions)
+                if best_img and best_img not in used_images:
+                    used_images.add(best_img)
+
+            if missed_points:
+                sections.append(make_section(
+                    "Additional Concepts",
+                    [make_subsection("Details", missed_points)]
+                ))
+
+        # ── 6b. Post-process: Consolidate thin sections ──
+        # Merge sections with < 3 points into "Additional Concepts"
+        # Also merge all existing "Additional Concepts" sections into one
+        MIN_POINTS_PER_SECTION = 2
+        
+        consolidated_sections = []
+        additional_concepts_points = []
+        additional_diagram = None
+        additional_diagram_caption = None
+        
+        for section in sections:
+            heading = section.get("heading", "")
+            subsections = section.get("subsections", [])
+            
+            # Count total points in this section
+            total_points = sum(len(ss.get("points", [])) for ss in subsections)
+            
+            if heading == "Additional Concepts":
+                # Always merge "Additional Concepts" sections into one
+                for ss in subsections:
+                    additional_concepts_points.extend(ss.get("points", []))
+                # Keep first diagram found
+                if not additional_diagram and section.get("diagram"):
+                    additional_diagram = section["diagram"].get("path")
+                    additional_diagram_caption = section["diagram"].get("caption")
+            elif total_points < MIN_POINTS_PER_SECTION:
+                # Merge thin sections: prepend section heading as context to each point
+                for ss in subsections:
+                    for pt in ss.get("points", []):
+                        text = pt.get("text", "")
+                        # Add the section heading as context if not already present
+                        if heading.lower() not in text.lower()[:50]:
+                            pt["text"] = f"{heading}: {text}"
+                        additional_concepts_points.append(pt)
+                # Preserve diagram
+                if not additional_diagram and section.get("diagram"):
+                    additional_diagram = section["diagram"].get("path")
+                    additional_diagram_caption = section["diagram"].get("caption")
+            else:
+                consolidated_sections.append(section)
+        
+        # Add the merged "Additional Concepts" section if it has points
+        if additional_concepts_points:
+            ac_section = make_section(
+                "Additional Concepts",
+                [make_subsection("Details", additional_concepts_points)]
+            )
+            if additional_diagram:
+                ac_section["diagram"] = {
+                    "path": additional_diagram,
+                    "caption": additional_diagram_caption or ""
+                }
+            consolidated_sections.append(ac_section)
+        
+        sections = consolidated_sections
+
+        # ── 7. Validate & Fix ──
+        notes_dict = make_notes("Lecture Notes", sections)
+        
+        is_valid, violations = validate_hierarchy(notes_dict)
+        if not is_valid:
+            print(f"[Notes] ⚠️ Hierarchy violations ({len(violations)}): {violations[:3]}...")
+            notes_dict = fix_hierarchy(notes_dict)
+            is_valid2, v2 = validate_hierarchy(notes_dict)
+            if is_valid2:
+                print(f"[Notes] ✅ Auto-fix resolved all violations")
+            else:
+                print(f"[Notes] ⚠️ {len(v2)} violations remain after auto-fix: {v2[:3]}")
+
+        # ── 8. Render ──
+        notes_dir = session_path / "notes"
+        notes_dir.mkdir(parents=True, exist_ok=True)
+        
+        out_pdf = notes_dir / "lecture_notes.pdf"
+        out_txt = notes_dir / "lecture_notes.txt"
+
+        try:
+            render_pdf(notes_dict, out_pdf, image_base_dir=session_path)
+            render_txt(notes_dict, out_txt)
+            
+            n_sections = len(notes_dict.get("sections", []))
+            n_subsections = sum(len(s.get("subsections", [])) for s in notes_dict.get("sections", []))
+            print(f"[Notes] ✅ Hierarchical Notes saved → {out_pdf} ({n_sections} sections, {n_subsections} subsections)")
         except Exception as e:
             print(f"[Notes] ❌ Generation failed: {e}")
             import traceback

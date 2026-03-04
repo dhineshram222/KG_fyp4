@@ -81,14 +81,20 @@ class StructuralKGSummarizer:
     
     def __init__(self, use_refiner: bool = True):
         # Reuse the cached BART model from ex.py if available
+        # Reuse the cached BART model from ex.py if available to ensure shared VRAM
         try:
-            from ex import _get_bart_model
+            from ex import _get_bart_model, generate_global_summary
             tokenizer, model = _get_bart_model()
-            self.bart = BARTSummarizer.__new__(BARTSummarizer)
-            self.bart.device = 0 if torch.cuda.is_available() else -1
-            self.bart.summarizer = pipeline("summarization", model="facebook/bart-large-cnn", device=self.bart.device)
-        except Exception:
-            self.bart = BARTSummarizer()
+            self.bart_model = model
+            self.bart_tokenizer = tokenizer
+            self.bart_func = generate_global_summary
+            device_id = model.device.index if model.device.index is not None else 0
+            self.bart_device = device_id if torch.cuda.is_available() else -1
+            self.bart = True
+            print("[StructuralKGSummarizer] Successfully linked with shared BART model")
+        except Exception as e:
+            print(f"[StructuralKGSummarizer] Failed to load BART: {e}")
+            self.bart = False
         self.use_refiner = use_refiner and HAS_REFINER
         if self.use_refiner:
             self.refiner = FusedSummaryRefiner()
@@ -341,11 +347,28 @@ class StructuralKGSummarizer:
             # For this subject, collect best relations
             valid_relations = []
             
+            tgt_labels_seen = []
+            valid_relations = []
+            
             for tgt, rels in targets_map.items():
                 if tgt == src: continue # No self-loops
                 
                 tgt_label = clean_text(G_clean.nodes[tgt].get('label', tgt))
                 if not tgt_label or tgt_label.lower() == src_label.lower(): continue
+                
+                # Semantic Deduplication of targets (e.g., ADT vs Abstract Data Type)
+                tgt_words = set(tgt_label.lower().split())
+                is_duplicate = False
+                for seen_label in tgt_labels_seen:
+                    seen_words = set(seen_label.lower().split())
+                    if not tgt_words or not seen_words: continue
+                    overlap = len(tgt_words.intersection(seen_words)) / max(len(tgt_words), len(seen_words))
+                    if overlap > 0.8:  # 80% word overlap means it's likely a semantic duplicate
+                        is_duplicate = True
+                        break
+                if is_duplicate:
+                    continue
+                tgt_labels_seen.append(tgt_label)
                 
                 # Pick BEST relation
                 # Priority: Specific Verb > "is a" > "connects" > "related/associated"
@@ -359,11 +382,14 @@ class StructuralKGSummarizer:
                     # Normalize strict "associated" forms to lowest priority
                     if r_clean in ('associated', 'associated with', 'is associated', 'is associated with'):
                          r_clean = 'is related to'
+                    # Strip generic prefixes like "is", "are"
+                    if r_clean.startswith("is ") or r_clean.startswith("are "):
+                         r_clean = " ".join(r_clean.split()[1:])
                     clean_rels.append((r, r_clean)) # Keep original case for output, use lower for check
                 
                 # Check for specific verbs
                 for raw, lower in clean_rels:
-                    if lower not in ('is related to', 'related to'):
+                    if lower not in ('is related to', 'related to', 'associated'):
                         best_rel = raw # Use specific verb!
                         specific_found = True
                         break
@@ -467,28 +493,38 @@ class StructuralKGSummarizer:
         else:
             refined_text = structural_text
         
-        # Step 5: BART Summarization (Constrained Paraphrasing)
-        if hasattr(self, 'bart') and self.bart:
+        # Step 5: BART Summarization (Context-Aware Abstract Synthesis)
+        if getattr(self, 'bart', False):
             # Prepend a prompt to encourage BART to synthesize instead of list
             prompt_wrapper = (
-                "Provide a comprehensive summary of the following knowledge graph facts, "
-                "connecting them into a coherent narrative that captures the overall meaning: "
+                "Synthesize the following educational concepts into a fluid, highly-contextual "
+                "academic abstract (8-12 lines). Do NOT list or enumerate the facts. Weave them together "
+                "logically, focusing on definitions, core principles, operations, and applications, "
+                "prioritizing the most salient relationships: "
             )
             final_input = prompt_wrapper + refined_text
             
-            summary = self.bart.summarize(
-                final_input,
-                max_length=500,  # Allow more room for narrative
-                min_length=200   # Force substantial content
-            )
+            try:
+                summary = self.bart_func(
+                    text=final_input,
+                    model=self.bart_model,
+                    tokenizer=self.bart_tokenizer,
+                    device=self.bart_device,
+                    max_len=450,
+                    min_len=200
+                )
+                print("[KG Summary] Successfully generated abstractive wrapper.")
+            except Exception as e:
+                print(f"[KG Summary] Abstract summarization failed: {e}")
+                summary = refined_text
         else:
             summary = refined_text
         
-        # Step 6: Post-processing — clean noise and constrain to 7-10 sentences
+        # Step 6: Post-processing — clean noise and constrain to 10-12 sentences
         summary = clean_and_constrain_summary(
             summary,
-            min_sentences=7,
-            max_sentences=10,
+            min_sentences=10,
+            max_sentences=12,
         )
         print(f"[KG Summary] Post-processed to {len(summary.split('.'))} sentences")
             

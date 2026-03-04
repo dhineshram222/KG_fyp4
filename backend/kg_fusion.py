@@ -331,8 +331,24 @@ class KGFusionEnhanced:
             })
 
         
+        def _canonicalize_rel(r: str) -> str:
+            r = r.strip().lower()
+            if r in ['includes', 'contains', 'consists of', 'comprises', 'has part']:
+                return 'includes'
+            if r in ['is a', 'is an', 'type', 'is type of', 'kind of']:
+                return 'is a'
+            if r in ['uses', 'utilizes', 'employs']:
+                return 'uses'
+            if r in ['associated with', 'related to', 'connected to', 'linked to', 'covers']:
+                return 'is related to'
+            if r in ['produces', 'generates', 'creates']:
+                return 'produces'
+            if r in ['defines', 'describes', 'means', 'refers to']:
+                return 'defines'
+            return r
+
         def _norm_rel(r: str) -> str:
-            return r.strip().lower()
+            return _canonicalize_rel(r)
 
         edge_bucket = {}  
         for e in fused_edges_raw:
@@ -357,12 +373,10 @@ class KGFusionEnhanced:
             if not relations:
                 chosen_relation = ""
             else:
-                freq = Counter([_safe_str(r).strip().lower() for r in relations if r])
+                # Pick the most common canonical relation
+                freq = Counter([_canonicalize_rel(r) for r in relations if r])
                 chosen_relation = freq.most_common(1)[0][0]
-                for r in relations:
-                    if _safe_str(r).strip().lower() == chosen_relation:
-                        chosen_relation = r
-                        break
+                
             fused_edges.append({
                 "source": src,
                 "target": tgt,

@@ -5,7 +5,7 @@ uvicorn
 yt-dlp==2025.1.15
 ffmpeg-python==0.2.0
 opencv-python-headless==4.10.0.84
-numpy==1.26.4 --only-binary=:all:
+numpy==1.26.4
 matplotlib==3.9.2
 pytesseract==0.3.13
 git+https://github.com/openai/whisper.git
@@ -15,13 +15,13 @@ sentence-transformers==3.0.1
 gensim==4.3.3
 rake-nltk==1.0.6
 language-tool-python==2.7.1
-srsly==2.4.8 
+srsly==2.4.8
 networkx==3.2.1
 spacy==3.7.4
 pyvis==0.3.2
 sympy==1.13.3
 
-# BLIP dependencies
+# BLIP / HF helpers
 Pillow==10.4.0
 huggingface-hub==0.24.6
 safetensors==0.4.3
@@ -32,10 +32,24 @@ nltk==3.9.1
 # Utilities
 tqdm==4.66.5
 requests==2.32.3
-#python -m spacy download en_core_web_sm
+# To install spaCy English model: python -m spacy download en_core_web_sm
 
-# Additional missing dependencies
+# Image / vision helpers
 scikit-image
 imagehash
 
+# Optional / evaluation / ML helpers
+scikit-learn
+scipy
+python-louvain
+rouge-score
+bert-score
+fpdf
+reportlab
+
+# Other (kept from original)
 google-generativeai
+
+# Notes: External system binaries required at runtime (not pip packages):
+# - ffmpeg / ffprobe (ffmpeg CLI)
+# - tesseract (Tesseract OCR executable)

@@ -448,6 +448,118 @@ def evaluate_non_kg_summary_endpoint(req: dict):
         raise HTTPException(status_code=500, detail=f"Evaluation failed: {str(e)}")
 
 
+@app.post("/evaluate_notes")
+def evaluate_notes_endpoint(req: dict):
+    """
+    Evaluate generated notes using 4 metrics + verb fidelity:
+    
+    1. ROUGE-1/L Recall (vs reference notes)
+    2. Flesch Reading Ease (readability)
+    3. Gunning Fog Index (education level)
+    4. Concept Dependency Score (logical flow from KG)
+    5. Verb Fidelity (exact KG verb usage)
+    
+    Accepts:
+        session_id: str
+        notes_type: "kg" or "non_kg"
+        reference_notes: str (optional — if empty, tries ground truth folder)
+    """
+    try:
+        from notes_evaluator import evaluate_notes
+
+        session_id = req.get("session_id")
+        notes_type = req.get("notes_type", "kg")  # "kg" or "non_kg"
+        reference_notes = req.get("reference_notes", "")
+
+        if not session_id:
+            raise HTTPException(status_code=422, detail="Missing session_id")
+
+        # Locate generated notes text file
+        if notes_type == "kg":
+            notes_path = OUTPUTS_DIR / session_id / "notes" / "lecture_notes.txt"
+        else:
+            notes_path = OUTPUTS_DIR / session_id / "notes" / "non_kg_notes.txt"
+
+        if not notes_path.exists():
+            raise HTTPException(
+                status_code=404,
+                detail=f"Notes file not found: {notes_path.name}. Generate notes first."
+            )
+
+        notes_text = notes_path.read_text(encoding="utf-8").strip()
+        if not notes_text:
+            raise HTTPException(status_code=400, detail="Generated notes file is empty")
+
+        # Load KG data for dependency scoring
+        kg_edges = []
+        kg_nodes = []
+
+        # Try fused KG first, then session-level KG
+        edges_candidates = [
+            OUTPUTS_DIR / session_id / "fused_kg" / "fused_edges.json",
+            OUTPUTS_DIR / session_id / "graphs" / "kg_edges.json"
+        ]
+        nodes_candidates = [
+            OUTPUTS_DIR / session_id / "fused_kg" / "fused_nodes.json",
+            OUTPUTS_DIR / session_id / "graphs" / "kg_nodes.json"
+        ]
+
+        for p in edges_candidates:
+            if p.exists():
+                try:
+                    kg_edges = json.loads(p.read_text(encoding="utf-8"))
+                    break
+                except:
+                    pass
+        for p in nodes_candidates:
+            if p.exists():
+                try:
+                    kg_nodes = json.loads(p.read_text(encoding="utf-8"))
+                    break
+                except:
+                    pass
+
+        # If no reference provided, evaluation requires it
+        if not reference_notes or not reference_notes.strip():
+            print(f"[Notes Eval] No reference notes provided.")
+
+        print(f"[Notes Eval] Evaluating {notes_type} notes for {session_id}...")
+        print(f"[Notes Eval] Notes length: {len(notes_text)} chars")
+        print(f"[Notes Eval] Reference: {'provided' if reference_notes else 'none'}")
+        print(f"[Notes Eval] KG edges: {len(kg_edges)}, KG nodes: {len(kg_nodes)}")
+
+        # Run evaluation
+        evaluation = evaluate_notes(
+            notes_text=notes_text,
+            reference_text=reference_notes,
+            kg_edges=kg_edges if kg_edges else None,
+            kg_nodes=kg_nodes if kg_nodes else None
+        )
+
+        # Save results
+        evaluations_dir = OUTPUTS_DIR / session_id / "evaluations"
+        evaluations_dir.mkdir(parents=True, exist_ok=True)
+        eval_file = evaluations_dir / f"{notes_type}_notes_evaluation.json"
+        eval_file.write_text(json.dumps(evaluation, indent=2), encoding="utf-8")
+
+        print(f"[Notes Eval] ✅ Results saved to {eval_file}")
+
+        return {
+            "status": "success",
+            "session_id": session_id,
+            "notes_type": notes_type,
+            "evaluation": evaluation
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Notes evaluation error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Notes evaluation failed: {str(e)}")
+
+
 @app.post("/process")
 async def process(req: VideoRequest):
     # Generate unique session ID
@@ -604,6 +716,129 @@ async def root():
         "status": "ok",
         "info": "POST /process with {'youtube_url': '<YouTube link>'} to process a lecture video."
     }
+
+
+# ──────────────── Statistical Testing Endpoints ────────────────
+
+@app.get("/list_dataset")
+def list_dataset():
+    """Return the dataset registry for frontend dropdowns."""
+    from evaluation_store import DATASET_REGISTRY
+    return {
+        "status": "success",
+        "dataset": [
+            {"file_key": k, "display_name": v}
+            for k, v in DATASET_REGISTRY.items()
+        ]
+    }
+
+
+@app.post("/save_evaluation")
+def save_evaluation_endpoint(req: dict):
+    """
+    Save per-video evaluation. Auto-pulls ROUGE-1 from session evaluation files.
+    Overwrites if the same video_name already exists (deduplication).
+    
+    Required: video_name, session_id
+    Optional: human_kg, human_nonkg (display-only, no statistical testing)
+    """
+    try:
+        from evaluation_store import save_video_evaluation
+
+        video_name = req.get("video_name")
+        session_id = req.get("session_id")
+        human_kg = req.get("human_kg")
+        human_nonkg = req.get("human_nonkg")
+
+        if not video_name:
+            raise HTTPException(status_code=422, detail="Missing video_name")
+        if not session_id:
+            raise HTTPException(status_code=422, detail="Missing session_id")
+
+        data = save_video_evaluation(
+            video_name=video_name,
+            session_id=session_id,
+            human_kg=float(human_kg) if human_kg is not None else None,
+            human_nonkg=float(human_nonkg) if human_nonkg is not None else None,
+        )
+
+        return {
+            "status": "success",
+            "video_name": video_name,
+            "data": data,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Save evaluation error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/run_statistics")
+def run_statistics_endpoint():
+    """
+    Aggregate all available per-video evaluations and run statistical tests.
+    Can be run at ANY time — works with however many videos are available.
+    """
+    try:
+        from evaluation_store import aggregate_evaluations
+        from stat_tests import run_statistical_analysis
+
+        # Step 1: Aggregate whatever we have
+        aggregated = aggregate_evaluations()
+
+        if aggregated.get("dataset_size", 0) < 2:
+            return {
+                "status": "insufficient_data",
+                "message": f"Only {aggregated.get('dataset_size', 0)} videos evaluated. Need ≥2 for statistics.",
+                "aggregated": aggregated,
+            }
+
+        # Step 2: Run all statistical tests
+        results = run_statistical_analysis()
+
+        return {
+            "status": "success",
+            "results": results,
+        }
+
+    except Exception as e:
+        print(f"Statistics error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/evaluation_status")
+def evaluation_status_endpoint():
+    """
+    Return summary of all evaluated videos + latest statistical results.
+    """
+    try:
+        from evaluation_store import list_evaluated_videos, EVAL_DIR
+
+        videos = list_evaluated_videos()
+
+        # Load latest statistical results if available
+        stat_path = EVAL_DIR / "statistical_results.json"
+        stat_results = None
+        if stat_path.exists():
+            stat_results = json.loads(stat_path.read_text(encoding="utf-8"))
+
+        return {
+            "status": "success",
+            "evaluated_count": len(videos),
+            "total_dataset": 21,
+            "videos": videos,
+            "statistical_results": stat_results,
+        }
+
+    except Exception as e:
+        print(f"Evaluation status error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ------------------ Optional: Background job version ------------------
 @app.post("/process_async")

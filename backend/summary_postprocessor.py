@@ -280,8 +280,8 @@ def _score_sentence_informativeness(sent: str) -> float:
 
 def clean_and_constrain_summary(
     summary_text: str,
-    min_sentences: int = 7,
-    max_sentences: int = 10,
+    min_sentences: int = 10,
+    max_sentences: int = 12,
     remove_noise: bool = True,
     remove_fragments: bool = True,
     deduplicate: bool = True,
@@ -290,7 +290,7 @@ def clean_and_constrain_summary(
     Universal summary post-processor.
     
     Takes raw summary text and produces a clean, context-rich summary
-    of 7-10 sentences (configurable).
+    of 10-12 sentences (configurable).
     
     Pipeline:
     1. Split into sentences
@@ -298,6 +298,7 @@ def clean_and_constrain_summary(
     3. Remove fragments (incomplete sentences)
     4. Deduplicate near-identical sentences
     5. Rank by informativeness and constrain to target range
+
     
     Args:
         summary_text: The raw summary text
@@ -339,7 +340,7 @@ def clean_and_constrain_summary(
 
     # Step 4: Deduplicate
     if deduplicate:
-        sentences = _deduplicate_sentences(sentences, threshold=0.70)
+        sentences = _deduplicate_sentences(sentences, threshold=0.85)
 
     if not sentences:
         return summary_text  # Fallback: return original if everything was filtered
