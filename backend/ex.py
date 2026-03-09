@@ -3566,8 +3566,16 @@ def fuse_two_knowledge_graphs(session1_dir: Path, session2_dir: Path, fused_dir:
     fused_edges = []
     def add_edges(edges, idmap):
         for e in edges:
+            source_id = e.get("source")
+            target_id = e.get("target")
+            
+            # Skip invalid or missing nodes from delimiter issues
+            if source_id not in idmap or target_id not in idmap:
+                print(f"[Fusion] Warning: Skipping edge with invalid references: {e}")
+                continue
+                
             fused_edges.append({
-                "source": idmap[e["source"]], "target": idmap[e["target"]], "relation": e.get("relation", "")
+                "source": idmap[source_id], "target": idmap[target_id], "relation": e.get("relation", "")
             })
 
     add_edges(edges1, idmap1)

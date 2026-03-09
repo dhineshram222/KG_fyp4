@@ -76,6 +76,8 @@ function App() {
     const [statVideos, setStatVideos] = useState([]);
     const [statResults, setStatResults] = useState(null);
     const [statMessage, setStatMessage] = useState("");
+    const [datasetLoading, setDatasetLoading] = useState(true);
+    const [datasetError, setDatasetError] = useState(null);
 
     // Generic backend root; change if your backend runs on a different host/port
     const SERVER_ORIGIN = "http://127.0.0.1:8000";
@@ -91,18 +93,30 @@ function App() {
     };
 
     useEffect(() => {
+        setDatasetLoading(true);
+        setDatasetError(null);
         fetch(`${SERVER_ORIGIN}/list_dataset`)
-            .then(r => r.json())
+            .then(r => {
+                if (!r.ok) throw new Error("Dataset fetch failed");
+                return r.json();
+            })
             .then(d => {
                 console.log("[list_dataset] Response:", d);
-                if (d.dataset) {
+                if (d.dataset && Array.isArray(d.dataset)) {
                     console.log("[list_dataset] Setting", d.dataset.length, "items");
                     setStatDataset(d.dataset);
                 } else {
-                    console.warn("[list_dataset] No dataset key in response:", d);
+                    console.warn("[list_dataset] No valid dataset key in response:", d);
+                    setDatasetError("Invalid dataset response");
                 }
             })
-            .catch((err) => { console.error("[list_dataset] Fetch failed:", err); });
+            .catch((err) => {
+                console.error("[list_dataset] Fetch failed:", err);
+                setDatasetError(err.message);
+            })
+            .finally(() => {
+                setDatasetLoading(false);
+            });
         loadEvalStatus();
     }, []);
 
@@ -1167,8 +1181,12 @@ function App() {
     const renderStatisticalTestingSection = () => {
 
         const handleSaveEval = async (selectedVideoName) => {
+            if (statSaving) return;
             const vName = selectedVideoName || statVideoName;
-            if (!vName) { return; }
+            if (!vName) {
+                setStatMessage("⚠️ Please select a video name first.");
+                return;
+            }
 
             const currentSessionId = fusedResult?.session_id;
             if (!currentSessionId) {
@@ -1193,7 +1211,11 @@ function App() {
                 if (d.status === "success") {
                     const kg_r = d.data?.metrics?.kg?.rouge1;
                     const nkg_r = d.data?.metrics?.nonkg?.rouge1;
-                    setStatMessage(`✅ Saved: ${vName} (KG=${kg_r ?? "—"}, NonKG=${nkg_r ?? "—"})`);
+                    if (kg_r == null && nkg_r == null) {
+                        setStatMessage(`⚠️ Saved: ${vName}, but no ROUGE-1 scores found! Did you generate & evaluate notes first?`);
+                    } else {
+                        setStatMessage(`✅ Saved: ${vName} (KG=${kg_r ?? "—"}, NonKG=${nkg_r ?? "—"})`);
+                    }
                     await loadEvalStatus();
                 } else { setStatMessage("❌ " + (d.detail || "Save failed")); }
             } catch (e) { setStatMessage("❌ " + e.message); }
@@ -1201,6 +1223,7 @@ function App() {
         };
 
         const handleRunStats = async () => {
+            if (statRunning) return;
             setStatRunning(true); setStatMessage("");
             try {
                 const r = await fetch(`${SERVER_ORIGIN}/run_statistics`, { method: "POST" });
@@ -1225,10 +1248,11 @@ function App() {
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "0.75rem" }}>
                         <div>
                             <label style={{ fontSize: "0.82rem", fontWeight: "bold", display: "block", marginBottom: 4 }}>Video Name</label>
-                            <select value={statVideoName} onChange={e => setStatVideoName(e.target.value)} style={{ width: "100%", padding: "0.4rem", fontSize: "0.9rem", borderRadius: 4, border: "1px solid #ccc" }}>
-                                <option value="">— Select from dataset —</option>
+                            <select value={statVideoName} onChange={e => setStatVideoName(e.target.value)} disabled={datasetLoading || datasetError} style={{ width: "100%", padding: "0.4rem", fontSize: "0.9rem", borderRadius: 4, border: "1px solid #ccc" }}>
+                                <option value="">{datasetLoading ? "— Loading dataset... —" : datasetError ? "— Error loading dataset —" : "— Select from dataset —"}</option>
                                 {statDataset.map(v => (<option key={v.file_key} value={v.display_name}>{v.display_name}</option>))}
                             </select>
+                            {datasetError && <div style={{ color: "crimson", fontSize: "0.8rem", marginTop: "2px" }}>Failed to load. Is backend running?</div>}
                         </div>
                         <div style={{ display: "flex", alignItems: "flex-end" }}>
                             <span style={{ fontSize: "0.82rem", color: "#666" }}>Session: <strong>{fusedResult?.session_id ? fusedResult.session_id.slice(0, 8) + "..." : "—"}</strong><br />ROUGE-1 auto-pulled from evaluated notes</span>

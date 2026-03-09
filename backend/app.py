@@ -762,10 +762,17 @@ def save_evaluation_endpoint(req: dict):
             human_nonkg=float(human_nonkg) if human_nonkg is not None else None,
         )
 
+        warning = None
+        kg_score = data.get("metrics", {}).get("kg", {}).get("rouge1")
+        nkg_score = data.get("metrics", {}).get("nonkg", {}).get("rouge1")
+        if kg_score is None and nkg_score is None:
+            warning = "No ROUGE-1 scores found in session. Ensure you have evaluated notes first."
+
         return {
             "status": "success",
             "video_name": video_name,
             "data": data,
+            "warning": warning
         }
 
     except HTTPException:
