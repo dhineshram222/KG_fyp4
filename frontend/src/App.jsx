@@ -1,83 +1,86 @@
 // App.jsx
 import React, { useState, useEffect } from "react";
+import useAppStore from './store';
 
 function App() {
-    const [video1Url, setVideo1Url] = useState("");
-    const [video2Url, setVideo2Url] = useState("");
-    const [referenceSummary1, setReferenceSummary1] = useState("");
-    const [referenceSummary2, setReferenceSummary2] = useState("");
-    const [result1, setResult1] = useState(null);
-    const [result2, setResult2] = useState(null);
-    const [loading1, setLoading1] = useState(false);
-    const [loading2, setLoading2] = useState(false);
-    const [evaluating1, setEvaluating1] = useState(false);
-    const [evaluating2, setEvaluating2] = useState(false);
-    const [error1, setError1] = useState(null);
-    const [error2, setError2] = useState(null);
-    const [showSummary1, setShowSummary1] = useState(true);
-    const [showSummary2, setShowSummary2] = useState(true);
-    const [showGraph1, setShowGraph1] = useState(true);
-    const [showGraph2, setShowGraph2] = useState(true);
-    const [showCombinedText1, setShowCombinedText1] = useState(false);
-    const [showCombinedText2, setShowCombinedText2] = useState(false);
-    const [showEvaluation1, setShowEvaluation1] = useState(false);
-    const [showEvaluation2, setShowEvaluation2] = useState(false);
+    const {
+        video1Url, setVideo1Url,
+        video2Url, setVideo2Url,
+        referenceSummary1, setReferenceSummary1,
+        referenceSummary2, setReferenceSummary2,
+        result1, setResult1,
+        result2, setResult2,
+        loading1, setLoading1,
+        loading2, setLoading2,
+        evaluating1, setEvaluating1,
+        evaluating2, setEvaluating2,
+        error1, setError1,
+        error2, setError2,
+        showSummary1, setShowSummary1,
+        showSummary2, setShowSummary2,
+        showGraph1, setShowGraph1,
+        showGraph2, setShowGraph2,
+        showCombinedText1, setShowCombinedText1,
+        showCombinedText2, setShowCombinedText2,
+        showEvaluation1, setShowEvaluation1,
+        showEvaluation2, setShowEvaluation2,
 
-    // Fused evaluation state
-    const [fusedReferenceSummary, setFusedReferenceSummary] = useState("");
-    const [showFusedEvaluation, setShowFusedEvaluation] = useState(false);
-    const [evaluatingFused, setEvaluatingFused] = useState(false);
-    const [fusedEvaluationResult, setFusedEvaluationResult] = useState(null);
+        // Fused evaluation state
+        fusedReferenceSummary, setFusedReferenceSummary,
+        showFusedEvaluation, setShowFusedEvaluation,
+        evaluatingFused, setEvaluatingFused,
+        fusedEvaluationResult, setFusedEvaluationResult,
 
-    // Unified fusion state
-    const [fusedResult, setFusedResult] = useState(null);
-    const [loadingFuse, setLoadingFuse] = useState(false);
-    const [errorFuse, setErrorFuse] = useState(null);
-    const [showUnifiedSummary, setShowUnifiedSummary] = useState(true);
-    const [showUnifiedNotes, setShowUnifiedNotes] = useState(false);
-    const [showUnifiedGraph, setShowUnifiedGraph] = useState(true);
+        // Unified fusion state
+        fusedResult, setFusedResult,
+        loadingFuse, setLoadingFuse,
+        errorFuse, setErrorFuse,
+        showUnifiedSummary, setShowUnifiedSummary,
+        showUnifiedNotes, setShowUnifiedNotes,
+        showUnifiedGraph, setShowUnifiedGraph,
 
-    // Fused notes generation state
-    const [generatingFusedNotes, setGeneratingFusedNotes] = useState(false);
-    const [fusedNotesUrl, setFusedNotesUrl] = useState(null);
+        // Fused notes generation state
+        generatingFusedNotes, setGeneratingFusedNotes,
+        fusedNotesUrl, setFusedNotesUrl,
 
-    // Fused Summary State
-    const [generatingFusedSummary, setGeneratingFusedSummary] = useState(false);
-    const [showFusedSummary, setShowFusedSummary] = useState(true);
+        // Fused Summary State
+        generatingFusedSummary, setGeneratingFusedSummary,
+        showFusedSummary, setShowFusedSummary,
 
-    // Non-KG Unified State
-    const [nonKgSummary, setNonKgSummary] = useState("");
-    const [generatingNonKgSummary, setGeneratingNonKgSummary] = useState(false);
-    const [nonKgNotesUrl, setNonKgNotesUrl] = useState(null);
-    const [generatingNonKgNotes, setGeneratingNonKgNotes] = useState(false);
-    const [showNonKgSummary, setShowNonKgSummary] = useState(false);
-    const [nonKgReferenceSummary, setNonKgReferenceSummary] = useState("");
-    const [nonKgEvaluationResult, setNonKgEvaluationResult] = useState(null);
-    const [evaluatingNonKg, setEvaluatingNonKg] = useState(false);
-    const [showNonKgEvaluation, setShowNonKgEvaluation] = useState(false);
+        // Non-KG Unified State
+        nonKgSummary, setNonKgSummary,
+        generatingNonKgSummary, setGeneratingNonKgSummary,
+        nonKgNotesUrl, setNonKgNotesUrl,
+        generatingNonKgNotes, setGeneratingNonKgNotes,
+        showNonKgSummary, setShowNonKgSummary,
+        nonKgReferenceSummary, setNonKgReferenceSummary,
+        nonKgEvaluationResult, setNonKgEvaluationResult,
+        evaluatingNonKg, setEvaluatingNonKg,
+        showNonKgEvaluation, setShowNonKgEvaluation,
 
-    // Notes Evaluation State
-    const [kgNotesRefText, setKgNotesRefText] = useState("");
-    const [kgNotesEval, setKgNotesEval] = useState(null);
-    const [evaluatingKgNotes, setEvaluatingKgNotes] = useState(false);
-    const [nonKgNotesRefText, setNonKgNotesRefText] = useState("");
-    const [nonKgNotesEval, setNonKgNotesEval] = useState(null);
-    const [evaluatingNonKgNotes, setEvaluatingNonKgNotes] = useState(false);
+        // Notes Evaluation State
+        kgNotesRefText, setKgNotesRefText,
+        kgNotesEval, setKgNotesEval,
+        evaluatingKgNotes, setEvaluatingKgNotes,
+        nonKgNotesRefText, setNonKgNotesRefText,
+        nonKgNotesEval, setNonKgNotesEval,
+        evaluatingNonKgNotes, setEvaluatingNonKgNotes,
 
-    // Statistical Testing State
-    const [statDataset, setStatDataset] = useState([]);
-    const [statVideoName, setStatVideoName] = useState("");
-    const [statKgRouge, setStatKgRouge] = useState("");
-    const [statNonKgRouge, setStatNonKgRouge] = useState("");
-    const [statHumanKg, setStatHumanKg] = useState("");
-    const [statHumanNonKg, setStatHumanNonKg] = useState("");
-    const [statSaving, setStatSaving] = useState(false);
-    const [statRunning, setStatRunning] = useState(false);
-    const [statVideos, setStatVideos] = useState([]);
-    const [statResults, setStatResults] = useState(null);
-    const [statMessage, setStatMessage] = useState("");
-    const [datasetLoading, setDatasetLoading] = useState(true);
-    const [datasetError, setDatasetError] = useState(null);
+        // Statistical Testing State
+        statDataset, setStatDataset,
+        statVideoName, setStatVideoName,
+        statKgRouge, setStatKgRouge,
+        statNonKgRouge, setStatNonKgRouge,
+        statHumanKg, setStatHumanKg,
+        statHumanNonKg, setStatHumanNonKg,
+        statSaving, setStatSaving,
+        statRunning, setStatRunning,
+        statVideos, setStatVideos,
+        statResults, setStatResults,
+        statMessage, setStatMessage,
+        datasetLoading, setDatasetLoading,
+        datasetError, setDatasetError
+    } = useAppStore();
 
     // Generic backend root; change if your backend runs on a different host/port
     const SERVER_ORIGIN = "http://127.0.0.1:8000";
@@ -564,7 +567,7 @@ function App() {
 
                 const data = await response.json();
                 setFusedResult(prev => ({ ...prev, fused_summary: data.fused_summary }));
-                setShowUnifiedSummary(true);
+                setShowFusedSummary(true);
 
             } catch (err) {
                 console.error("Fused summary error:", err);

@@ -342,3 +342,122 @@ def cluster_and_summarize(sentences: List[str], summarizer_fn=None) -> str:
     """
     clusterer = SemanticClusterer()
     return clusterer.generate_structured_notes(sentences, summarizer_fn)
+
+
+# ─── Cross-Section Deduplication (Change 8 / P3) ────────────────────────────
+
+def deduplicate_across_sections(sections: List[Dict]) -> List[Dict]:
+    """Remove near-duplicate bullets across all sections using TF-IDF cosine similarity.
+    
+    Threshold: 0.85 — keeps the topologically earlier occurrence.
+    
+    Args:
+        sections: List of section dicts with 'subsections' -> 'points' structure
+        
+    Returns:
+        Sections with duplicates removed
+    """
+    if not sections:
+        return sections
+    
+    # Collect all bullet texts with their location
+    all_bullets = []  # (section_idx, sub_idx, point_idx, text)
+    for s_idx, section in enumerate(sections):
+        for ss_idx, sub in enumerate(section.get('subsections', [])):
+            for p_idx, pt in enumerate(sub.get('points', [])):
+                text = pt.get('text', '').strip()
+                if text:
+                    all_bullets.append((s_idx, ss_idx, p_idx, text))
+    
+    if len(all_bullets) < 2:
+        return sections
+    
+    # Compute TF-IDF similarity
+    try:
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        from sklearn.metrics.pairwise import cosine_similarity as cos_sim
+        
+        texts = [b[3] for b in all_bullets]
+        vectorizer = TfidfVectorizer(stop_words='english')
+        tfidf_matrix = vectorizer.fit_transform(texts)
+        sim_matrix = cos_sim(tfidf_matrix)
+        
+        # Mark later duplicates for removal
+        to_remove = set()
+        for i in range(len(all_bullets)):
+            if i in to_remove:
+                continue
+            for j in range(i + 1, len(all_bullets)):
+                if j in to_remove:
+                    continue
+                if sim_matrix[i, j] > 0.85:
+                    # Remove the later occurrence
+                    to_remove.add(j)
+        
+        if to_remove:
+            print(f"[Deduplication] Removing {len(to_remove)} duplicate bullets across sections")
+        
+        # Build removal set as (s_idx, ss_idx, p_idx)
+        remove_keys = set()
+        for idx in to_remove:
+            s_idx, ss_idx, p_idx, _ = all_bullets[idx]
+            remove_keys.add((s_idx, ss_idx, p_idx))
+        
+        # Filter points
+        import copy
+        result = copy.deepcopy(sections)
+        for s_idx, section in enumerate(result):
+            for ss_idx, sub in enumerate(section.get('subsections', [])):
+                sub['points'] = [
+                    pt for p_idx, pt in enumerate(sub.get('points', []))
+                    if (s_idx, ss_idx, p_idx) not in remove_keys
+                ]
+        
+        # Remove empty subsections
+        for section in result:
+            section['subsections'] = [
+                sub for sub in section.get('subsections', [])
+                if sub.get('points')
+            ]
+        
+        return result
+        
+    except ImportError:
+        print("[Deduplication] sklearn not available, skipping cross-section deduplication")
+        return sections
+
+
+def select_canonical_bullet(cluster_sentences: List[str]) -> str:
+    """Pick the most informative representative from a cluster (Change 9).
+    
+    Uses vocabulary coverage score: unique_words / total_words.
+    Higher ratio = more diverse vocabulary = more informative.
+    
+    Args:
+        cluster_sentences: List of sentences in a cluster
+        
+    Returns:
+        The most informative sentence
+    """
+    if not cluster_sentences:
+        return ""
+    if len(cluster_sentences) == 1:
+        return cluster_sentences[0]
+    
+    best_sent = cluster_sentences[0]
+    best_score = 0.0
+    
+    for sent in cluster_sentences:
+        words = sent.lower().split()
+        if not words:
+            continue
+        unique_ratio = len(set(words)) / len(words)
+        # Bonus for longer sentences (more content)
+        length_bonus = min(len(words) / 20.0, 1.0)
+        score = unique_ratio * 0.7 + length_bonus * 0.3
+        if score > best_score:
+            best_score = score
+            best_sent = sent
+    
+    return best_sent
+

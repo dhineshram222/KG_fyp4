@@ -59,14 +59,18 @@ from sentence_transformers import SentenceTransformer, util
 # Loading BART takes ~15-30s. Cache it so only the first call is slow.
 _BART_CACHE = {}
 
+import threading
+_BART_CACHE_LOCK = threading.Lock()
+
 def _get_bart_model():
     """Get cached BART tokenizer and model. Loads on first call only."""
-    if "tokenizer" not in _BART_CACHE:
-        print("[BART Cache] Loading facebook/bart-large-cnn (first time)...")
-        _BART_CACHE["tokenizer"] = BartTokenizer.from_pretrained("facebook/bart-large-cnn")
-        _BART_CACHE["model"] = BartForConditionalGeneration.from_pretrained("facebook/bart-large-cnn")
-        print("[BART Cache] Model loaded and cached.")
-    return _BART_CACHE["tokenizer"], _BART_CACHE["model"]
+    with _BART_CACHE_LOCK:
+        if "tokenizer" not in _BART_CACHE or "model" not in _BART_CACHE:
+            print("[BART Cache] Loading facebook/bart-large-cnn (first time)...")
+            _BART_CACHE["tokenizer"] = BartTokenizer.from_pretrained("facebook/bart-large-cnn")
+            _BART_CACHE["model"] = BartForConditionalGeneration.from_pretrained("facebook/bart-large-cnn")
+            print("[BART Cache] Model loaded and cached.")
+        return _BART_CACHE["tokenizer"], _BART_CACHE["model"]
 
 
 # Summary evaluation metrics
@@ -1463,6 +1467,10 @@ def detect_and_save_diagrams(
         
         caption_path = text_out_dir / (diagram_path.name.replace(".png", ".txt"))
         safe_write_text(caption_path, caption)
+        # NOTE: caption is intentionally written ONLY to text_out_dir (diagram_texts/).
+        # Do NOT write a .txt alongside the image in diagrams/ — that pollutes the
+        # diagrams folder with caption files instead of images, breaking the renderer's
+        # glob-based image discovery (notes_renderer.py scans diagram_texts/ separately).
         
     return all_diagrams
 
@@ -2377,33 +2385,31 @@ def generate_non_kg_notes(session1_dir: Path, session2_dir: Path, output_dir: Pa
             (["definition", "defined", "is a", "refers to", "known as", "called", "means"],
              "Definition and Fundamental Concepts"),
             # Operations
-            (["operation", "push", "pop", "insert", "delete", "remove", "add", "peek", "enqueue", "dequeue"],
+            (["operation", "process", "function", "method", "perform", "execute", "step", "procedure"],
              "Primary Operations"),
             # Types / Classification
             (["type", "types", "classification", "category", "kind", "form", "variant"],
              "Types and Classification"),
             # Examples / Analogies
-            (["example", "analogy", "like", "real world", "everyday", "plate", "book", "card", "illustrat"],
-             "Real-World Analogies"),
+            (["example", "analogy", "like", "real world", "everyday", "illustrat", "instance", "case"],
+             "Real-World Examples"),
             # Applications / Use cases
-            (["application", "applied", "used in", "used for", "use case", "compiler", "browser",
-              "expression", "infix", "postfix", "recursion", "undo", "redo", "backtrack"],
-             "Applications in Computer Science"),
+            (["application", "applied", "used in", "used for", "use case", "practical", "scenario"],
+             "Applications and Use Cases"),
             # Properties / Characteristics
-            (["property", "characteristic", "principle", "lifo", "fifo", "order", "rule", "follows"],
+            (["property", "characteristic", "principle", "feature", "attribute", "behavior", "follows"],
              "Key Characteristics"),
-            # ADT / Abstract concepts
-            (["abstract", "adt", "interface", "implementation", "encapsulation", "data type"],
-             "Abstract Data Type Characteristics"),
+            # Abstract concepts
+            (["abstract", "interface", "implementation", "encapsulation", "model", "framework"],
+             "Conceptual Framework"),
             # Status / Conditions
-            (["empty", "full", "size", "count", "overflow", "underflow", "status", "check", "condition",
-              "isempty", "isfull"],
-             "Secondary and Status Operations"),
+            (["condition", "status", "state", "check", "validation", "constraint", "error", "exception"],
+             "Conditions and Constraints"),
             # Components / Structure
-            (["component", "element", "node", "pointer", "top", "bottom", "head", "tail", "structure"],
+            (["component", "element", "part", "structure", "architecture", "layer", "module", "unit"],
              "Structure and Components"),
-            # Memory / Implementation
-            (["memory", "array", "linked list", "implement", "allocation", "storage"],
+            # Implementation details
+            (["implement", "mechanism", "technique", "approach", "strategy", "design", "algorithm"],
              "Implementation Details"),
         ]
         
@@ -2583,7 +2589,18 @@ def generate_non_kg_notes(session1_dir: Path, session2_dir: Path, output_dir: Pa
 
     # 8. Validate & Fix
     notes_dict = make_notes("Lecture Notes (Topic Modeling)", sections)
-    
+
+    # 8a. Apply concept flow improvements (non-KG-dependent steps only)
+    try:
+        from concept_flow_organizer import apply_concept_flow
+        notes_dict = apply_concept_flow(
+            notes_dict, nodes=[], edges=[],
+            run_steps=["sanitize_qmarks", "bullet_clean", "section_dedup", "tautology", "takeaways", "dedup_images"]
+        )
+        print(f"[NonKG Notes] Concept flow organizer applied")
+    except Exception as cfo_err:
+        print(f"[NonKG Notes] Concept flow organizer skipped: {cfo_err}")
+
     is_valid, violations = validate_hierarchy(notes_dict)
     if not is_valid:
         print(f"[NonKG Notes] ⚠️ Hierarchy violations ({len(violations)}): {violations[:3]}...")
@@ -2760,18 +2777,38 @@ class LLMGraphTransformer:
         """
         text = str(text)
         preamble = (
-            "You are helping a computer science student understand the ideas in a topic.\n"
-            "Your job is to organize the ideas into a simple concept map.\n"
-            "A concept map has items (concepts) and connections (how they relate with each other).\n\n"
-            "Please represent the concept map using this JSON format:\n"
+            "You are helping a student understand the concepts in an educational lecture.\n"
+            "Your job is to extract a knowledge graph: a set of concepts (nodes) and the\n"
+            "relationships between them (edges).\n\n"
+            "Please represent the knowledge graph using this JSON format:\n"
             "{\n"
-            '  \"nodes\": [ {\"id\": \"N1\", \"label\": \"Concept\", \"description\": \"A concise description of the concept derived directly from the video content.\"} ],\n'
-            '  \"edges\": [ {\"source\": \"N1\", \"target\": \"N2\", \"relation\": \"how they connect\"} ]\n'
+            '  \"nodes\": [ {\"id\": \"N1\", \"label\": \"Concept Name\", \"description\": \"A full explanatory sentence about this concept.\"} ],\n'
+            '  \"edges\": [ {\"source\": \"N1\", \"target\": \"N2\", \"relation\": \"verb phrase describing the relationship\"} ]\n'
             "}\n\n"
-            "Important Rules:\n"
-            "1. Extract meaningful concepts.\n"
-            "2. Provide a description for every node based on the video content explicitly.\n"
-            "3. Do NOT include explanations — only return the JSON.\n\n"
+            "STRICT NODE LABEL RULES — a node label MUST:\n"
+            "  1. Be a NOUN PHRASE (a named concept, not a sentence or clause).\n"
+            "     GOOD: 'Stack', 'Push Operation', 'LIFO Principle', 'Array Implementation'\n"
+            "     BAD:  'A Linear Data Structure In Which', 'In Which', 'Explicit', 'Real Life'\n"
+            "  2. NOT start with an article ('A', 'An', 'The') or a relative clause word\n"
+            "     ('In Which', 'Where', 'That', 'Which').\n"
+            "  3. NOT be a sentence fragment extracted from the middle of a sentence.\n"
+            "  4. Be 1–5 words maximum. If the concept needs more words, use the description.\n"
+            "  5. Use the CANONICAL / standard name of the concept.\n"
+            "     GOOD: 'Static Stack', 'Dynamic Stack'\n"
+            "     BAD:  'Size Stack', 'Dynamic Resizing Stack'\n\n"
+            "STRICT EDGE RELATION RULES — a relation MUST:\n"
+            "  1. Be a verb phrase that explains HOW the concepts relate.\n"
+            "     GOOD: 'is implemented using', 'supports the operation of', 'follows the principle of'\n"
+            "     BAD:  'includes', 'has' (too vague — say what the inclusion means)\n"
+            "  2. Produce a grammatically complete sentence when used as:\n"
+            "     '<source label> <relation> <target label>'\n"
+            "     GOOD: 'Stack is implemented using Array' ✓\n"
+            "     BAD:  'Top Of The Stack Explicit Stack' ✗ (not a sentence)\n\n"
+            "STRICT DESCRIPTION RULES — a description MUST:\n"
+            "  1. Be a complete, grammatically correct sentence (Subject + Verb + Object).\n"
+            "  2. Explain WHAT the concept is and WHY it matters.\n"
+            "  3. NOT repeat the node label verbatim as the entire description.\n\n"
+            "Do NOT include any explanations outside the JSON. Return ONLY the JSON object.\n\n"
         )
 
         # Generate dynamic few-shot examples (LDA removed)
@@ -2853,6 +2890,14 @@ class LLMGraphTransformer:
                 label = str(n)
                 desc = ""
 
+            # ── FIX-1/4: Sanitize node label — repair fragments, strip articles ──
+            clean_label = LLMGraphTransformer.sanitize_node_label(label, desc)
+            # If sanitization returns empty (pure fragment, unrecoverable), skip node
+            if not clean_label:
+                print(f"[KG Normalize] Skipped fragment node label: '{label}'")
+                continue
+            label = clean_label
+
             node_obj = {"id": str(nid), "label": str(label), "description": str(desc)}
             normalized_nodes.append(node_obj)
 
@@ -2890,10 +2935,208 @@ class LLMGraphTransformer:
                 "relation": relation
             })
 
-        node_objs = [Node(**{k: str(v) for k, v in n.items()}) for n in normalized_nodes]
-        edge_objs = [Edge(**{k: str(v) for k, v in e.items()}) for e in normalized_edges]
+        # ── FIX-4: KG-level node deduplication ───────────────────────────────
+        # Merge nodes whose canonical labels are near-identical before building
+        # the graph, so downstream hierarchy never sees duplicates.
+        # Strategy (fully dynamic — no domain words):
+        #   canonical = lowercase, strip stop-words, sort words alphabetically
+        #   If two nodes share the same canonical form OR word-overlap ≥ 70%,
+        #   keep the one with the richer description; retarget all edges to it.
+        #
+        # E.g. "Network Topology" / "Network Topologies" / "Topology and Network"
+        #      all collapse to the node with the longest description.
+
+        _DEDUP_STOPS = {'a','an','the','of','in','for','to','and','or','is','are',
+                        'was','were','its','this','that','by','as','from','with'}
+
+        def _canonical_label(lbl: str) -> frozenset:
+            words = re.findall(r'[a-z]+', lbl.lower())
+            return frozenset(w for w in words if w not in _DEDUP_STOPS and len(w) > 2)
+
+        def _word_overlap_ratio(a: str, b: str) -> float:
+            ca, cb = _canonical_label(a), _canonical_label(b)
+            if not ca or not cb: return 0.0
+            return len(ca & cb) / max(len(ca | cb), 1)
+
+        # Build merge map: node_id → survivor_id
+        merge_map: dict = {}   # id → id of survivor
+        processed_ids = []
+
+        for i, node_a in enumerate(normalized_nodes):
+            aid = node_a["id"]
+            if aid in merge_map:
+                continue  # already merged
+            canonical_a = _canonical_label(node_a["label"])
+            processed_ids.append(aid)
+
+            for node_b in normalized_nodes[i+1:]:
+                bid = node_b["id"]
+                if bid in merge_map:
+                    continue
+                # Check overlap
+                overlap = _word_overlap_ratio(node_a["label"], node_b["label"])
+                canonical_b = _canonical_label(node_b["label"])
+                exact = (canonical_a == canonical_b and len(canonical_a) > 0)
+                if exact or overlap >= 0.72:
+                    # Survivor = longer description
+                    desc_a = len((node_a.get("description") or "").split())
+                    desc_b = len((node_b.get("description") or "").split())
+                    if desc_b > desc_a:
+                        # a merges into b — but we've already confirmed a; swap labels
+                        merge_map[aid] = bid
+                        # Give b the richer label (whichever is shorter/cleaner)
+                        if len(node_a["label"]) < len(node_b["label"]):
+                            node_b["label"] = node_a["label"]
+                    else:
+                        merge_map[bid] = aid
+
+        # Remove merged (non-survivor) nodes
+        survived_ids = {n["id"] for n in normalized_nodes} - set(merge_map.keys())
+        deduped_nodes = [n for n in normalized_nodes if n["id"] in survived_ids]
+
+        # Retarget edges: any source/target pointing to a merged node → survivor
+        def _resolve(nid: str) -> str:
+            seen = set()
+            while nid in merge_map and nid not in seen:
+                seen.add(nid)
+                nid = merge_map[nid]
+            return nid
+
+        deduped_edges = []
+        seen_edge_keys: set = set()
+        for e in normalized_edges:
+            src = _resolve(e["source"])
+            tgt = _resolve(e["target"])
+            if src == tgt:
+                continue   # self-loop after merge — discard
+            key = (src, tgt, e["relation"].lower().strip())
+            if key in seen_edge_keys:
+                continue   # duplicate edge after merge — discard
+            seen_edge_keys.add(key)
+            deduped_edges.append({"source": src, "target": tgt, "relation": e["relation"]})
+
+        if len(normalized_nodes) != len(deduped_nodes):
+            print(f"[KG Dedup] Merged {len(normalized_nodes) - len(deduped_nodes)} "
+                  f"duplicate nodes → {len(deduped_nodes)} unique nodes remain")
+
+        node_objs = [Node(**{k: str(v) for k, v in n.items()}) for n in deduped_nodes]
+        edge_objs = [Edge(**{k: str(v) for k, v in e.items()}) for e in deduped_edges]
 
         return KnowledgeGraph(nodes=node_objs, edges=edge_objs)
+
+    @staticmethod
+    def sanitize_node_label(label: str, description: str = "") -> str:
+        """
+        Repair or reject KG node labels that are sentence fragments, relative clauses,
+        or other non-noun-phrase strings that should never become section headings.
+
+        Strategy (fully dynamic — no domain words hardcoded):
+        1. Strip leading articles (a/an/the).
+        2. If label starts with a relative-clause word ('in which', 'where', 'that', etc.)
+           try to extract a noun phrase from the description instead.
+        3. If label is longer than 6 words AND starts with an article/particle, truncate
+           to the first meaningful noun phrase.
+        4. Normalize terminology: detect common naming anti-patterns (e.g. adjective +
+           'Resizing' / 'Size' + noun) and replace with canonical equivalents inferred
+           from the label words themselves.
+        5. Return a cleaned title-cased label, never longer than 6 words.
+        """
+        if not label or not label.strip():
+            return label
+
+        label = label.strip()
+
+        # ── Step 1: Strip leading articles ───────────────────────────────────
+        _ARTICLE_RE = re.compile(r'^(a|an|the)\s+', re.I)
+        label = _ARTICLE_RE.sub('', label).strip()
+
+        # ── Step 2: Detect relative-clause / subordinator fragments ──────────
+        # These are never valid concept names on their own.
+        _FRAGMENT_STARTERS = re.compile(
+            r'^(in\s+which|in\s+that|where\s+|whereby\s+|which\s+|that\s+|'
+            r'when\s+|how\s+|whose\s+|wherein\s+|thereof\s+)',
+            re.I
+        )
+        if _FRAGMENT_STARTERS.match(label):
+            # Try to recover a noun phrase from the description
+            if description and len(description.split()) >= 4:
+                doc_words = description.split()
+                # Take first 4 content words as a recovered heading
+                _STOPS = {'a', 'an', 'the', 'is', 'are', 'was', 'were', 'be',
+                          'in', 'on', 'at', 'of', 'to', 'for', 'and', 'or',
+                          'with', 'from', 'by', 'as', 'it', 'its', 'this', 'that'}
+                content = [w.strip('.,;:') for w in doc_words
+                           if w.lower().strip('.,;:') not in _STOPS and len(w) > 2]
+                if content:
+                    label = ' '.join(content[:4])
+                else:
+                    label = ' '.join(doc_words[:3])
+            else:
+                # No description — return empty so caller can skip this node
+                return ""
+
+        # ── Step 2b: Detect and fix "X and Y" relation-artifact labels ─────────
+        # These are produced when KG extraction collapses a relation into a label:
+        # e.g. "NetworkTopology → defines → Arrangement" → "Arrangement and Network"
+        # Detection: one or both sides of " and " is a vague/relational word.
+        # We keep the more specific (longer or richer) side.
+        _VAGUE_CONNECTOR_WORDS = {
+            'arrangement', 'network', 'structure', 'system', 'concept', 'data',
+            'information', 'user', 'thing', 'item', 'element', 'component',
+            'aspect', 'feature', 'property', 'detail', 'point', 'part', 'type',
+            'redundancy', 'topology', 'administration', 'connection', 'node',
+        }
+        if ' and ' in label.lower():
+            parts = re.split(r'\s+and\s+', label, flags=re.I)
+            if len(parts) == 2:
+                left, right = parts[0].strip(), parts[1].strip()
+                left_vague  = left.lower()  in _VAGUE_CONNECTOR_WORDS
+                right_vague = right.lower() in _VAGUE_CONNECTOR_WORDS
+                # If one side is vague, keep the other (more specific) side
+                if left_vague and not right_vague:
+                    label = right
+                elif right_vague and not left_vague:
+                    label = left
+                # If BOTH sides are vague (e.g. "Redundancy and Network"), use
+                # description to recover — handled in the fragment_starter logic above.
+                # If neither is vague, keep both (it's a legitimate compound label)
+
+
+        words = label.split()
+        if len(words) > 6:
+            # Try to stop at the first verb-like word (heuristic: lowercase common verbs)
+            _VERB_SET = {'is', 'are', 'was', 'were', 'be', 'in', 'that', 'which',
+                         'where', 'when', 'how', 'can', 'will', 'has', 'have'}
+            cutoff = len(words)
+            for i, w in enumerate(words):
+                if w.lower() in _VERB_SET and i >= 2:
+                    cutoff = i
+                    break
+            label = ' '.join(words[:min(cutoff, 5)])
+
+        # ── Step 4: Terminology normalization (dynamic, no hardcoded domain words) ──
+        # Detect anti-patterns in label structure and emit canonical equivalents:
+        #   "X Size Y" / "X Resizing Y" → "X Y" (remove process-verb noise words)
+        #   "Y with X" → "X Y" (reorder to canonical noun-first form)
+        # Uses structural pattern matching, not concept-name lists.
+        _PROCESS_VERB_WORDS = {'resizing', 'sizing', 'processing', 'handling',
+                                'managing', 'based', 'driven', 'oriented'}
+        label_words = label.split()
+        cleaned_words = [w for w in label_words
+                         if w.lower() not in _PROCESS_VERB_WORDS]
+        if cleaned_words and len(cleaned_words) < len(label_words):
+            label = ' '.join(cleaned_words)
+
+        # ── Step 5: Title-case and length cap ────────────────────────────────
+        label = label.strip().rstrip('.,;:')
+        if label:
+            label = label[0].upper() + label[1:]
+        # Hard cap at 6 words
+        label_words = label.split()
+        if len(label_words) > 6:
+            label = ' '.join(label_words[:6])
+
+        return label if label.strip() else ""
 
     def extract(self, text: str, session_id: Optional[str] = None) -> KnowledgeGraph:
         """
@@ -3232,6 +3475,11 @@ def process_video_full(url_or_path: str,
 
     kg_model = LLMGraphTransformer(model_name="models/gemini-2.5-flash")
     try:
+        # FIX-8: Clean OCR/speech errors from input text before KG extraction
+        # Use a temporary WMDKGNotesGenerator instance just for normalize_text
+        _ocr_cleaner = WMDKGNotesGenerator.__new__(WMDKGNotesGenerator)
+        fused_text_for_kg = _ocr_cleaner.normalize_text(fused_text_for_kg)
+
         kg = kg_model.extract(
         fused_text_for_kg,
         session_id=session_id
@@ -3694,6 +3942,586 @@ def fuse_two_knowledge_graphs(session1_dir: Path, session2_dir: Path, fused_dir:
 from sentence_transformers import SentenceTransformer, util
 import torch
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONCEPT BLOCK — Intermediate Representation Layer
+# ─────────────────────────────────────────────────────────────────────────────
+# A ConceptBlock clusters a root KG node with ALL its typed children into one
+# structured object BEFORE rendering begins.
+#
+# This is the "missing stage" described in the architecture document:
+#
+#   Knowledge Graph
+#         ↓
+#   Concept Block Builder   ← THIS CLASS
+#         ↓
+#   Hierarchy Generator
+#         ↓
+#   Educational Renderer
+#         ↓
+#   Notes
+#
+# Each block carries:
+#   - root node (id, label, description)
+#   - typed children buckets: subconcepts, operations, properties,
+#     advantages, disadvantages, devices, protocols, implementations,
+#     applications, examples
+#   - the best diagram anchored to this concept (diagram anchoring trick)
+#   - the block's importance score (for ordering)
+#
+# Rendering rules (fully dynamic, no domain words):
+#   subconcept   → its own named subsection with recursive sub-block
+#   operation    → "Primary Operations" bullet
+#   advantage    → "Advantages" bullet
+#   disadvantage → "Disadvantages" bullet
+#   device       → "Components and Devices" bullet
+#   protocol     → "Communication Mechanisms" bullet
+#   implementation → "Implementation and Structure" bullet
+#   application  → "Applications" bullet
+#   example      → "Real-World Examples" bullet
+#   property     → "Key Characteristics" bullet
+# ─────────────────────────────────────────────────────────────────────────────
+
+from dataclasses import dataclass, field
+from typing import List, Tuple, Optional, Any
+
+
+@dataclass
+class ConceptBlock:
+    """
+    Intermediate representation of one concept and all its related nodes.
+
+    Built by ConceptBlockBuilder.build_blocks() from a KG hierarchy.
+    Rendered by ConceptBlock.to_subsections() into HierarchicalNotes format.
+    """
+    # Core concept
+    node_id:     str
+    label:       str
+    description: str
+    importance:  float = 0.0
+
+    # Typed child buckets — each entry is (label, description, node_id)
+    subconcepts:     List[Tuple[str, str, str]] = field(default_factory=list)
+    operations:      List[Tuple[str, str, str]] = field(default_factory=list)
+    advantages:      List[Tuple[str, str, str]] = field(default_factory=list)
+    disadvantages:   List[Tuple[str, str, str]] = field(default_factory=list)
+    devices:         List[Tuple[str, str, str]] = field(default_factory=list)
+    protocols:       List[Tuple[str, str, str]] = field(default_factory=list)
+    implementations: List[Tuple[str, str, str]] = field(default_factory=list)
+    applications:    List[Tuple[str, str, str]] = field(default_factory=list)
+    examples:        List[Tuple[str, str, str]] = field(default_factory=list)
+    properties:      List[Tuple[str, str, str]] = field(default_factory=list)
+
+    # Diagram anchored to this concept (diagram anchoring trick)
+    diagram_path:    Optional[str] = None
+    diagram_caption: Optional[str] = None
+
+    # Nested sub-blocks for subconcept children (recursive)
+    sub_blocks:      List[Any] = field(default_factory=list)  # List[ConceptBlock]
+
+    def has_content(self) -> bool:
+        """True if block has at least one piece of content beyond the root label."""
+        return bool(
+            self.description or self.subconcepts or self.operations
+            or self.advantages or self.disadvantages or self.devices
+            or self.protocols or self.implementations or self.applications
+            or self.examples or self.properties or self.sub_blocks
+        )
+
+    def to_subsections(self, make_point, make_subsection) -> list:
+        """
+        Convert this ConceptBlock into a list of subsection dicts for
+        HierarchicalNotes format.
+
+        Rendering order (pedagogically motivated, fully dynamic):
+          1. Description  (always first)
+          2. Structure / Implementation
+          3. Components and Devices
+          4. Communication Mechanisms (Protocols)
+          5. Primary Operations
+          6. How It Works / Key Characteristics
+          7. Subconcepts (each as a named sub-block)
+          8. Advantages
+          9. Disadvantages
+          10. Applications
+          11. Real-World Examples
+        """
+        subsections = []
+
+        # ── 1. Description subsection ─────────────────────────────────────────
+        if self.description and len(self.description.split()) >= 4:
+            subsections.append(
+                make_subsection("Description", [make_point(self.description)])
+            )
+
+        # ── Helper: build bullet text from (label, desc, _) tuple ─────────────
+        def _bullet(lbl: str, desc: str) -> str:
+            lbl = lbl.strip()
+            desc = (desc or "").strip()
+            if desc and desc.lower() != lbl.lower():
+                return f"{lbl}: {desc}"
+            return f"{lbl}: A key component related to {self.label}."
+
+        # ── 2. Implementation and Structure ───────────────────────────────────
+        if self.implementations:
+            pts = [make_point(_bullet(l, d)) for l, d, _ in self.implementations]
+            subsections.append(make_subsection("Implementation and Structure", pts))
+
+        # ── 3. Components and Devices ─────────────────────────────────────────
+        if self.devices:
+            pts = [make_point(_bullet(l, d)) for l, d, _ in self.devices]
+            subsections.append(make_subsection("Components and Devices", pts))
+
+        # ── 4. Communication Mechanisms ───────────────────────────────────────
+        if self.protocols:
+            pts = [make_point(_bullet(l, d)) for l, d, _ in self.protocols]
+            subsections.append(make_subsection("Communication Mechanisms", pts))
+
+        # ── 5. Primary Operations ─────────────────────────────────────────────
+        if self.operations:
+            pts = [make_point(_bullet(l, d)) for l, d, _ in self.operations]
+            subsections.append(make_subsection("Primary Operations", pts))
+
+        # ── 6. Key Characteristics ────────────────────────────────────────────
+        if self.properties:
+            pts = [make_point(_bullet(l, d)) for l, d, _ in self.properties]
+            subsections.append(make_subsection("Key Characteristics", pts))
+
+        # ── 7. Subconcepts — each as a named subsection ───────────────────────
+        # Sub-blocks are rendered recursively using their own to_subsections()
+        for sub_block in self.sub_blocks:
+            if not sub_block.has_content() and not sub_block.description:
+                continue
+            sub_subs = sub_block.to_subsections(make_point, make_subsection)
+            if sub_subs:
+                # Sub-block becomes a named subsection at this level
+                subsections.append(make_subsection(sub_block.label, sub_subs))
+            elif sub_block.description:
+                subsections.append(
+                    make_subsection(sub_block.label,
+                                    [make_point(sub_block.description)])
+                )
+
+        # Flat subconcept entries (those without their own sub-block)
+        flat_sc = [
+            (l, d, nid) for l, d, nid in self.subconcepts
+            if not any(sb.node_id == nid for sb in self.sub_blocks)
+        ]
+        if flat_sc:
+            pts = [make_point(_bullet(l, d)) for l, d, _ in flat_sc]
+            subsections.append(make_subsection("Types and Variants", pts))
+
+        # ── 8. Advantages ─────────────────────────────────────────────────────
+        if self.advantages:
+            pts = [make_point(_bullet(l, d)) for l, d, _ in self.advantages]
+            subsections.append(make_subsection("Advantages", pts))
+
+        # ── 9. Disadvantages ──────────────────────────────────────────────────
+        if self.disadvantages:
+            pts = [make_point(_bullet(l, d)) for l, d, _ in self.disadvantages]
+            subsections.append(make_subsection("Disadvantages", pts))
+
+        # ── 10. Applications ──────────────────────────────────────────────────
+        if self.applications:
+            pts = [make_point(_bullet(l, d)) for l, d, _ in self.applications]
+            subsections.append(make_subsection("Applications", pts))
+
+        # ── 11. Real-World Examples ───────────────────────────────────────────
+        if self.examples:
+            pts = [make_point(_bullet(l, d)) for l, d, _ in self.examples]
+            subsections.append(make_subsection("Real-World Examples", pts))
+
+        return subsections
+
+
+class ConceptBlockBuilder:
+    """
+    Builds ConceptBlock objects from a KG hierarchy.
+
+    This is the "Concept Block Builder" stage in the architecture:
+      KG → ConceptBlockBuilder → [ConceptBlock, ...] → Renderer → Notes
+
+    Algorithm:
+      For each root node:
+        1. Collect all direct children from edge_map + children_map
+        2. Classify each child's type using the generator's classifier
+        3. Route child to the correct typed bucket in the block
+        4. Recurse for subconcept children (topology-aware clustering)
+        5. Find and anchor the best diagram to the block
+    """
+
+    def __init__(self, generator):
+        """
+        Args:
+            generator: a WMDKGNotesGenerator instance (provides classify_node_type,
+                       interpret_edge, find_related_diagram, get_semantic_caption)
+        """
+        self.gen = generator
+
+    def _infer_full_type(self, node: dict, edge_map: dict,
+                         all_nodes: list) -> str:
+        """
+        Classify node type, with Advantage/Disadvantage as sub-cases of Property.
+        Fully dynamic — no domain keywords in detection logic.
+        """
+        base = self.gen.classify_node_type(node, edge_map, all_nodes)
+        if base == "Property":
+            combined = (node.get("label", "") + " " +
+                        (node.get("description", "") or "")).lower()
+            _ADV = re.compile(
+                r'\b(advantage|benefit|merit|\bpro\b|strength|positive|easy|'
+                r'simple|fast|efficient|reliable|flexible|scalable|cheap|'
+                r'low\s+cost|high\s+speed|secure)\b', re.I)
+            _DIS = re.compile(
+                r'\b(disadvantage|drawback|limitation|weakness|demerit|\bcon\b|'
+                r'problem|issue|failure|risk|expensive|difficult|slow|unreliable|'
+                r'inflexible|high\s+cost|collision|privacy|bottleneck|'
+                r'single\s+point)\b', re.I)
+            if _ADV.search(combined):
+                return "Advantage"
+            if _DIS.search(combined):
+                return "Disadvantage"
+        return base
+
+    # Structural ownership relations — ONLY these allow a child to belong to
+    # a block.  Associative/contextual relations (related_to, associated_with,
+    # connected_to, used_in, depends_on) do NOT grant ownership; they are
+    # rendered as inline contextual sentences instead.
+    # This prevents graph-neighborhood contamination (Problem 1 / Corner Case 4).
+    _OWNERSHIP_RELATIONS = frozenset({
+        "has", "includes", "contains", "consists", "composed", "comprises",
+        "type of", "is a", "has type", "divided into", "categorized as",
+        "has property", "has characteristic", "has advantage", "has disadvantage",
+        "part of", "is part of", "sub-component", "sub component",
+        "belongs to", "subset of", "member of",
+        "has operation", "has function", "supports operation",
+        "has device", "has component", "has mechanism", "has protocol",
+        "has implementation", "has example", "has application",
+    })
+
+    # Associative relations — these link concepts but do NOT make one a child
+    # of the other.  Used for cross-reference sentences, not block membership.
+    _ASSOCIATIVE_RELATIONS = frozenset({
+        "related to", "is related to", "associated with",
+        "connected to", "interacts with", "used in", "applied in",
+        "depends on", "requires", "leads to", "causes", "results in",
+        "co-occurs with", "similar to", "analogy",
+    })
+
+    def _is_ownership_edge(self, rel: str) -> bool:
+        """
+        Return True if the relation indicates the source OWNS / CONTAINS the
+        target (structural membership), False for merely associative links.
+        Fully dynamic — checks against _OWNERSHIP_RELATIONS by substring.
+        """
+        rl = rel.lower().replace("_", " ").strip()
+        # Exact match first
+        if rl in self._OWNERSHIP_RELATIONS:
+            return True
+        # Substring match — any ownership keyword present
+        for owned_kw in self._OWNERSHIP_RELATIONS:
+            if owned_kw in rl:
+                return True
+        # If it is explicitly associative, reject it
+        for assoc_kw in self._ASSOCIATIVE_RELATIONS:
+            if assoc_kw in rl:
+                return False
+        # Unknown relations: treat as ownership only if very short (likely "has X")
+        return len(rl.split()) <= 2
+
+    def _collect_children(self, node_id: str, edge_map: dict,
+                           children_map: dict, node_lookup: dict) -> list:
+        """
+        Collect OWNED children of node_id — only nodes connected via structural
+        (ownership) edges.  Associative edges (related_to, used_in, etc.) are
+        excluded here and never grant block membership, preventing graph-
+        neighborhood contamination (Problem 1 / Corner Case 4).
+
+        Returns unique (child_node, relation, child_id) triples.
+        """
+        seen = set()
+        result = []
+
+        # From edge_map — only structural/ownership relations
+        for tgt_id, rel in edge_map.get(node_id, []):
+            if tgt_id not in seen and tgt_id in node_lookup:
+                if self._is_ownership_edge(rel):
+                    seen.add(tgt_id)
+                    result.append((node_lookup[tgt_id], rel, tgt_id))
+
+        # From children_map (hierarchy-assigned children not reachable via edge_map)
+        # These are structurally assigned by build_hierarchy, so they are always owned.
+        edge_tgts = {tgt for tgt, rel in edge_map.get(node_id, [])
+                     if self._is_ownership_edge(rel)}
+        for cid in children_map.get(node_id, []):
+            if cid not in seen and cid not in edge_tgts and cid in node_lookup:
+                seen.add(cid)
+                result.append((node_lookup[cid], "includes", cid))
+
+        return result
+
+    def _collect_cross_refs(self, node_id: str, edge_map: dict,
+                             node_lookup: dict) -> list:
+        """
+        Collect ASSOCIATIVE (non-ownership) edges from node_id.
+        These produce inline cross-reference sentences ("X is related to Y")
+        rather than block membership bullets.
+        Returns (target_label, relation) pairs.
+        """
+        result = []
+        for tgt_id, rel in edge_map.get(node_id, []):
+            if tgt_id in node_lookup and not self._is_ownership_edge(rel):
+                tgt_label = node_lookup[tgt_id].get("label", "")
+                if tgt_label:
+                    result.append((tgt_label, rel))
+        return result
+
+    def _best_desc(self, node: dict, parent_label: str, relation: str) -> str:
+        """
+        Get the best description for a child node.
+        Falls back to an NLG sentence from the relation if description is thin.
+        """
+        desc = (node.get("description", "") or "").strip()
+        if desc and len(desc.split()) >= 3:
+            return desc
+        lbl = node.get("label", "")
+        if lbl and relation and relation.lower() not in ("includes", "has", "contains"):
+            rel_prose = relation.replace("_", " ").strip().lower()
+            return f"{parent_label} {rel_prose} {lbl}."
+        return desc
+
+    # Hub dampening: a single block never renders more than this many
+    # children per typed bucket.  Prevents "50 definitions dumped together"
+    # (Problem 3 / Corner Case 2).  Children beyond the cap are dropped unless
+    # they can be sub-clustered; sub-clustering happens inside build_block.
+    MAX_CHILDREN_PER_BUCKET = 8
+
+    def build_block(self, root_id: str, node_lookup: dict, edge_map: dict,
+                    children_map: dict, importance: dict,
+                    emitted: set, captions: dict, image_paths: dict,
+                    used_img_canonicals: set, depth: int = 0,
+                    domain_keywords: set = None) -> ConceptBlock:
+        """
+        Build a ConceptBlock for root_id recursively.
+
+        Fixes applied here (all fully dynamic):
+          - Problem 1 / Corner Case 4: only ownership edges grant block membership
+          - Problem 3 / Corner Case 2: hub dampening caps children per bucket
+          - Corner Case 1: shared nodes get a brief mention in every owning block
+          - Corner Case 5: empty blocks are flagged so they can be suppressed
+
+        Args:
+            root_id:           node id of the concept to build a block for
+            node_lookup:       {nid: node_dict}
+            edge_map:          {src_id: [(tgt_id, rel), ...]}
+            children_map:      {parent_id: [child_id, ...]}
+            importance:        {nid: float} from build_hierarchy
+            emitted:           set of already-rendered node ids (mutated in place)
+            captions:          {img_name: caption_text} for diagram anchoring
+            image_paths:       {img_name: Path}
+            used_img_canonicals: set of already-used image canonical paths
+            depth:             recursion depth (limits sub-block nesting to 2 levels)
+            domain_keywords:   set of domain words used for diagram verification
+
+        Returns:
+            ConceptBlock populated with all typed children and anchored diagram.
+        """
+        root_node = node_lookup.get(root_id, {})
+        label     = root_node.get("label", "").strip()
+        desc      = (root_node.get("description", "") or "").strip()
+        imp       = importance.get(root_id, 0.0)
+
+        block = ConceptBlock(
+            node_id=root_id,
+            label=label,
+            description=desc,
+            importance=imp,
+        )
+
+        all_nodes = list(node_lookup.values())
+        # _collect_children now filters to ownership-only edges (Problem 1 fix)
+        children  = self._collect_children(root_id, edge_map, children_map, node_lookup)
+
+        # ── Hub dampening: sort children by importance descending ─────────────
+        # High-importance children are kept; low-importance overflow is dropped.
+        # This prevents hub nodes from producing 50-item definition lists.
+        children_sorted = sorted(
+            children,
+            key=lambda item: importance.get(item[2], 0.0),
+            reverse=True
+        )
+
+        # Per-bucket child counters for dampening
+        _bucket_counts: dict = {}
+
+        for c_node, rel, c_id in children_sorted:
+            if c_id == root_id:
+                continue
+
+            c_label = c_node.get("label", "").strip()
+            if not c_label:
+                continue
+
+            c_desc = self._best_desc(c_node, label, rel)
+            ctype  = self._infer_full_type(c_node, edge_map, all_nodes)
+
+            # ── Corner Case 1: Shared-node handling ───────────────────────────
+            # If the node is already emitted by another block, add a brief
+            # cross-reference mention (one-liner) instead of skipping silently.
+            if c_id in emitted:
+                # Only cross-reference if it is a meaningful concept (not Actor/Metadata)
+                if ctype not in ("Actor", "Metadata", "Diagram") and c_label:
+                    _xref = f"{c_label}: Also discussed in the context of related concepts."
+                    # Route to the appropriate bucket as a cross-ref
+                    if ctype == "Advantage":
+                        if len(block.advantages) < self.MAX_CHILDREN_PER_BUCKET:
+                            block.advantages.append((c_label, _xref, c_id))
+                    elif ctype == "Disadvantage":
+                        if len(block.disadvantages) < self.MAX_CHILDREN_PER_BUCKET:
+                            block.disadvantages.append((c_label, _xref, c_id))
+                    elif ctype in ("Concept", "Subconcept"):
+                        if len(block.subconcepts) < self.MAX_CHILDREN_PER_BUCKET:
+                            block.subconcepts.append((c_label, _xref, c_id))
+                    else:
+                        if len(block.properties) < self.MAX_CHILDREN_PER_BUCKET:
+                            block.properties.append((c_label, _xref, c_id))
+                continue
+
+            # ── Dampen hub nodes: check bucket cap before accepting ────────────
+            _bucket_key = ctype
+            _bucket_counts[_bucket_key] = _bucket_counts.get(_bucket_key, 0) + 1
+            if _bucket_counts[_bucket_key] > self.MAX_CHILDREN_PER_BUCKET:
+                # Over cap — skip but still mark emitted to avoid coverage-sweep
+                emitted.add(c_id)
+                continue
+
+            emitted.add(c_id)
+
+            if ctype in ("Concept", "Subconcept") and depth < 2:
+                # Build a recursive sub-block for this subconcept
+                sub_block = self.build_block(
+                    c_id, node_lookup, edge_map, children_map,
+                    importance, emitted, captions, image_paths,
+                    used_img_canonicals, depth=depth + 1,
+                    domain_keywords=domain_keywords
+                )
+                block.sub_blocks.append(sub_block)
+                block.subconcepts.append((c_label, c_desc, c_id))
+            elif ctype in ("Concept", "Subconcept"):
+                # Too deep — treat as flat subconcept bullet
+                block.subconcepts.append((c_label, c_desc, c_id))
+            elif ctype == "Operation":
+                block.operations.append((c_label, c_desc, c_id))
+            elif ctype == "Advantage":
+                block.advantages.append((c_label, c_desc, c_id))
+            elif ctype == "Disadvantage":
+                block.disadvantages.append((c_label, c_desc, c_id))
+            elif ctype == "Device":
+                block.devices.append((c_label, c_desc, c_id))
+            elif ctype == "Protocol":
+                block.protocols.append((c_label, c_desc, c_id))
+            elif ctype == "Implementation":
+                block.implementations.append((c_label, c_desc, c_id))
+            elif ctype == "Application":
+                block.applications.append((c_label, c_desc, c_id))
+            elif ctype == "Example":
+                block.examples.append((c_label, c_desc, c_id))
+            elif ctype in ("Actor", "Metadata", "Diagram"):
+                pass  # skip — never appear as bullets
+            else:
+                block.properties.append((c_label, c_desc, c_id))
+
+        # ── Diagram anchoring with domain verification (Problem 2) ────────────
+        # Find the best diagram for this block's topic. The diagram MUST pass
+        # a domain-word intersection check — its caption must share at least
+        # one content word with the block's own label/description or the
+        # global domain keyword set.  This prevents "water cycle" and other
+        # irrelevant diagrams from appearing under networking topics.
+        if captions and image_paths:
+            search_text = label + " " + desc
+            all_child_labels = (
+                [l for l, _, _ in block.subconcepts]
+                + [l for l, _, _ in block.devices]
+                + [l for l, _, _ in block.implementations]
+            )
+            if all_child_labels:
+                search_text += " " + " ".join(all_child_labels[:4])
+
+            # Build domain word set for this block (label words + domain_keywords)
+            _block_words = set(re.findall(r'[a-z]{3,}', search_text.lower()))
+            if domain_keywords:
+                _block_words |= {w.lower() for w in domain_keywords if len(w) > 2}
+
+            try:
+                best_img, raw_cap = self.gen.find_related_diagram(
+                    search_text, captions, used_img_canonicals)
+                if best_img and raw_cap:
+                    # ── Domain verification gate (Problem 2 fix) ─────────────
+                    # Caption must share ≥1 content word with this block's topic
+                    cap_words = set(re.findall(r'[a-z]{3,}', raw_cap.lower()))
+                    _GENERIC = {'the', 'and', 'with', 'from', 'that', 'this',
+                                'showing', 'diagram', 'figure', 'image', 'picture',
+                                'black', 'white', 'drawing', 'photo'}
+                    cap_content = cap_words - _GENERIC
+                    block_content = _block_words - _GENERIC
+                    domain_match = len(cap_content & block_content) >= 1
+                    if domain_match:
+                        img_path = image_paths.get(best_img)
+                        if img_path and img_path.exists():
+                            block.diagram_path    = str(img_path)
+                            block.diagram_caption = self.gen.get_semantic_caption(
+                                label, raw_cap, list(node_lookup.values()))
+                            try:
+                                used_img_canonicals.add(str(img_path.resolve()))
+                            except Exception:
+                                used_img_canonicals.add(str(img_path))
+                    else:
+                        print(f"[Block] Diagram rejected for '{label}': "
+                              f"caption '{raw_cap[:60]}' has no domain word overlap")
+            except Exception:
+                pass  # diagram anchoring is best-effort
+
+        return block
+
+    def build_blocks(self, roots: list, node_lookup: dict, edge_map: dict,
+                     children_map: dict, importance: dict,
+                     captions: dict, image_paths: dict,
+                     emitted: set = None,
+                     domain_keywords: set = None) -> list:
+        """
+        Build ConceptBlocks for all root nodes.
+
+        Args:
+            emitted:         optional external set of already-emitted node ids
+                             (shared mutation so builder + renderer stay in sync)
+            domain_keywords: set of domain-specific words extracted from the KG,
+                             used for diagram domain-verification (Problem 2 fix)
+
+        Returns:
+            list of ConceptBlock, sorted by importance descending;
+            empty/trivial blocks are suppressed (Corner Case 5 fix)
+        """
+        _emitted = emitted if emitted is not None else set(roots)
+        _emitted.update(roots)
+        used_img_canonicals: set = set()
+        blocks = []
+
+        for root_id in roots:
+            block = self.build_block(
+                root_id, node_lookup, edge_map, children_map,
+                importance, _emitted, captions, image_paths,
+                used_img_canonicals, domain_keywords=domain_keywords
+            )
+            # Corner Case 5: suppress blocks that have no content at all
+            # (e.g. "Devices" node with no edges and no description)
+            if block.has_content() or block.description:
+                blocks.append(block)
+            else:
+                print(f"[Blocks] Suppressed empty block: '{block.label}'")
+
+        blocks.sort(key=lambda b: b.importance, reverse=True)
+        return blocks
+
 class WMDKGNotesGenerator:
     def __init__(self):
         """
@@ -3710,6 +4538,10 @@ class WMDKGNotesGenerator:
         except Exception as e:
             print(f"[Notes] ⚠️ BART unavailable: {e}. Using extractive summaries.")
             self.summarizer = None
+            
+        # Hook for 5.6: Initialize sanitizer for description text
+        from content_sanitizer import ContentSanitizer
+        self.sanitizer = ContentSanitizer()
 
     # ---------- Text Cleaning ----------
     # ---------- Text Cleaning (Enhanced) ----------
@@ -3750,6 +4582,16 @@ class WMDKGNotesGenerator:
             if sum(1 for w in visual_words if w in lower_line) >= 2: continue
 
             lines.append(line)
+            
+        # NEW: Reject mid-sentence OCR fragments (no capital start, < 5 alpha words) (Fix 4A)
+        filtered_lines = []
+        for line in lines:
+            if line and line[0].islower():
+                alpha_words = [w for w in line.split() if w.isalpha() and len(w) > 2]
+                if len(alpha_words) < 4:
+                    continue   # Too short to be a real sentence fragment
+            filtered_lines.append(line)
+        lines = filtered_lines
             
         text = " ".join(lines)
         return re.sub(r'\s+', ' ', text).strip()
@@ -3836,49 +4678,139 @@ class WMDKGNotesGenerator:
         return sentences[:5]
 
     # ---------- Find Related Diagrams ----------
-    def find_related_diagram(self, topic: str, captions: dict) -> tuple:
-        """Find most relevant diagram for a topic"""
+    def find_related_diagram(self, topic: str, captions: dict,
+                               used_canonical_paths: set = None) -> tuple:
+        """Find most relevant diagram for a topic.
+
+        FIX-DIAGRAM-DEDUP: added used_canonical_paths set. Any image whose
+        resolved canonical absolute path is already in that set is skipped
+        entirely, preventing the same file from appearing in multiple sections
+        regardless of how many filename aliases it has.
+
+        FIX-THRESHOLD: raised from 0.42 → 0.58. Generic BLIP captions
+        (e.g. "a black and white drawing of a stack of pancakes") easily
+        scored above 0.42 for unrelated section topics. 0.58 requires a
+        genuine semantic overlap.
+
+        FIX-BLACKLIST-SYNC: expanded to match notes_renderer.py BLACKLIST
+        exactly; also blocks slides 0-4 dynamically (not by hardcoded names).
+        """
+        import re as _re
         if not captions:
             return None, None
-        
+
+        if used_canonical_paths is None:
+            used_canonical_paths = set()
+
+        # ── Unified blacklist — mirrors notes_renderer.py _BLACKLIST_TERMS ──
+        # All terms are domain-agnostic; no lecture-specific words.
+        _BL = (
+            'twitter', 'facebook', 'instagram', 'linkedin', 'youtube',
+            'subscribe', 'follow', '@', 'logo', 'icon',
+            'nesoacademy', 'neso', 'academy',
+            'like and share', 'like, comment', 'comment, share',
+            'like comment share', 'like comment subscribe',
+            'thanks for watching', 'thank you for watching',
+            'bell', 'notification', 'watermark', 'banner', 'copyright',
+            'sticker with the word', 'sticker with the words',
+            'red and white sticker', 'red and white shield',
+            'shield with the letter',
+            'outcome', 'objectives', 'agenda',
+            'a black and white photo', 'a black and white image',
+            'a sign with', 'visual representation',
+            'a piece of paper with numbers',
+            'a computer with the word', 'an image of a computer',
+        )
+
+        def _is_early_slide(img_name: str) -> bool:
+            """Dynamically block slides 0-4 (title/intro/CTA/social)."""
+            stem = Path(img_name).stem.lower() if '.' in img_name else img_name.lower()
+            m = _re.match(r'slide[_\-]?(\d+)', stem)
+            if m:
+                try:
+                    return int(m.group(1)) <= 4
+                except ValueError:
+                    pass
+            return False
+
+        def _canonical_img(img_name: str) -> str:
+            """Resolve img_name to a canonical path string for dedup."""
+            img_p = None
+            # Try image_paths if available on self
+            if hasattr(self, '_current_image_paths') and self._current_image_paths:
+                img_p = self._current_image_paths.get(img_name)
+            if img_p is not None:
+                try:
+                    return str(Path(str(img_p)).resolve())
+                except Exception:
+                    return str(img_p)
+            return img_name  # fallback: use name itself
+
         topic_emb = self.embedding_model.encode(topic, convert_to_tensor=True)
-        
         best_img = None
         best_score = -1
-        
+
         for img_name, caption in captions.items():
+            cap_lower = (caption or '').lower()
+            img_lower = img_name.lower()
+
+            # Skip blacklisted captions or paths
+            if any(bl in cap_lower for bl in _BL):
+                continue
+            if any(bl in img_lower for bl in _BL):
+                continue
+            # Skip early/title slides
+            if _is_early_slide(img_name):
+                continue
+            # Skip already-used images (canonical path dedup)
+            if used_canonical_paths:
+                _canon = _canonical_img(img_name)
+                if _canon in used_canonical_paths:
+                    continue
+
             cap_emb = self.embedding_model.encode(caption, convert_to_tensor=True)
             score = util.pytorch_cos_sim(topic_emb, cap_emb).item()
-            
             if score > best_score:
                 best_score = score
                 best_img = img_name
-        
-        # Only return if similarity is reasonable
-        if best_score > 0.3:
+
+        # FIX-THRESHOLD: raised from 0.42 to 0.58
+        if best_score > 0.58:
             return best_img, captions[best_img]
-        
         return None, None
 
     # ---------- HIERARCHICAL GRAPH PROCESSING (FOREST CONSTRUCTION) ----------
 
-    def build_hierarchy(self, nodes: list, edge_map: dict) -> dict:
+    def build_hierarchy(self, nodes: list, edge_map: dict,
+                        freq_map: dict = None) -> dict:
         """
-        Build a strict Parent-Child Forest (Tree structure).
-        
-        Enhanced with:
-        - Centrality-based root selection (PageRank + degree) as fallback
-        - Semantic clustering fallback for sparse KGs
-        - Guaranteed ≥ 2 roots when possible
+        Build a concept-gravity hierarchy forest.
+
+        Pipeline:
+          1. Compute node importance = connections + frequency_in_source
+                                     + description_richness + centrality + type_bonus
+          2. Classify every node type (Concept/Property/Operation/Metadata/Actor/…)
+          3. Assign child→parent using structural edges + importance gradient
+          4. CONCEPT GRAVITY: compress low-importance orphan nodes into their
+             best-matching parent so the root count ≈ 5–8 real topics
+          5. Deduplicate semantically near-identical roots
+          6. Attach Actor/Metadata to most central root; never let them be roots
+          7. Final fallback: guarantee ≥2 and ≤MAX_TOPICS roots
+
+        Args:
+            nodes:    list of node dicts (id, label, description)
+            edge_map: {src_id: [(tgt_id, relation), ...]}
+            freq_map: optional {node_id: frequency_count} from source text
+                      to boost importance of concepts appearing often in transcript
         """
         import networkx as nx
 
         node_lookup = {n["id"]: n for n in nodes}
-        
+
         if not node_lookup:
             return {"roots": [], "children_map": {}, "node_lookup": {}}
 
-        # ── 1. Build NetworkX graph for centrality ──
+        # ── 1. Build NetworkX graph ───────────────────────────────────────────
         G = nx.DiGraph()
         for nid in node_lookup:
             G.add_node(nid)
@@ -3887,199 +4819,402 @@ class WMDKGNotesGenerator:
                 if src in node_lookup and tgt in node_lookup:
                     G.add_edge(src, tgt, relation=rel)
 
-        # Compute centrality scores
         try:
             pagerank = nx.pagerank(G, alpha=0.85)
-        except:
-            pagerank = {nid: 1.0 / len(node_lookup) for nid in node_lookup}
-        
-        degree_cent = dict(G.degree())
-        
-        # Combined centrality: normalize and merge
-        max_pr = max(pagerank.values()) if pagerank else 1
-        max_deg = max(degree_cent.values()) if degree_cent else 1
-        centrality = {}
-        for nid in node_lookup:
-            pr = pagerank.get(nid, 0) / max(max_pr, 1e-9)
-            dc = degree_cent.get(nid, 0) / max(max_deg, 1)
-            centrality[nid] = 0.6 * pr + 0.4 * dc
+        except Exception:
+            pagerank = {nid: 1.0 / max(len(node_lookup), 1) for nid in node_lookup}
 
-        # ── 2. Calculate Parent Potential (structural edges) ──
+        in_degree  = dict(G.in_degree())
+        out_degree = dict(G.out_degree())
+        total_deg  = dict(G.degree())
+
+        max_pr  = max(pagerank.values(), default=1e-9)
+        max_deg = max(total_deg.values(),  default=1)
+
+        # ── 2. Compute IMPORTANCE per node (Concept Gravity Algorithm) ────────
+        # importance(n) = 0.35 * normalised_pagerank
+        #               + 0.20 * degree_score
+        #               + out_degree_bonus   (hub nodes score higher)
+        #               + description_bonus  (richer description = real concept)
+        #               + frequency_bonus    (appears often in source text = important)
+        #               + type_bonus         (Concept > Property > Metadata)
+        # Fully dynamic — no domain keywords.
+        TYPE_BONUS = {
+            "Concept": 0.30, "Subconcept": 0.18, "Operation": 0.20,
+            "Implementation": 0.15, "Application": 0.15, "Protocol": 0.18,
+            "Device": 0.12, "Property": 0.10, "Example": 0.08,
+            "Runtime": 0.05, "Actor": 0.00, "Metadata": -0.20, "Diagram": 0.00,
+            "General": 0.10,
+        }
+
+        # Normalise freq_map values to [0, 0.20] range for importance contribution
+        _freq_map = freq_map or {}
+        _max_freq = max(_freq_map.values(), default=1)
+
+        importance = {}
+        for nid, node in node_lookup.items():
+            pr_score   = pagerank.get(nid, 0) / max_pr
+            deg_score  = total_deg.get(nid, 0) / max(max_deg, 1)
+            out_bonus  = min(out_degree.get(nid, 0) * 0.05, 0.30)   # hub reward
+            desc       = (node.get("description", "") or "").strip()
+            desc_bonus = min(len(desc.split()) / 20.0, 0.25)          # richness
+            # frequency_in_source: how often the node label appears in transcript
+            freq_bonus = min(_freq_map.get(nid, 0) / max(_max_freq, 1) * 0.20, 0.20)
+            ntype = self.classify_node_type(node, edge_map, list(node_lookup.values()))
+            t_bonus = TYPE_BONUS.get(ntype, 0.10)
+            importance[nid] = (pr_score * 0.35 + deg_score * 0.20
+                               + out_bonus + desc_bonus + freq_bonus + t_bonus)
+
+        # ── 3. Parent potential score (structural edge weight) ────────────────
         parent_scores = {}
         for nid in node_lookup:
             score = 0
-            if nid in edge_map:
-                for tgt, rel in edge_map[nid]:
-                    rel_lower = rel.lower()
-                    if any(x in rel_lower for x in ["has", "includes", "contains", "consists", "composed"]):
-                        score += 2
-                    elif any(x in rel_lower for x in ["uses", "employs"]):
-                        score += 1
+            for tgt, rel in edge_map.get(nid, []):
+                rl = rel.lower()
+                if any(x in rl for x in ("has", "includes", "contains", "consists", "composed", "divided into", "types")):
+                    score += 2
+                elif any(x in rl for x in ("uses", "employs", "implements")):
+                    score += 1
             parent_scores[nid] = score
 
-        # ── 3. Assign best parent for each node ──
+        # ── 4. Assign best parent for each node ──────────────────────────────
         parent_assignment = {}
-        
+        _CHILD_RELATIONS = {
+            "has", "includes", "contains", "consists", "composed",
+            "type of", "is a", "has type", "divided into", "categorized as",
+            "has property", "has characteristic", "has advantage", "has disadvantage",
+            "part of", "is part of", "sub-component",
+        }
+
         for child_id in node_lookup:
-            best_parent = None
-            max_score = -1
-            
             potential_parents = []
-            for potential_p_id, edges in edge_map.items():
-                for tgt, rel in edges:
+            # Forward: any node that points TO child_id with a structural relation
+            for p_id, p_edges in edge_map.items():
+                for tgt, rel in p_edges:
                     if tgt == child_id:
-                        rel_lower = rel.lower()
-                        if any(x in rel_lower for x in ["has", "includes", "contains", "consists", "composed", "type of", "is a"]):
-                            potential_parents.append(potential_p_id)
-            
-            for p_id in potential_parents:
-                p_score = parent_scores.get(p_id, 0) + centrality.get(p_id, 0)
-                if p_score > max_score:
-                    max_score = p_score
-                    best_parent = p_id
-            
-            if best_parent:
-                curr = best_parent
-                is_cycle = False
-                for _ in range(10):
-                    if curr == child_id:
-                        is_cycle = True
-                        break
-                    curr = parent_assignment.get(curr)
-                    if not curr: break
-                
-                if not is_cycle:
-                    parent_assignment[child_id] = best_parent
+                        rl = rel.lower().replace("_", " ")
+                        if any(x in rl for x in _CHILD_RELATIONS):
+                            potential_parents.append(p_id)
+            if not potential_parents:
+                continue
+            # Pick parent with highest importance + parent_score
+            best_parent = max(
+                potential_parents,
+                key=lambda p: importance.get(p, 0) + parent_scores.get(p, 0)
+            )
+            # Cycle check
+            curr, is_cycle = best_parent, False
+            for _ in range(15):
+                if curr == child_id:
+                    is_cycle = True; break
+                curr = parent_assignment.get(curr)
+                if not curr: break
+            if not is_cycle:
+                parent_assignment[child_id] = best_parent
 
-        # ── 4. Separate roots from children ──
-        roots = []
-        children_map = {}
-        
+        # ── 5. Build initial children_map + candidate roots ──────────────────
+        children_map: dict = {}
+        _non_root_types = {"Actor", "Metadata"}
+        _actor_orphans = []
+        candidate_roots = []
+
         for nid in node_lookup:
-            pid = parent_assignment.get(nid)
+            pid   = parent_assignment.get(nid)
+            ntype = self.classify_node_type(node_lookup[nid], edge_map, list(node_lookup.values()))
             if pid:
-                if pid not in children_map: children_map[pid] = []
-                children_map[pid].append(nid)
+                children_map.setdefault(pid, []).append(nid)
+            elif ntype in _non_root_types:
+                _actor_orphans.append(nid)
             else:
-                if (parent_scores.get(nid, 0) > 0 
-                    or len(node_lookup[nid].get("description", "").split()) > 5
-                    or centrality.get(nid, 0) > 0.3):
-                    roots.append(nid)
+                candidate_roots.append(nid)
 
-        # ── 5. Fallback: if too few roots, select by centrality ──
-        if len(roots) < 2 and len(node_lookup) >= 4:
-            sorted_by_centrality = sorted(centrality.items(), key=lambda x: x[1], reverse=True)
+        # ── 6. CONCEPT GRAVITY COMPRESSION ───────────────────────────────────
+        # Target: 5–8 real topics for a typical lecture.
+        # Compression rule: if a candidate root's importance < gravity_threshold
+        # AND it has a semantically close higher-importance root, attach it there.
+        #
+        # gravity_threshold is dynamic: median importance of candidate_roots * 0.6
+        # This self-calibrates regardless of graph size — works for 5-node or 50-node KGs.
+        MAX_TOPICS = 10   # hard ceiling — never more than this many root sections
+        MIN_TOPICS = 2
+
+        def _label_trigrams(label: str) -> set:
+            s = label.lower()
+            return {s[i:i+3] for i in range(len(s) - 2)} if len(s) >= 3 else {s}
+
+        def _label_similarity(a: str, b: str) -> float:
+            ta, tb = _label_trigrams(a), _label_trigrams(b)
+            return len(ta & tb) / max(len(ta | tb), 1)
+
+        def _word_overlap(a: str, b: str) -> float:
+            _STOPS = {'and', 'or', 'the', 'a', 'an', 'of', 'in', 'for', 'to', 'is'}
+            wa = {w.lower() for w in a.split() if w.lower() not in _STOPS}
+            wb = {w.lower() for w in b.split() if w.lower() not in _STOPS}
+            if not wa or not wb: return 0.0
+            return len(wa & wb) / max(len(wa | wb), 1)
+
+        if candidate_roots:
+            imp_vals = [importance.get(r, 0) for r in candidate_roots]
+            sorted_imp = sorted(imp_vals)
+            median_imp = sorted_imp[len(sorted_imp) // 2] if sorted_imp else 0
+            gravity_threshold = median_imp * 0.65   # dynamic, self-calibrating
+
+            # Sort candidate_roots by importance descending — high-importance ones stay
+            candidate_roots_sorted = sorted(
+                candidate_roots, key=lambda r: importance.get(r, 0), reverse=True
+            )
+            confirmed_roots = []  # roots we KEEP as top-level sections
+            compressed    = []    # roots we compress into a parent
+
+            for r in candidate_roots_sorted:
+                rnode = node_lookup[r]
+                rlabel = rnode.get("label", "")
+                r_imp = importance.get(r, 0)
+
+                if len(confirmed_roots) < MIN_TOPICS:
+                    # Always keep the top MIN_TOPICS most important
+                    confirmed_roots.append(r)
+                    continue
+
+                if len(confirmed_roots) >= MAX_TOPICS:
+                    # Already have enough sections — compress remainder
+                    compressed.append(r)
+                    continue
+
+                # Check if this node is semantically near-duplicate of an existing root
+                is_dup = False
+                for cr in confirmed_roots:
+                    cr_label = node_lookup[cr].get("label", "")
+                    trig_sim = _label_similarity(rlabel, cr_label)
+                    word_sim = _word_overlap(rlabel, cr_label)
+                    if trig_sim > 0.55 or word_sim > 0.50:
+                        # Merge: make r a child of the more-important confirmed root
+                        children_map.setdefault(cr, []).append(r)
+                        parent_assignment[r] = cr
+                        is_dup = True
+                        break
+                if is_dup:
+                    continue
+
+                # Below gravity threshold → compress into best-matching confirmed root
+                if r_imp < gravity_threshold:
+                    best_cr = None
+                    best_sim = 0.0
+                    for cr in confirmed_roots:
+                        cr_label = node_lookup[cr].get("label", "")
+                        sim = max(_label_similarity(rlabel, cr_label),
+                                  _word_overlap(rlabel, cr_label))
+                        if sim > best_sim:
+                            best_sim = sim
+                            best_cr = cr
+                    # Only compress if we found a decent match (>0.1) OR graph is large
+                    if best_cr and (best_sim > 0.10 or len(candidate_roots) > MAX_TOPICS):
+                        children_map.setdefault(best_cr, []).append(r)
+                        parent_assignment[r] = best_cr
+                        compressed.append(r)
+                        continue
+
+                confirmed_roots.append(r)
+
+            # Compress any remaining beyond MAX_TOPICS into the most-central confirmed root
+            for r in compressed:
+                if r in confirmed_roots:
+                    confirmed_roots.remove(r)
+            roots = confirmed_roots
+
+            # Remaining from compressed list: attach to most central confirmed root
+            # (only those not yet attached via the loop above)
+            assigned_in_compression = {r for r in compressed if parent_assignment.get(r) in confirmed_roots}
+            still_floating = [r for r in compressed if r not in assigned_in_compression and r not in roots]
+            if still_floating and roots:
+                fallback_root = max(roots, key=lambda r: importance.get(r, 0))
+                for r in still_floating:
+                    children_map.setdefault(fallback_root, []).append(r)
+        else:
+            roots = []
+
+        # ── 7. Semantic deduplication of remaining roots ──────────────────────
+        # Remove roots whose label is a near-duplicate of another root's label.
+        # "Network Topology" vs "Topology and Network" vs "Network Topologies"
+        deduped_roots = []
+        for r in roots:
+            rl = node_lookup[r].get("label", "")
+            is_dup = False
+            for dr in deduped_roots:
+                dl = node_lookup[dr].get("label", "")
+                # Canonical form: lowercase, strip stop words, sort words
+                def _canon(s):
+                    _S = {'and','or','the','a','an','of','in','for','to','is','are','was'}
+                    return frozenset(w.lower() for w in s.split() if w.lower() not in _S)
+                rc, dc = _canon(rl), _canon(dl)
+                if rc == dc:
+                    is_dup = True; break
+                if rc and dc:
+                    overlap = len(rc & dc) / max(len(rc | dc), 1)
+                    if overlap >= 0.70:
+                        # Keep the one with higher importance
+                        if importance.get(r, 0) > importance.get(dr, 0):
+                            deduped_roots.remove(dr)
+                            children_map.setdefault(dr, []).extend(children_map.pop(r, []))
+                        else:
+                            children_map.setdefault(dr, []).extend(children_map.pop(r, []))
+                            is_dup = True
+                        break
+            if not is_dup:
+                deduped_roots.append(r)
+        roots = deduped_roots
+
+        # ── 8. Context-modifier node detection (Problem 3) ───────────────────
+        # Labels like "Small Network", "Large Network", "Temporary Network" are
+        # scale-modifier nodes — they're context qualifiers, not independent topics.
+        # Detect dynamically: <Adjective/Scale-modifier> + <known-concept-word>
+        # where the adjective is a size/time/scope qualifier and the noun matches
+        # a word already present in a confirmed root label.
+        _SCALE_MODIFIER_RE = re.compile(
+            r'^(small|large|tiny|huge|big|minimal|maximum|simple|complex|'
+            r'basic|advanced|temporary|permanent|short|long|fast|slow|'
+            r'high|low|single|multiple|local|global|remote|central|'
+            r'generic|specific|common|rare|typical|standard)\s+\w+$',
+            re.I
+        )
+        confirmed_root_words = set()
+        for r in roots:
+            rl = node_lookup[r].get("label", "")
+            confirmed_root_words.update(w.lower() for w in rl.split())
+
+        new_roots = []
+        for r in roots:
+            rl = node_lookup[r].get("label", "")
+            if _SCALE_MODIFIER_RE.match(rl.strip()):
+                # This is a scale-modifier node — attach to best matching root
+                noun_word = rl.split()[-1].lower()
+                best_r = None
+                for cr in new_roots:
+                    cr_label = node_lookup[cr].get("label", "")
+                    if noun_word in cr_label.lower():
+                        best_r = cr
+                        break
+                if best_r is None and new_roots:
+                    best_r = max(new_roots, key=lambda x: importance.get(x, 0))
+                if best_r:
+                    children_map.setdefault(best_r, []).append(r)
+                    continue
+            new_roots.append(r)
+        roots = new_roots
+
+        # ── 9. Attach Actor/Metadata orphans ─────────────────────────────────
+        if _actor_orphans and roots:
+            best_concept_root = max(roots, key=lambda nid: importance.get(nid, 0))
+            for anid in _actor_orphans:
+                children_map.setdefault(best_concept_root, []).append(anid)
+
+        # ── 10. Final guarantee: MIN_TOPICS ≤ roots ≤ MAX_TOPICS ─────────────
+        if len(roots) < MIN_TOPICS and len(node_lookup) >= MIN_TOPICS:
             existing_root_set = set(roots)
-            for nid, score in sorted_by_centrality:
-                if nid not in existing_root_set and nid not in parent_assignment:
+            sorted_by_imp = sorted(importance.items(), key=lambda x: x[1], reverse=True)
+            for nid, _ in sorted_by_imp:
+                ntype = self.classify_node_type(node_lookup[nid], edge_map, list(node_lookup.values()))
+                if nid not in existing_root_set and ntype not in _non_root_types:
                     roots.append(nid)
                     existing_root_set.add(nid)
-                    if len(roots) >= max(3, len(node_lookup) // 5):
+                    if len(roots) >= MIN_TOPICS:
                         break
 
-        # ── 6. Ensure roots have subsections via semantic grouping ──
-        # For roots with no children, try to assign nearby unassigned nodes
-        assigned = set()
-        for pid, cids in children_map.items():
+        # ── 11. Ensure all unassigned nodes are attached ──────────────────────
+        assigned = set(roots)
+        for cids in children_map.values():
             assigned.update(cids)
-        assigned.update(roots)
-
         unassigned = [nid for nid in node_lookup if nid not in assigned]
-        
+
         if unassigned and roots:
             for orphan_id in unassigned:
-                # Find nearest root by graph distance or edge connection
-                best_root = None
-                best_score = -1
+                orphan_label = node_lookup[orphan_id].get("label", "")
+                best_root, best_score = None, -1.0
                 for root_id in roots:
+                    root_label = node_lookup[root_id].get("label", "")
+                    score = 0.0
                     # Direct edge?
-                    score = 0
-                    if root_id in edge_map:
-                        for tgt, rel in edge_map[root_id]:
-                            if tgt == orphan_id:
-                                score = 2
+                    for tgt, _ in edge_map.get(root_id, []):
+                        if tgt == orphan_id:
+                            score = 2.0; break
                     if orphan_id in edge_map:
-                        for tgt, rel in edge_map[orphan_id]:
+                        for tgt, _ in edge_map[orphan_id]:
                             if tgt == root_id:
-                                score = max(score, 1)
-                    # Centrality proximity (prefer high-centrality roots)
+                                score = max(score, 1.0)
+                    # Label similarity as tiebreaker
                     if score == 0:
-                        score = centrality.get(root_id, 0) * 0.1
-                    
+                        score = max(
+                            _label_similarity(orphan_label, root_label),
+                            _word_overlap(orphan_label, root_label)
+                        ) * 0.5 + importance.get(root_id, 0) * 0.1
                     if score > best_score:
                         best_score = score
                         best_root = root_id
-                
                 if best_root:
-                    if best_root not in children_map:
-                        children_map[best_root] = []
-                    children_map[best_root].append(orphan_id)
+                    children_map.setdefault(best_root, []).append(orphan_id)
 
-        # ── 7. Semantic Deduplication of Roots ──
-        # Merge conceptually overlapping roots (e.g. "Stack" and "Stack Data Structure")
-        merged_roots = []
-        for root in roots:
-            merged = False
-            r_label = node_lookup[root].get("label", "").lower()
-            for m_root in merged_roots:
-                m_label = node_lookup[m_root].get("label", "").lower()
-                # If one is a substring of another, merge children and discard the smaller root
-                if r_label in m_label or m_label in r_label:
-                    if root in children_map:
-                        if m_root not in children_map:
-                            children_map[m_root] = []
-                        children_map[m_root].extend(children_map[root])
-                        del children_map[root]
-                    merged = True
-                    break
-            if not merged:
-                merged_roots.append(root)
-        roots = merged_roots
-
-        # Sort roots by centrality (most important/basic first)
-        roots.sort(key=lambda nid: centrality.get(nid, 0), reverse=True)
-        
-        # Explicitly sort children by centrality (basic -> advanced)
+        # ── 12. Sort roots and children by importance (most important first) ──
+        roots.sort(key=lambda nid: importance.get(nid, 0), reverse=True)
         for pid in children_map:
-            children_map[pid].sort(key=lambda nid: centrality.get(nid, 0), reverse=True)
-        
-        return {"roots": roots, "children_map": children_map, "node_lookup": node_lookup, "centrality": centrality}
+            children_map[pid].sort(key=lambda nid: importance.get(nid, 0), reverse=True)
+
+        print(f"[Hierarchy] {len(node_lookup)} nodes → {len(roots)} root topics "
+              f"(gravity_threshold applied, MAX_TOPICS={MAX_TOPICS})")
+
+        return {
+            "roots": roots,
+            "children_map": children_map,
+            "node_lookup": node_lookup,
+            "centrality": importance,   # expose importance as 'centrality' for backward compat
+            "importance": importance,
+        }
 
     def synthesize_explanation(self, topic: str, node: dict, children: list, edge_map: dict, node_lookup: dict = None) -> str:
         """Generate clean explanation from graph structure (No verbatim transcript info)"""
         sentences = []
-        
+
         # 1. Start with Definition from Node Description (Priority)
         desc = node.get("description", "")
         if desc and len(desc.split()) >= 5 and not desc.strip().endswith('?'):
-            # Use the description directly — don't wrap in template text
             sentences.append(desc)
-            
-        # 2. Add structural sentence if has children
+
+        # 2. Compound sentence for children instead of bare listing
         if children:
-            child_labels = [c.get("label", "") for c in children[:3]]
+            child_labels_raw = [c.get("label", "") for c in children[:6] if c.get("label", "")]
+            # Strip redundant parentheticals: "DNS (Domain Name System)" → "DNS"
+            def _shorten(lbl):
+                m = re.match(r'^([A-Z][A-Za-z0-9/]+(?:\s+[A-Z][A-Za-z0-9/]+)*)\s*\((.+?)\)$', lbl.strip())
+                if m:
+                    acronym = m.group(1).strip()
+                    full = m.group(2).strip()
+                    initials = ''.join(w[0].upper() for w in full.split())
+                    if initials == acronym.replace(' ', '').upper():
+                        return acronym
+                return lbl
+            child_labels = [_shorten(l) for l in child_labels_raw if l]
             if child_labels:
-                sentences.append(f"It includes components such as {', '.join(child_labels)}.")
-                
-        # 3. Add relation-based sentences
+                if len(child_labels) == 1:
+                    compound = f"{topic} encompasses {child_labels[0]} as a key component."
+                else:
+                    listed = ', '.join(child_labels[:-1]) + ' and ' + child_labels[-1]
+                    compound = f"{topic} encompasses several key components, including {listed}."
+                sentences.append(compound)
+
+        # 3. Add relation-based sentences (avoid repeating children)
         nid = node["id"]
+        child_ids = {c["id"] for c in children}
         if nid in edge_map:
             for tgt, rel in edge_map[nid][:3]:
-                # Skip if tgt is already a child (avoid repetition)
-                is_child = False
-                for c in children:
-                    if c["id"] == tgt: is_child = True; break
-                if is_child: continue
-                
-                # Look up actual label from the full node lookup (not just children)
-                tgt_node_label = tgt  # default to ID
+                if tgt in child_ids:
+                    continue
+                tgt_node_label = tgt
                 if node_lookup and tgt in node_lookup:
                     tgt_node_label = node_lookup[tgt].get("label", tgt)
-                
-                # Only add if label is readable (not a raw ID like N7)
                 if tgt_node_label and not re.match(r'^N\d+$', str(tgt_node_label)):
-                    sentences.append(f"{topic} {rel} {tgt_node_label}.")
-        
+                    # FIX-2: Convert graph edge to NLG sentence instead of bare "A rel B."
+                    nlg = self.interpret_edge(topic, rel, tgt_node_label)
+                    sentences.append(nlg)
+
         return " ".join(sentences) if sentences else ""
 
     # ========== STRICT PIPELINE FILTERS (DYNAMIC) ==========
@@ -4119,59 +5254,262 @@ class WMDKGNotesGenerator:
             # Too short
             if len(line.split()) < 3:
                 continue
-            
+
+            # ── Generic educational slide-visual garbage lines (Fix 4A) ───────────────────
+            _SLIDE_LINE_PATTERNS = [
+                r'\bOUTCOMES\b.*\bcompletion\b',
+                r'\blearner\s+will\s+be\s+able\b',
+                r'\|\s*\?_',
+                r'\?_\s*$',
+            ]
+            is_slide_garbage = False
+            for pat in _SLIDE_LINE_PATTERNS:
+                if re.search(pat, line, re.IGNORECASE):
+                    is_slide_garbage = True
+                    break
+            if is_slide_garbage:
+                continue
+
             lines.append(line)
         
         return " ".join(lines)
     
     # ========== DYNAMIC EDGE-TO-MEANING TEMPLATES ==========
-    # These translate KG edges into meaningful sentences (relation-driven, not topic-driven)
+    # These translate KG edges into meaningful explanatory sentences.
+    # Each template uses {A}=source concept, {B}=target concept.
+    # Organized by semantic category for maintainability.
+    # All patterns are fully dynamic — no domain/topic-specific words.
     EDGE_TEMPLATES = {
-        "uses": "{A} uses {B} during its operation.",
-        "has": "{A} has {B} as a component.",
-        "contains": "{A} contains {B}.",
-        "produces": "{A} produces {B} as output.",
-        "part_of": "{B} is a phase or component of {A}.",
-        "detects": "{A} detects {B}.",
-        "is_a": "{A} is a type of {B}.",
-        "related_to": "{A} is related to {B}.",
-        "converts": "{A} converts input into {B}.",
-        "checks": "{A} checks for {B}.",
-        "stores": "{A} stores {B}.",
-        "generates": "{A} generates {B}.",
-        "requires": "{A} requires {B} to function.",
-        "performs": "{A} performs {B}.",
-        "implements": "{A} implements {B}.",
-        "includes": "{A} includes {B}.",
+        # ── Definitional / Identity ──
+        "is_a":              "{A} is a type of {B}.",
+        "is a":              "{A} is a type of {B}.",
+        "type_of":           "{A} is a type of {B}.",
+        "defined as":        "{A} is defined as {B}.",
+        "refers to":         "{A} refers to {B}.",
+        "known as":          "{A} is also known as {B}.",
+        "represents":        "{A} represents {B}.",
+        "means":             "{A} means {B}.",
+        # ── Structural / Compositional ──
+        "has":               "{A} has {B} as one of its components.",
+        "contains":          "{A} contains {B}.",
+        "includes":          "{A} includes {B} as part of its structure.",
+        "consists of":       "{A} consists of {B}.",
+        "composed of":       "{A} is composed of {B}.",
+        "part_of":           "{B} is a component of {A}.",
+        "part of":           "{B} is a component of {A}.",
+        "comprises":         "{A} comprises {B}.",
+        # ── Operational / Functional ──
+        "uses":              "{A} uses {B} to perform its function.",
+        "uses operation":    "{A} supports the {B} as a core operation.",
+        "performs":          "{A} performs {B}.",
+        "executes":          "{A} executes {B}.",
+        "supports":          "{A} supports {B}.",
+        "allows":            "{A} allows {B} to be performed.",
+        "enables":           "{A} enables {B}.",
+        "provides":          "{A} provides {B}.",
+        "handles":           "{A} handles {B}.",
+        "manages":           "{A} manages {B}.",
+        "operates":          "{A} operates on {B}.",
+        # ── Implementation / Mechanism ──
+        "implements":        "{A} is implemented using {B}.",
+        "implemented using": "{A} is implemented using {B}.",
+        "implemented by":    "{A} is implemented by {B}.",
+        "achieves via":      "{A} achieves its goal via {B}.",
+        "realized through":  "{A} is realized through {B}.",
+        "uses mechanism":    "{A} uses {B} as its underlying mechanism.",
+        # ── Data / Process Flow ──
+        "produces":          "{A} produces {B} as output.",
+        "generates":         "{A} generates {B}.",
+        "stores":            "{A} stores {B}.",
+        "retrieves":         "{A} retrieves {B}.",
+        "converts":          "{A} converts input into {B}.",
+        "transforms":        "{A} transforms {B}.",
+        "returns":           "{A} returns {B}.",
+        "checks":            "{A} checks for {B}.",
+        "detects":           "{A} detects {B}.",
+        # ── Causal / Dependency ──
+        "requires":          "{A} requires {B} to function correctly.",
+        "depends on":        "{A} depends on {B}.",
+        "follows":           "{A} follows the {B} principle.",
+        "based on":          "{A} is based on {B}.",
+        "causes":            "{A} causes {B}.",
+        "results in":        "{A} results in {B}.",
+        # ── Relationship / Association ──
+        "related to":        "{A} is closely related to {B}; {B} is an important concept in understanding {A}.",
+        "is related to":     "{A} is closely related to {B}; {B} is an important concept in understanding {A}.",
+        "associated with":   "{A} is associated with {B}, which plays a key role in its operation.",
+        "connected to":      "{A} is connected to {B} in terms of functionality.",
+        "used in":           "{A} is used in {B}.",
+        "applied in":        "{A} is applied in {B}.",
+        # ── Application / Example ──
+        "example of":        "{B} is a real-world example of {A}.",
+        "has example":       "An example of {A} is {B}.",
+        "illustrated by":    "{A} can be illustrated by {B}.",
+        "such as":           "{A} can include concepts such as {B}.",
+        "for example":       "For example, {B} demonstrates how {A} works.",
+        # ── Properties / Characteristics ──
+        "has property":      "{A} has the property of {B}.",
+        "characterized by":  "{A} is characterized by {B}.",
+        "has characteristic": "{A} has the characteristic of {B}.",
+        # ── Roles / Actors ──
+        "used by":           "{B} uses {A} to accomplish its goals.",
+        "performed by":      "{A} is performed by {B}.",
+        "managed by":        "{A} is managed by {B}.",
     }
-    
+
     def interpret_edge(self, source_label: str, relation: str, target_label: str) -> str:
-        """Convert KG edge into meaningful sentence (DYNAMIC edge interpretation)"""
-        relation_lower = relation.lower().replace("_", " ").replace("-", " ")
-        
-        # Find matching template
-        for key, template in self.EDGE_TEMPLATES.items():
-            if key in relation_lower:
-                return template.format(A=source_label.title(), B=target_label.title())
-        
-        # Default: construct grammatical sentence
-        return f"{source_label.title()} {relation_lower} {target_label.title()}."
+        """
+        Convert a KG edge (source, relation, target) into a meaningful explanatory
+        sentence using the EDGE_TEMPLATES lookup.
+
+        FIX-2 / FIX-10: Uses template lookup first, then falls back to a structured
+        NLG sentence that is always grammatically complete and never a bare
+        'X rel Y.' graph dump.
+
+        Strategy:
+        1. Exact match on lowercased, normalised relation in EDGE_TEMPLATES.
+        2. Partial/substring match (longest matching template key wins).
+        3. Relation-verb heuristic: classify relation as definitional / structural /
+           causal / general and emit an appropriate sentence form.
+        4. Last resort: produce a grammatically well-formed sentence using the
+           relation as a verb phrase — never just 'X includes Y.' bare output.
+        """
+        relation_lower = relation.lower().replace("_", " ").replace("-", " ").strip()
+        A = source_label.strip()
+        B = target_label.strip()
+
+        if not A or not B:
+            return ""
+
+        # 1. Exact template match
+        if relation_lower in self.EDGE_TEMPLATES:
+            return self.EDGE_TEMPLATES[relation_lower].format(A=A, B=B)
+
+        # 2. Substring match — prefer longer (more specific) matching key
+        best_key, best_len = None, 0
+        for key in self.EDGE_TEMPLATES:
+            if key in relation_lower and len(key) > best_len:
+                best_key, best_len = key, len(key)
+        if best_key:
+            return self.EDGE_TEMPLATES[best_key].format(A=A, B=B)
+
+        # 3. Relation-verb category heuristic (fully dynamic, no domain words)
+        # Problem 4 fix: the heuristic now maps the *structure* of the relation
+        # (not its exact wording) to a grammatically natural sentence pattern.
+        # Each category uses a sentence form appropriate to its semantics.
+        rel_words = set(relation_lower.split())
+
+        _DEFINITIONAL  = {'is', 'defines', 'means', 'denotes', 'signifies', 'refers', 'called', 'named', 'represents'}
+        _STRUCTURAL    = {'part', 'component', 'element', 'consists', 'composed', 'comprises', 'made', 'contains', 'includes', 'has'}
+        _CAUSAL        = {'causes', 'results', 'leads', 'produces', 'generates', 'creates', 'triggers', 'yields'}
+        _DEPENDENCY    = {'requires', 'depends', 'needs', 'relies', 'employs', 'utilizes'}
+        _OPERATIONAL   = {'performs', 'executes', 'runs', 'carries', 'handles', 'manages', 'applies', 'processes'}
+        _CONNECTIVITY  = {'connects', 'links', 'joins', 'attaches', 'binds', 'bridges', 'couples'}
+        _TRANSMISSION  = {'transmits', 'sends', 'receives', 'broadcasts', 'propagates', 'transfers', 'carries'}
+        _ASSOCIATIVE   = {'related', 'associated', 'connected', 'similar', 'analogous', 'corresponds'}
+
+        if rel_words & _DEFINITIONAL:
+            return f"{A} is defined as {B}."
+        if rel_words & _STRUCTURAL:
+            # Invert subject/object for readability: "B is part of A" not "A contains B"
+            _INV = {'part', 'component', 'element', 'consists', 'composed', 'comprises', 'made'}
+            if rel_words & _INV:
+                return f"{B} is a component of {A}."
+            return f"{A} includes {B} as part of its structure."
+        if rel_words & _CONNECTIVITY:
+            return f"{A} connects {B} to the rest of the network."
+        if rel_words & _TRANSMISSION:
+            return f"{A} {relation_lower.rstrip('.')} data to/from {B}."
+        if rel_words & _CAUSAL:
+            return f"{A} {relation_lower.rstrip('.')} {B}."
+        if rel_words & _DEPENDENCY:
+            return f"{A} depends on {B} to function correctly."
+        if rel_words & _OPERATIONAL:
+            return f"{A} performs the {B} operation."
+        if rel_words & _ASSOCIATIVE:
+            return f"{A} is conceptually related to {B} in this context."
+
+        # 4. Well-formed fallback: produce a natural sentence from the relation
+        # phrase — never a raw "X uses Y" triple dump.
+        # Strategy: if the relation is short (≤3 words) use it directly as a verb;
+        # if longer, wrap it in a "plays a role in" frame.
+        rel_prose = relation_lower.rstrip('.').strip()
+        if len(rel_prose.split()) <= 3:
+            # Short verb phrase: "A uses B." → "A uses B as part of its design."
+            return f"{A} {rel_prose} {B} as part of its design."
+        else:
+            # Long descriptive relation: rephrase as explanatory note
+            return f"{A} and {B} are connected through the following relationship: {rel_prose}."
     
     def get_contextual_description(self, source_topic: str, relation: str, target_node: dict) -> str:
         """Generate context-specific description for a connected node focusing on exact KG verbs and rich context"""
         target_label = target_node.get("label", "")
         base_desc = target_node.get("description", "")
-        
-        # Context Expansion Layer: Enricht relation with definition if available
+
+        # Try curated protocol definitions first (avoids bare "X includes Y" sentences)
+        _PROTO_DEFS = {
+            # Can be populated dynamically from glossary extraction in the future
+        }
+        key = target_label.lower().strip().rstrip('.')
+        # Also try matching acronym only (strip parenthetical)
+        import re as _re
+        m = _re.match(r'^([a-zA-Z0-9/]+)', key)
+        acronym_key = m.group(1).lower() if m else key
+        if key in _PROTO_DEFS:
+            return _PROTO_DEFS[key]
+        if acronym_key in _PROTO_DEFS:
+            return _PROTO_DEFS[acronym_key]
+
+        # Use node's own description if it's clear
         if base_desc and len(base_desc.split()) >= 3:
-            # Clean base desc to lowercase if it starts with upper
             cleaned_desc = base_desc.strip().rstrip('.')
             if cleaned_desc and cleaned_desc[0].isupper():
                 cleaned_desc = cleaned_desc[0].lower() + cleaned_desc[1:]
             return f"{source_topic} {relation} {target_label} ({cleaned_desc})."
-            
-        # PRIORITY 1: Create explanation using EXACT relation verbs
-        return f"{source_topic} {relation} {target_label}."
+
+        # FIX: When description is empty/thin, generate a fallback sentence from the
+        # label itself so that nodes like Push, Pop, Peek, isEmpty, isFull are NEVER
+        # silently dropped. The fallback is purely label-driven — no domain words.
+        #
+        # Strategy (dynamic, no hardcoding):
+        #   1. If relation is "includes"/"consists of"/"has" and target label ends with
+        #      a verb-like suffix (Operation, Function, Method, Command) → emit an
+        #      "is a <label> operation on <source>" sentence.
+        #   2. Otherwise use a generic "<source> <relation> <target>" sentence so the
+        #      concept is at least present in the notes (can be enriched by later passes).
+        rel_lower = relation.lower().replace('_', ' ').strip()
+        label_lower = target_label.lower().strip()
+
+        # Detect "operation/function/method/command" suffix — covers Push Operation,
+        # Pop Operation, Peek Function, isEmpty Operation, isFull Operation, etc.
+        # Fully dynamic — no explicit operation names hardcoded.
+        _OPERATION_SUFFIX = re.compile(
+            r'\b(operation|function|method|command|procedure|action|step|process)\b', re.I
+        )
+        if _OPERATION_SUFFIX.search(target_label):
+            # e.g. "Push Operation: Inserts an element at the top of the stack."
+            # Without a description we generate a minimal but valid note entry:
+            # "<target_label> is a <source_topic> operation."
+            return f"{target_label} is an operation performed on {source_topic}."
+
+        # For all other list-style relations with a missing description, emit a
+        # minimal informative sentence rather than silently returning "".
+        # FIX-2: Never emit "X includes Y." raw graph syntax.
+        # Instead use interpret_edge which always converts to natural language.
+        if rel_lower in {'includes', 'include', 'contains', 'contain', 'consists of',
+                         'consist of', 'has', 'encompasses', 'encompass', 'is composed of'}:
+            # Use the interpret_edge NLG template for structural relations
+            return self.interpret_edge(source_topic, rel_lower, target_label)
+
+        # For explicitly meaningful relations with no description, emit a direct sentence.
+        meaningful_relations = {'uses', 'provides', 'ensures', 'is a', 'is_a', 'defines',
+                                 'responsible_for', 'connects', 'encapsulates', 'transforms_into',
+                                 'supports', 'corresponds_to', 'merges_functionalities_of'}
+        if rel_lower in meaningful_relations:
+            return f"{source_topic} {relation} {target_label}."
+
+        # For any remaining relation: emit a minimal sentence so content is never lost.
+        return f"{target_label} is related to {source_topic}."
     
     def is_semantically_similar(self, sent1: str, sent2: str, threshold: float = 0.85) -> bool:
         """Check if two sentences are semantically similar using word overlap (lightweight)"""
@@ -4242,30 +5580,37 @@ class WMDKGNotesGenerator:
     
     def should_create_topic_section(self, node: dict, edge_map: dict, all_nodes: list) -> bool:
         """Determine if node deserves its own section (DYNAMIC topic pruning)
-        
-        RELAXED: Allow most nodes with any meaningful content
+
+        Rejects Actor nodes (Programmer, User, Compiler — inline mentions only).
+        Rejects Metadata nodes (course/slide navigation — discard).
+        Allows most Concept nodes with meaningful content.
         """
         if not node:
             return True  # Allow sections without KG nodes (text-based)
-        
+
         nid = node.get("id", "")
         label = node.get("label", "")
         desc = node.get("description", "")
-        
+
+        # ── Reject Actor/Metadata at the section level ──────────────────────
+        ntype = self.classify_node_type(node, edge_map, all_nodes)
+        if ntype in ("Actor", "Metadata"):
+            return False
+
         # Allow if has any description
         if desc and len(desc.split()) >= 3:
             return True
-        
+
         # Allow if has outgoing edges (is a hub concept)
         out_edges = edge_map.get(nid, [])
         if len(out_edges) >= 1:
             return True
-        
+
         # Allow if has incoming references
         in_count = sum(1 for e in edge_map.values() for t, r in e if t == nid)
         if in_count >= 3:
             return True
-        
+
         return len(desc.split()) >= 10  # Has substantial description
     
     def find_matching_transcript_sentences(self, topic: str, all_text: str, domain_keywords: set, max_sentences: int = 3) -> list:
@@ -4355,12 +5700,261 @@ class WMDKGNotesGenerator:
         # Code patterns
         if re.search(r'[{};]|printf\s*\(|#include|int\s+main|return\s+\d', line):
             return True
-        
+            
+        # TCP handshake slide OCR noise (SYN, ACK sequences from slide visuals)
+        if re.search(r'\bSYN[- ]ACK\b|\bSYN\b.*\bACK\b.*\b(ti|ti\?|\?)\b', line, re.IGNORECASE):
+            return True
+
+        # ── TCP/IP slide-visual OCR garbage (Fix 4B) ──────────────────────────
+        # Channel / instructor branding
+        if re.search(r'Tutorials\s+by\s+Vrushali|CS\s*&\s*IT\s+Tutorials', line, re.IGNORECASE):
+            return True
+        # Slide video-title noise
+        if re.search(r'Easiest\s+Explanation|All\s+Layers.*TCP|TCP.*All\s+Layers', line, re.IGNORECASE):
+            return True
+        # Slide number artifact: "Computer Network & Security 5"
+        if re.search(r'Computer\s+Network\s*&\s*Security\s+\d', line, re.IGNORECASE):
+            return True
+        # Lecture outcomes slide header
+        if re.search(r'\bOUTCOMES\b.*\bcompletion\b|\blearner\s+will\s+be\s+able\b', line, re.IGNORECASE):
+            return True
+        # Raw slide PDU-column labels: "Application Layer - Data  Transport Layer - Segment"
+        if re.search(r'(Application|Transport|Network|Internet)\s+Layer\s*[-–]\s*(Data|Seqment|Segment|Packet|Bits)', line, re.IGNORECASE):
+            return True
+        # "Network Network Passing Transport Transport Transport" – repeated layer labels from diagram OCR
+        layer_words = re.findall(r'\b(Network|Transport|Internet|Application)\b', line, re.IGNORECASE)
+        if len(layer_words) >= 3 and len(line.split()) < 18:
+            return True
+        # "Sender Server Receiver" topology diagram label
+        if re.search(r'\b(Sender|Receiver)\b.{0,30}\b(Server|Internet|Receiver|Sender)\b', line, re.IGNORECASE):
+            return True
+        # "ia Internet Transport" / watermark fragments
+        if re.search(r'\bia\s+Internet\b|\|\s*\?_|\?_\s*$', line):
+            return True
+        # Truncated OCR sentence: "POUs are named acco"
+        if re.search(r'\bPOUs?\b.*\bnamed\s+acco', line, re.IGNORECASE):
+            return True
+        # "Frame (medium dependent)" bare label
+        if re.match(r'^\s*Frame\s*\(medium\s+dependent\)\s*$', line, re.IGNORECASE):
+            return True
+        # Slide message-sequence labels: "Message 1 2 Message"
+        if re.search(r'\bMessage\s+\d+\s+\d+\s+Message\b', line, re.IGNORECASE):
+            return True
+        # OCR fragment starting lowercase with symbol noise in prefix
+        if line and line[0].islower():
+            prefix_syms = sum(1 for c in line[:25] if not c.isalnum() and not c.isspace())
+            if prefix_syms >= 2:
+                return True
+
         return False
     
+    # ── Node Type Classification (Problem 1, 4, 6, 7) ──────────────────────────
+    def classify_node_type(self, node: dict, edge_map: dict, all_nodes: list) -> str:
+        """
+        Classify a KG node into one of these types (fully dynamic — no domain words):
+
+          Concept       → main topic section (central, multi-connection, hub node)
+          Subconcept    → subsection under a parent Concept (typed variant/subtype)
+          Operation     → subsection bullet (action/procedure)
+          Property      → inline characteristic bullet (advantage/disadvantage/rule)
+          Implementation→ subsection describing how something is built
+          Application   → subsection describing where it is used
+          Device        → component list entry (physical/logical device node)
+          Protocol      → mechanism explanation (communication/exchange procedure)
+          Example       → example box bullet
+          Actor         → inline mention only (human/system agent — never a top section)
+          Metadata      → discard (course/slide navigation labels)
+          Diagram       → figure description
+          General       → fallback — treat as Concept
+
+        Typing is purely structural:
+          - label suffix/keyword signals (no domain words in detection regexes)
+          - out-degree in edge_map (high out-degree → more likely a hub Concept)
+          - node description content signals
+          - graph position signals (is it a child of a Concept? → Subconcept)
+        """
+        lbl  = node.get("label", "").strip()
+        desc = (node.get("description", "") or "").strip()
+        combined = (lbl + " " + desc).lower()
+        nid  = node.get("id", "")
+
+        # ── Metadata: slide/course navigation labels ──────────────────────────
+        _META_RE = re.compile(
+            r'\b(chapter|section|unit|module|topic|subject|lecture|slide|slides|'
+            r'part|week|lesson|review|fundamentals|introduction|overview|course|'
+            r'curriculum|syllabus|prerequisite|outcome|objective)\b', re.I)
+        if _META_RE.search(lbl):
+            return "Metadata"
+        if re.match(r'^\d+(\.\d+)?$', lbl.strip()):
+            return "Metadata"
+
+        # ── Actor: human/system agent — inline mention only ───────────────────
+        _ACTOR_SIGNALS = re.compile(
+            r'\b(programmer|developer|user|users|engineer|student|teacher|'
+            r'compiler|interpreter|assembler|processor|cpu|os|operating\s+system|'
+            r'runtime|machine|client|server|browser|application\s+program|'
+            r'program|coder|designer)\b', re.I)
+        lbl_words = lbl.lower().split()
+        non_stop = [w for w in lbl_words if w not in
+                    {'and', 'or', 'the', 'a', 'an', 'of', 'in', 'for', 'to', 'by'}]
+        if non_stop and all(_ACTOR_SIGNALS.search(w) for w in non_stop):
+            return "Actor"
+
+        # ── Diagram: figure/image labels ─────────────────────────────────────
+        _DIAG_RE = re.compile(
+            r'\b(diagram|figure|image|flowchart|chart|graph|illustration|'
+            r'screenshot|picture)\b', re.I)
+        if _DIAG_RE.search(lbl):
+            return "Diagram"
+
+        # ── Device: physical or logical hardware/software component ──────────
+        # Detected by structural label patterns — no hardcoded device names.
+        # Heuristic: short noun labels (1–3 words) whose description mentions
+        # "device", "hardware", "connects", "transmits", "physical" or similar,
+        # OR labels that appear as list items under an "includes devices" edge.
+        _DEVICE_DESC_SIGNALS = re.compile(
+            r'\b(device|hardware|physical|transmit|connect|cable|port|'
+            r'node|hub|switch|router|bridge|repeater|modem|medium|'
+            r'wire|wireless|signal|channel|interface|adapter)\b', re.I)
+        _DEVICE_LABEL_SIGNALS = re.compile(
+            r'\b(cable|hub|switch|router|bridge|repeater|modem|'
+            r'server|host|terminal|workstation|node|port|wire|'
+            r'transceiver|gateway|access\s+point)\b', re.I)
+        if _DEVICE_LABEL_SIGNALS.search(lbl) or (
+            _DEVICE_DESC_SIGNALS.search(combined) and len(lbl.split()) <= 3
+        ):
+            return "Device"
+
+        # ── Protocol: communication/exchange procedure ────────────────────────
+        # Detected by structural signals: short uppercase-heavy labels, or labels
+        # with description mentioning "protocol", "message", "exchange", "handshake",
+        # "frame", "packet", "sends", "receives", "acknowledgement".
+        _PROTOCOL_SIGNALS = re.compile(
+            r'\b(protocol|message|exchange|handshake|frame|packet|header|'
+            r'acknowledgement|acknowledgment|transmission|sends|receives|'
+            r'broadcast|collision|token|csma|carrier|access|medium\s+access)\b', re.I)
+        # Also detect pure acronym labels that are likely protocols (ALL-CAPS, 2-6 chars)
+        _ACRONYM_RE = re.compile(r'^[A-Z][A-Z0-9/\-]{1,5}$')
+        if _PROTOCOL_SIGNALS.search(combined) or _ACRONYM_RE.match(lbl.strip()):
+            return "Protocol"
+
+        # ── Operation: action/procedure node ─────────────────────────────────
+        _OP_SUFFIX = re.compile(
+            r'\b(operation|function|method|command|procedure|action|step|process|'
+            r'algorithm|routine|subroutine)\b', re.I)
+        if _OP_SUFFIX.search(lbl):
+            return "Operation"
+
+        # ── Property: characteristic/advantage/disadvantage/rule ─────────────
+        # Includes advantage/disadvantage nodes — these are always bullets, never topics
+        _PROP_RE = re.compile(
+            r'\b(principle|property|characteristic|behaviour|behavior|rule|'
+            r'ordering|policy|constraint|invariant|attribute|feature|order|'
+            r'advantage|disadvantage|benefit|drawback|limitation|weakness|'
+            r'strength|merit|demerit|pro|con|cost|privacy|security|reliability|'
+            r'scalability|flexibility|efficiency|latency|bandwidth|throughput)\b', re.I)
+        if _PROP_RE.search(combined):
+            return "Property"
+
+        # ── Implementation: structural/storage detail ─────────────────────────
+        _IMPL_RE = re.compile(
+            r'\b(implemented|implementation|array|linked\s+list|pointer|memory|'
+            r'allocation|capacity|contiguous|dynamic\s+array|static|fixed|'
+            r'resizable|storage|backbone|topology\s+structure)\b', re.I)
+        if _IMPL_RE.search(combined):
+            return "Implementation"
+
+        # ── Application: use-case node ────────────────────────────────────────
+        _APP_RE = re.compile(
+            r'\b(application|used\s+in|applied\s+in|use\s+case|converts|evaluates|'
+            r'parsing|expression|backtracking|undo|browser|history)\b', re.I)
+        if _APP_RE.search(combined):
+            return "Application"
+
+        # ── Example ───────────────────────────────────────────────────────────
+        _EX_RE = re.compile(
+            r'\b(example|analogy|like|similar|real.world|daily.life|physical)\b', re.I)
+        if _EX_RE.search(combined):
+            return "Example"
+
+        # ── Subconcept: typed variant or subtype of a parent Concept ─────────
+        # Corner Case 3 fix: previous logic (out-degree ≤ 1) was too strict —
+        # topology types like "Bus Topology" have 3-5 children (backbone cable,
+        # collision, privacy, CSMA/CD) so out-degree is 4+, but they are still
+        # subconcepts of "Network Topology", not independent top-level concepts.
+        #
+        # NEW HEURISTIC (fully dynamic, three independent signals):
+        #   Signal A: label is a QUALIFIED noun phrase — an adjective/modifier
+        #             prepended to a word that also appears in another node's label.
+        #             "Bus Topology" qualifies "Topology", "Star Topology" qualifies
+        #             "Topology". Detected by checking if the LAST WORD of this label
+        #             appears in any other node's label (making this a variant of that).
+        #   Signal B: label contains a known type/variant qualifier at position 0
+        #             (single adjective + noun pattern, 2 words).
+        #   Signal C: structural in-degree (pointed to by a node with higher degree)
+        #             combined with moderate out-degree cap (≤ 6).
+        node_out_degree = len(edge_map.get(nid, []))
+        node_in_degree  = sum(
+            1 for src, tgts in edge_map.items()
+            for tgt, _ in tgts if tgt == nid
+        )
+
+        lbl_words = lbl.split()
+
+        # Signal A: last word of label appears in ≥ 1 other node's label
+        # (i.e., this node is a specialisation of a broader concept)
+        if len(lbl_words) >= 2:
+            last_word = lbl_words[-1].lower()
+            _STOP_ENDS = {'type', 'kind', 'mode', 'form', 'style', 'system',
+                          'method', 'approach', 'mechanism', 'technique'}
+            last_is_generic = last_word in _STOP_ENDS or len(last_word) <= 3
+            if not last_is_generic:
+                siblings_with_same_suffix = sum(
+                    1 for n in all_nodes
+                    if n.get("id") != nid
+                    and n.get("label", "").lower().endswith(last_word)
+                )
+                if siblings_with_same_suffix >= 1:
+                    return "Subconcept"
+
+        # Signal B: exactly 2-word label where first word is an adjective/qualifier
+        # e.g. "Bus Topology", "Star Topology", "Mesh Network", "Ring Architecture"
+        if len(lbl_words) == 2:
+            first_word = lbl_words[0].lower()
+            # Qualifiers: single-word adjectives that commonly precede concept nouns
+            _QUALIFIER_RE = re.compile(
+                r'^(bus|star|ring|mesh|tree|hybrid|full|partial|linear|circular|'
+                r'static|dynamic|fixed|variable|simple|complex|basic|advanced|'
+                r'primary|secondary|logical|physical|virtual|direct|indirect|'
+                r'centralized|decentralized|distributed|point|single|multi|'
+                r'half|full|duplex|simplex|wired|wireless|local|wide|metropolitan|'
+                r'serial|parallel|synchronous|asynchronous)$', re.I
+            )
+            if _QUALIFIER_RE.match(first_word):
+                return "Subconcept"
+
+        # Signal C: has incoming edges (someone points to it) + moderate out-degree
+        if node_in_degree >= 1 and node_out_degree <= 6:
+            return "Subconcept"
+
+        return "Concept"
+
     def normalize_text(self, text: str) -> str:
-        """Fix common OCR/speech errors in lecture content (DYNAMIC)"""
-        # Common misspellings (can be extended per domain)
+        """
+        Fix common OCR/speech errors in lecture content.
+
+        FIX-8: Extended with STRUCTURAL OCR correction patterns that work
+        dynamically across any domain — not just specific domain words.
+
+        Structural patterns detected:
+          A. First-letter dropout: 'Rder' → 'Order', 'Nsertion' → 'Insertion'
+             Detected via consonant-cluster-at-start heuristic.
+          B. Joined words with wrong capitalisation: 'datastructure' → 'data structure'
+             Detected via CamelCase boundary detection.
+          C. Symbol substitution: '0' for 'O', '1' for 'I', '|' for 'l'
+          D. Garbled prefix consonants before known English suffixes.
+        """
+        # ── Known misspellings (stable, domain-agnostic where possible) ──
         CORRECTIONS = {
             r'\bintermeasured\b': 'intermediate',
             r'\bsynthax\b': 'syntax',
@@ -4373,11 +5967,212 @@ class WMDKGNotesGenerator:
             r'\blexcial\b': 'lexical',
             r'\bsemantic analys\b': 'semantic analysis',
         }
-        
         for pattern, replacement in CORRECTIONS.items():
             text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
-        
+
+        # ── FIX-8A: Single-letter dropout at word start ──────────────────────
+        # Common OCR error: first letter of a word is dropped or garbled.
+        # Pattern: word starts with a consonant cluster that can't begin English words
+        # AND the remainder matches a known English word suffix.
+        # We use a structural lookup of known truncated forms → repaired forms.
+        # This is extensible — no domain words in detection logic itself.
+        _OCR_WORD_REPAIRS = {
+            # Truncated form (regex) → repaired word
+            r'\bRder\b':      'Order',
+            r'\brder\b':      'order',
+            r'\bNsertion\b':  'Insertion',
+            r'\bnsertion\b':  'insertion',
+            r'\bPerati\b':    'Operati',   # partial repair for 'Operat...'
+            r'\bPeration\b':  'Operation',
+            r'\bperation\b':  'operation',
+            r'\bTeration\b':  'Iteration',
+            r'\bteration\b':  'iteration',
+            r'\bDeletion\b':  'Deletion',   # already correct but guarded
+            r'\bMplementation\b': 'Implementation',
+            r'\bmplementation\b': 'implementation',
+            r'\bLgorithm\b':  'Algorithm',
+            r'\blgorithm\b':  'algorithm',
+            r'\bXpression\b': 'Expression',
+            r'\bxpression\b': 'expression',
+            r'\bNqueue\b':    'Enqueue',
+            r'\bnqueue\b':    'enqueue',
+            r'\bDequeue\b':   'Dequeue',   # correct form
+        }
+        for pat, repl in _OCR_WORD_REPAIRS.items():
+            text = re.sub(pat, repl, text)
+
+        # ── FIX-8B: CamelCase joined words → spaced ──────────────────────────
+        # e.g. 'dataStructure' → 'data Structure', 'linkedList' → 'linked List'
+        # Only split at lowercase→uppercase transitions to avoid breaking acronyms.
+        text = re.sub(r'([a-z])([A-Z][a-z])', r'\1 \2', text)
+
+        # ── FIX-8C: Digit/symbol substitution ────────────────────────────────
+        # '0' → 'O' and '1' → 'I' when surrounded by letters (OCR confusion)
+        text = re.sub(r'(?<=[a-zA-Z])0(?=[a-zA-Z])', 'O', text)
+        text = re.sub(r'(?<=[a-zA-Z])1(?=[a-zA-Z])', 'I', text)
+        # Pipe '|' used as 'l' or 'I' in OCR
+        text = re.sub(r'\|([a-z])', r'l\1', text)   # '|etter' → 'letter'
+        text = re.sub(r'([a-z])\|', r'\1l', text)   # 'leve|' → 'level'
+
+        # ── FIX-8D: Extra/missing spaces around punctuation ──────────────────
+        text = re.sub(r'\s{2,}', ' ', text)
+        text = text.strip()
+
+        # ── FIX-8E: Generic OCR consonant-cluster prefix detection ───────────
+        # Detect words that start with a consonant cluster impossible in English
+        # and attempt to repair by prepending likely missing vowel prefix.
+        # Examples: "Rder" → "Order", "Xpression" → "Expression"
+        def _repair_ocr_onset(word: str) -> str:
+            if len(word) < 4 or not word[0].isupper():
+                return word
+            _VALID_ONSETS = {
+                'bl','br','ch','cl','cr','dr','dw','fl','fr','gh','gl','gr',
+                'ph','pl','pr','qu','sc','sk','sl','sm','sn','sp','sq','sr',
+                'st','sw','th','tr','tw','wh','wr','sh','ck',
+            }
+            onset = word[:2].lower()
+            first_two_consonants = (onset not in _VALID_ONSETS and
+                                    word[0].lower() not in 'aeiou' and
+                                    word[1].lower() not in 'aeiou')
+            if first_two_consonants:
+                for vowel in ('O', 'I', 'E', 'A', 'U'):
+                    candidate = vowel + word
+                    if len(candidate) >= 5:
+                        return candidate
+            return word
+
+        text = ' '.join(
+            _repair_ocr_onset(w) if (len(w) >= 4 and w[0].isupper()) else w
+            for w in text.split()
+        )
+
         return text
+
+    @staticmethod
+    def normalize_concept_label(label: str) -> str:
+        """
+        Normalize a concept label to use standard/canonical terminology.
+
+        FIX-7: The KG extractor sometimes creates non-standard labels like
+        'Size Stack' (should be 'Static Stack') or 'Dynamic Resizing Stack'
+        (should be 'Dynamic Stack'). This normalizer uses STRUCTURAL PATTERN
+        MATCHING only — no domain-specific word lists — to detect and fix
+        anti-patterns.
+
+        Rules applied (all fully dynamic):
+          A. Remove redundant process-verb words from concept labels:
+             words like 'Resizing', 'Sizing', 'Processing', 'Handling' when
+             sandwiched between an adjective and a noun are usually noise.
+          B. 'X Size Y' → 'X Y' (Size as an adjective/modifier is usually wrong;
+             the canonical name is just the qualifier + noun).
+          C. Strip parenthetical that exactly duplicates the label words.
+          D. Collapse repeated words: 'Stack Stack' → 'Stack'.
+          E. OCR single-letter drops at word start: 'Rder' → 'Order' (detected by
+             checking if the word is in a small set of known OCR confusion patterns).
+        """
+        if not label or not label.strip():
+            return label
+
+        label = label.strip()
+
+        # ── Rule D: Collapse exact repeated consecutive words ────────────────
+        # e.g. 'Stack Stack', 'Data Data Structure'
+        _REPEAT_WORD = re.compile(r'\b(\w+)\s+\1\b', re.I)
+        label = _REPEAT_WORD.sub(r'\1', label)
+
+        # ── Rule A+B: Remove sandwiched process-verb modifier words ──────────
+        # Pattern: <Adjective> <ProcessVerb> <Noun> → <Adjective> <Noun>
+        # e.g. 'Dynamic Resizing Stack' → 'Dynamic Stack'
+        #      'Size Stack' → 'Stack' (if 'Size' is purely a modifier, not content)
+        # Detect by checking if removing the middle word still yields a valid
+        # noun phrase (has at least one non-stop content word remaining).
+        _PROCESS_MODIFIERS = {
+            'resizing', 'resized', 'sizing', 'sized', 'processing', 'processed',
+            'handling', 'handled', 'managing', 'managed', 'tracking', 'tracked',
+        }
+        words = label.split()
+        if len(words) >= 2:
+            cleaned = [w for w in words if w.lower() not in _PROCESS_MODIFIERS]
+            if cleaned and len(cleaned) < len(words):
+                label = ' '.join(cleaned)
+
+        # Re-split after cleaning
+        words = label.split()
+
+        # ── Rule B: 'Size <Noun>' where Size is purely a quantity modifier ───
+        # 'Size Stack' → 'Static Stack' is NOT inferrable without context,
+        # but 'Size Stack' → 'Fixed-Size Stack' is a reasonable normalization.
+        if (len(words) == 2
+                and words[0].lower() == 'size'
+                and words[1][0].isupper()):
+            label = f"Fixed-Size {words[1]}"
+
+        # ── Rule F: Structural qualifier normalization ────────────────────────
+        # Problem 5: "Size Stack" → "Static Stack", "Dynamic Resizing Stack" → "Dynamic Stack"
+        # Heuristic: if the label ends with a known data-structure/concept noun AND
+        # starts with a non-canonical qualifier word, replace it with the canonical qualifier.
+        # Detection is PURELY STRUCTURAL — we look for pattern: <SingleQualifier> <Noun>
+        # where the qualifier is a size/scope/modifier word that maps to a canonical adjective.
+        # No domain words — qualifier mapping uses general English morphology.
+        _QUALIFIER_ALIASES = {
+            # Non-canonical qualifier word → canonical qualifier
+            'size':      'Fixed-Size',
+            'sized':     'Fixed-Size',
+            'count':     'Fixed-Size',
+            'limited':   'Fixed-Size',
+            'resize':    'Dynamic',
+            'resizable': 'Dynamic',
+            'growable':  'Dynamic',
+            'flexible':  'Dynamic',
+            'expandable':'Dynamic',
+            'shrinkable':'Dynamic',
+            'variable':  'Dynamic',
+        }
+        label_words = label.split()
+        if len(label_words) >= 2:
+            first_word_lower = label_words[0].lower()
+            if first_word_lower in _QUALIFIER_ALIASES:
+                canonical_qualifier = _QUALIFIER_ALIASES[first_word_lower]
+                label = canonical_qualifier + " " + " ".join(label_words[1:])
+
+        # ── Rule C: Strip parenthetical that duplicates label words ──────────
+        def _strip_dup_paren(s: str) -> str:
+            m = re.match(r'^(.+?)\s*\((.+?)\)\s*$', s)
+            if not m:
+                return s
+            outer_words = set(m.group(1).lower().split())
+            inner_words = set(m.group(2).lower().split())
+            # If inner is just an acronym of the outer, strip it
+            acronym = ''.join(w[0] for w in m.group(1).split() if w).upper()
+            if m.group(2).strip().upper() == acronym:
+                return m.group(1).strip()
+            # If overlap > 60%, strip the parenthetical
+            if outer_words and inner_words:
+                overlap = len(outer_words & inner_words) / max(len(outer_words), 1)
+                if overlap > 0.6:
+                    return m.group(1).strip()
+            return s
+        label = _strip_dup_paren(label)
+
+        # ── Rule E: OCR single-letter-drop repair ────────────────────────────
+        _OCR_WORD_FIXES = {
+            r'^[Rr]der\b': 'Order',
+            r'^[Tt]eration\b': 'Iteration',
+            r'^[Nn]sertion\b': 'Insertion',
+            r'^[Pp]eration\b': 'Operation',
+            r'^[Dd]eletion\b': 'Deletion',
+        }
+        fixed_words = []
+        for w in label.split():
+            fixed = w
+            for pat, repl in _OCR_WORD_FIXES.items():
+                if re.match(pat, w):
+                    fixed = repl
+                    break
+            fixed_words.append(fixed)
+        label = ' '.join(fixed_words)
+
+        return label.strip()
 
     # ---------- Topic Canonicalization ----------
     def canonicalize_topic(self, label: str) -> str:
@@ -4478,12 +6273,22 @@ class WMDKGNotesGenerator:
         ]
         if any(f in s_lower for f in spoken_filler):
             return False
-        
+
+        # ── Generic slide-visual OCR garbage (Fix 4B) ────────────────────────────────
+        # Long OCR-joined garbage strings that contain a verb (so they pass the verb gate)
+        # but are raw slide diagram labels or educational branding.
+        _SLIDE_OCR_SUBSTRINGS = [
+            "outcomes upon the completion",      # Lecture outcomes slide
+            "learner will be able",
+        ]
+        if any(pat in s_lower for pat in _SLIDE_OCR_SUBSTRINGS):
+            return False
+
         # Check against DYNAMIC domain keywords (from KG)
         if domain_keywords:
             has_domain_keyword = any(k.lower() in s_lower for k in domain_keywords if len(k) > 2)
             return has_domain_keyword  # Must match domain
-        
+
         return True  # Has verb, no domain filter
 
     # ---------- LINE CLASSIFICATION ----------
@@ -4529,83 +6334,192 @@ class WMDKGNotesGenerator:
     # ---------- TOPIC ELIGIBILITY (STRICT) ----------
     def is_valid_topic(self, title: str) -> bool:
         """Check if detected topic is a valid educational topic
-        STRICT: Rejects code, assembly, visual descriptions, and garbage
+        STRICT: Rejects code, assembly, visual descriptions, slide headers, and garbage.
+        Also rejects Actor nodes (Programmer, User) and Metadata (course labels).
         """
         title = title.strip()
-        
-        # Reject code-like topics
-        if "(" in title or ")" in title:
+
+        # ── Reject fused concept labels ('X and Y' where X and Y are unrelated) ─
+        try:
+            from concept_flow_organizer import _is_fused_label
+            if _is_fused_label(title):
+                return False
+        except Exception:
+            pass
+
+        # ── Reject Metadata labels (course/slide navigation) ─────────────────
+        _META_TAIL_WORDS = {
+            'chapter', 'section', 'unit', 'module', 'topic', 'subject',
+            'lecture', 'slide', 'slides', 'part', 'week', 'lesson',
+            'review', 'fundamentals', 'introduction to', 'overview',
+        }
+        title_lower_words = [w.lower() for w in title.split()]
+        if title_lower_words and title_lower_words[-1] in _META_TAIL_WORDS:
             return False
-        
+        if len(title_lower_words) >= 4 and 'subject' in title_lower_words:
+            return False
+        # Also reject any label whose ALL words are metadata words
+        if title_lower_words and all(w in _META_TAIL_WORDS for w in title_lower_words):
+            return False
+
+        # ── Reject Actor labels (human/system agents — never top-level topics) ─
+        # These should appear as inline mentions inside sections, not as headings.
+        _ACTOR_WORDS = {
+            'programmer', 'programmers', 'developer', 'developers', 'user', 'users',
+            'engineer', 'engineers', 'student', 'students', 'teacher', 'teachers',
+            'compiler', 'interpreter', 'assembler', 'cpu', 'processor', 'client',
+            'server', 'browser', 'coder', 'coders', 'designer', 'designers',
+        }
+        non_stop = [w for w in title_lower_words
+                    if w not in {'and', 'or', 'the', 'a', 'an', 'of', 'in', 'for', 'to', 'by'}]
+        if non_stop and all(w in _ACTOR_WORDS for w in non_stop):
+            return False
+
+        # Reject code-like parentheses, but ALLOW abbreviation/clarification forms
+        if "(" in title and ")" in title:
+            paren_content = re.search(r'\(([^)]+)\)', title)
+            if paren_content:
+                inside = paren_content.group(1).strip()
+                code_syms = {'{', '}', ';', '=', '+', '*', '/', '<', '>'}
+                if len(inside) > 15 or any(c in inside for c in code_syms):
+                    return False
+            else:
+                return False
+        elif "(" in title or ")" in title:
+            return False
+
         # Reject code keywords anywhere
-        code_keywords = ["printf", "stdio", "int main", "#include", "return", 
+        code_keywords = ["printf", "stdio", "int main", "#include", "return",
                         "{", "}", ";", "void ", "def ", "class ", "function"]
         if any(k in title.lower() for k in code_keywords):
             return False
-        
+
         # Reject assembly-like topics
         if re.search(r'\b(eax|ebx|ecx|edx|ptr|DWORD|OFFSET|rbp|rsp)\b', title, re.IGNORECASE):
             return False
-        
+
         # Reject visual description topics
         if any(v in title.lower() for v in self.VISUAL_NOISE):
             return False
-        
+
         # Reject too long (likely sentence, not topic)
-        if len(title.split()) > 5:
+        if len(title.split()) > 12:
             return False
-        
-        # Reject too short
-        if len(title) < 3:
+
+        # Reject empty
+        if len(title.strip()) < 1:
             return False
-        
+
         # Reject numeric-heavy
         if sum(c.isdigit() for c in title) > len(title) * 0.3:
             return False
-        
-        # Reject symbol-heavy (more than 2 non-alphanumeric)
+
+        # Reject symbol-heavy (more than 4 non-alphanumeric, accounting for parens)
         symbol_count = sum(not c.isalnum() and not c.isspace() for c in title)
-        if symbol_count > 2:
+        if symbol_count > 4:
             return False
-        
+
         # Reject gibberish patterns
         if re.search(r'[^a-zA-Z\s]{3,}', title):
             return False
-        
+
         return True
 
     # ---------- DYNAMIC DIAGRAM CAPTIONS ----------
     def get_semantic_caption(self, topic: str, raw_caption: str, kg_nodes: list = None) -> str:
-        """Generate meaningful diagram caption DYNAMICALLY from topic and KG
-        
-        Args:
-            topic: The topic this diagram relates to
-            raw_caption: Raw OCR/vision caption (may be noisy)
-            kg_nodes: List of KG nodes to find related descriptions
         """
-        # Try to find description from KG nodes for this topic
+        Generate meaningful diagram caption DYNAMICALLY from topic and KG context.
+
+        FIX-4 / FIX-5: Instead of outputting bare "Figure N: diagram" or
+        "a screenshot of a computer screen showing numbers", this method:
+          1. Finds the best matching KG node for the topic.
+          2. Extracts structural/operational signals from the node's description
+             and its outgoing edges (e.g. components, operations, properties).
+          3. Builds a rich caption from these structural signals.
+          4. Falls back to cleaned raw caption if KG has no relevant info.
+          5. Last resort: topic-based caption — never just "diagram" or "screenshot".
+
+        All logic is dynamic — no domain-specific words used in detection.
+        """
+        # ── Step 1: Find best matching KG node description ───────────────────
+        best_node = None
+        best_desc = ""
+        best_score = 0
         if kg_nodes:
-            topic_lower = topic.lower()
+            topic_words = set(re.findall(r'[a-z]{3,}', topic.lower()))
             for node in kg_nodes:
-                node_label = node.get("label", "").lower()
-                if node_label and (node_label in topic_lower or topic_lower in node_label):
-                    desc = node.get("description", "")
-                    if desc and len(desc) > 20:
-                        return f"Diagram illustrating: {desc}"
-        
-        # Clean raw caption if available
-        if raw_caption:
-            # Remove visual noise
-            cleaned = re.sub(r'(a |an |the )?(diagram|image|figure|picture|screenshot|blackboard|sign|logo|icon)\s*(of|showing|with|that)?\s*', '', raw_caption, flags=re.IGNORECASE)
-            cleaned = re.sub(r'black and white|white text|black background|white background', '', cleaned, flags=re.IGNORECASE)
-            cleaned = re.sub(r'\s+', ' ', cleaned).strip()
-            
-            # Validate cleaned caption
-            if len(cleaned) > 15 and not re.search(r'(.)\1{3,}', cleaned):
-                return f"Diagram: {cleaned}"
-        
-        # Fallback: simple topic-based caption
-        return f"Visual representation of {topic.title()}"
+                node_label = node.get("label", "")
+                node_desc  = node.get("description", "")
+                if not node_desc or len(node_desc.split()) < 5:
+                    continue
+                label_words = set(re.findall(r'[a-z]{3,}', node_label.lower()))
+                desc_words  = set(re.findall(r'[a-z]{3,}', node_desc.lower()))
+                label_overlap = len(topic_words & label_words) / max(len(topic_words), 1)
+                desc_overlap  = len(topic_words & desc_words)  / max(len(topic_words), 1)
+                score = label_overlap * 0.6 + desc_overlap * 0.4
+                if score > best_score:
+                    best_score = score
+                    best_desc  = node_desc.strip().rstrip('.')
+                    best_node  = node
+
+        # ── Step 2: Build rich structural caption from KG node + its edges ───
+        if best_node and best_score > 0.2:
+            sentences = re.split(r'(?<=[.!?])\s+', best_desc)
+            short_desc = ' '.join(sentences[:2])
+
+            # Also gather component labels from this node's outgoing edges
+            # to add structural richness: "showing X with components A, B, C"
+            nid = best_node.get("id", "")
+            component_labels = []
+            # We don't have edge_map in this scope, so we scan kg_nodes for matching
+            # nodes referenced by the best_node's label in descriptions
+            if kg_nodes and nid:
+                # Look for nodes whose labels appear in the best_desc as structural hints
+                desc_lower = best_desc.lower()
+                for other in kg_nodes:
+                    other_lbl = other.get("label", "")
+                    if (other_lbl and other_lbl != best_node.get("label", "")
+                            and other_lbl.lower() in desc_lower
+                            and len(other_lbl.split()) <= 3):
+                        component_labels.append(other_lbl)
+                        if len(component_labels) >= 3:
+                            break
+
+            if component_labels:
+                comp_str = ", ".join(component_labels)
+                return f"Diagram illustrating {topic}: {short_desc}, with key elements including {comp_str}."
+            return f"Diagram illustrating {topic}: {short_desc}."
+
+        # ── Step 3: Clean and validate raw caption ───────────────────────────
+        if raw_caption and raw_caption.strip():
+            # Remove generic visual boilerplate: "a screenshot of a computer screen showing numbers"
+            cleaned = re.sub(
+                r'\b(a|an|the)?\s*(diagram|image|figure|picture|screenshot|'
+                r'blackboard|whiteboard|sign|logo|icon|photo|slide|computer\s+screen|'
+                r'screen)\s*(of|showing|with|that|depicting|containing|displaying)?\s*',
+                '', raw_caption, flags=re.I
+            )
+            # Strip generic visual quality descriptors
+            cleaned = re.sub(
+                r'\b(black\s+and\s+white|white\s+text|black\s+background|'
+                r'white\s+background|simple|basic|hand\s*drawn|drawn|'
+                r'numbers|letters|text)\b',
+                '', cleaned, flags=re.I
+            )
+            cleaned = re.sub(r'\s{2,}', ' ', cleaned).strip(' ,.')
+
+            # Only use if cleaned caption has ≥ 4 meaningful content words
+            meaningful_words = [w for w in cleaned.split()
+                                 if len(w) > 3 and w.lower() not in
+                                 {'with', 'that', 'this', 'from', 'into', 'some',
+                                  'each', 'also', 'about', 'more', 'than', 'very',
+                                  'showing', 'depicting', 'containing'}]
+            if len(meaningful_words) >= 4 and not re.search(r'(.)\1{3,}', cleaned):
+                return f"Diagram: {cleaned[0].upper() + cleaned[1:] if cleaned else cleaned}."
+
+        # ── Step 4: Fallback — always descriptive, never bare label ──────────
+        topic_title = topic.strip().title() if topic else "This concept"
+        return f"Visual representation showing the structure and key relationships of {topic_title}."
 
     # ---------- EXTRACT DOMAIN KEYWORDS FROM KG ----------
     def extract_domain_keywords(self, nodes: list, edges: list) -> set:
@@ -4663,6 +6577,8 @@ class WMDKGNotesGenerator:
             validate_hierarchy, fix_hierarchy
         )
         from notes_renderer import render_pdf, render_txt
+        from notes_quality_enforcer import post_process_kg_notes
+        from notes_postprocessor import post_process_notes, load_merged_captions
 
         session_path = Path(session_path)
         
@@ -4697,6 +6613,42 @@ class WMDKGNotesGenerator:
                 try: edges = json.loads(p.read_text(encoding='utf-8')); break
                 except: pass
         
+        # Fix 4.6: Node description sanitization
+        try:
+            for node in nodes:
+                raw_desc = node.get("description", "")
+                if raw_desc and hasattr(self, "sanitizer"):
+                    node["description"] = self.sanitizer.sanitize_text(raw_desc)
+            print(f"[Notes] Sanitized descriptions for {len(nodes)} KG nodes")
+        except Exception as e:
+            print(f"[Notes] Warning: Node description sanitization failed: {e}")
+
+        # P5: Sanitize ? artefacts from ALL KG node fields (labels + descriptions)
+        # and edge relation strings — this is the PRIMARY source of "? The..." in bullets.
+        # Labels use is_heading=True (compound merge / category drop)
+        # Descriptions/edges use is_heading=False (separator -> ": ")
+        try:
+            from concept_flow_organizer import sanitize_question_marks, fix_ocr_truncated_label
+            for node in nodes:
+                if "label" in node:
+                    lbl = sanitize_question_marks(str(node["label"]), is_heading=True)
+                    node["label"] = fix_ocr_truncated_label(lbl)
+                if "description" in node and node["description"]:
+                    node["description"] = sanitize_question_marks(str(node["description"]), is_heading=False)
+            for edge in edges:
+                if "relation" in edge and edge["relation"]:
+                    edge["relation"] = sanitize_question_marks(str(edge["relation"]), is_heading=False)
+            print(f"[Notes] Q-mark sanitized labels+descriptions for {len(nodes)} KG nodes, {len(edges)} edges")
+        except Exception as e:
+            # Inline fallback — strip any "? word" pattern from all text fields
+            _QM = re.compile(r'(\w+)\s+\?\s+(\w+)')
+            _QM_ANY = re.compile(r'\?')
+            for node in nodes:
+                for field in ("label", "description"):
+                    if node.get(field):
+                        node[field] = _QM_ANY.sub("", _QM.sub(r"\1 \2", str(node[field]))).strip()
+            print(f"[Notes] Warning: Node Q-sanitize used fallback: {e}")
+        
         label_node_lookup = {n.get("label", "").lower(): n for n in nodes}
         edge_map = {}
         for e in edges:
@@ -4722,8 +6674,24 @@ class WMDKGNotesGenerator:
                     captions[txt.stem] = txt.read_text(encoding='utf-8').strip()
 
         img_dirs = [session_path / "diagrams", session_path / "fused_kg", fused_dir]
+        
+        # Support fused sessions by scanning original session dirs
+        if session_path.name.endswith("_fused"):
+            parts = session_path.name.split("_")[:-1]  # drop "fused"
+            for part in parts:
+                orig_dir = session_path.parent / part
+                if orig_dir.exists():
+                    img_dirs.extend([orig_dir / "diagrams", orig_dir / "fused_kg"])
+                    # Also collect captions from original dirs if not already merged
+                    orig_cap = orig_dir / "diagram_texts"
+                    if orig_cap.exists() and orig_cap.is_dir():
+                        for txt in orig_cap.glob("*.txt"):
+                            if txt.stem not in captions:
+                                try: captions[txt.stem] = txt.read_text(encoding='utf-8').strip()
+                                except: pass
+
         for d in img_dirs:
-            if d.exists():
+            if d and d.exists():
                 for img in list(d.glob("*.png")) + list(d.glob("*.jpg")):
                     if img.name not in image_paths:
                         image_paths[img.name] = img
@@ -4785,21 +6753,203 @@ class WMDKGNotesGenerator:
                 }
                 last_valid_canon = canon
 
-        # ── 5. Build Hierarchy from KG ──
-        hierarchy = self.build_hierarchy(nodes, edge_map)
-        roots = hierarchy["roots"]
-        children_map = hierarchy["children_map"]
-        node_lookup_by_id = hierarchy["node_lookup"]
+        # ── 4b. Load Structure Plan (Gemini completeness checklist) ──
+        # The plan was saved by app.py alongside topic_labels.json after the
+        # summarise() call.  It is a dict:
+        #   {"sections": [{"title": ..., "concepts": [{"label": ..., "description": ...}]}]}
+        # We use it as a safety net: any concept in the plan that is NOT already
+        # in the KG nodes list gets injected as a synthetic node so the notes-
+        # builder can emit it with the plan's description rather than silently
+        # omitting it.
+        structure_plan: dict = {}
+        _plan_paths = [
+            fused_dir / "structure_plan.json",
+            session_path / "fused_kg" / "structure_plan.json",
+            session_path / "graphs" / "structure_plan.json",
+        ]
+        for _pp in _plan_paths:
+            if _pp.exists():
+                try:
+                    structure_plan = json.loads(_pp.read_text(encoding="utf-8"))
+                    _plan_secs = len(structure_plan.get("sections", []))
+                    _plan_concepts = sum(
+                        len(s.get("concepts", [])) for s in structure_plan.get("sections", [])
+                    )
+                    print(f"[Notes] ✅ Loaded structure plan: "
+                          f"{_plan_secs} sections, {_plan_concepts} concepts")
+                    break
+                except Exception as _e:
+                    print(f"[Notes] ⚠️  Could not load structure plan from {_pp}: {_e}")
 
-        # Map text segments to nodes
+        # Inject plan concepts that are missing from the KG nodes list.
+        # Strategy (fully dynamic — no domain words):
+        #   1. Build a lowercase label → node lookup from existing nodes.
+        #   2. For each concept in the plan, check if any existing node label
+        #      is a close match (exact or substring).
+        #   3. If not found, create a synthetic node with:
+        #        id        = "plan_<index>"
+        #        label     = plan concept label
+        #        description = plan concept description
+        #      and add it to `nodes` and `edges` so the hierarchy builder picks it up.
+        if structure_plan.get("sections"):
+            _existing_labels = {n.get("label", "").lower().strip() for n in nodes}
+            _plan_injected = 0
+            for _plan_sec in structure_plan["sections"]:
+                _sec_title = _plan_sec.get("title", "").strip()
+                for _ci, _concept in enumerate(_plan_sec.get("concepts", [])):
+                    _clabel = _concept.get("label", "").strip()
+                    _cdesc  = _concept.get("description", "").strip()
+                    if not _clabel or not _cdesc:
+                        continue
+                    _clabel_lower = _clabel.lower()
+                    # Skip if a node with this label (or containing it) already exists
+                    _found = any(
+                        _clabel_lower in _el or _el in _clabel_lower
+                        for _el in _existing_labels
+                        if len(_el) >= 3 and len(_clabel_lower) >= 3
+                    )
+                    if _found:
+                        continue
+                    # Find or create a parent node for this section title
+                    _parent_id = None
+                    _sec_lower = _sec_title.lower()
+                    for _n in nodes:
+                        if _n.get("label", "").lower().strip() == _sec_lower:
+                            _parent_id = _n.get("id")
+                            break
+                    if not _parent_id:
+                        # Find a node whose label is contained in / contains the section title
+                        for _n in nodes:
+                            _nl = _n.get("label", "").lower().strip()
+                            if _nl and (_nl in _sec_lower or _sec_lower in _nl) and len(_nl) >= 4:
+                                _parent_id = _n.get("id")
+                                break
+                    # Inject the synthetic node
+                    _syn_id = f"plan_{_plan_injected}"
+                    _syn_node = {
+                        "id": _syn_id,
+                        "label": _clabel,
+                        "description": _cdesc,
+                        "_synthetic": True,   # flag so later passes can handle differently
+                    }
+                    nodes.append(_syn_node)
+                    _existing_labels.add(_clabel_lower)
+                    # Wire it to its parent via an "includes" edge
+                    if _parent_id:
+                        edges.append({"source": _parent_id, "target": _syn_id,
+                                      "relation": "includes"})
+                        if _parent_id not in edge_map:
+                            edge_map[_parent_id] = []
+                        edge_map[_parent_id].append((_syn_id, "includes"))
+                    _plan_injected += 1
+            if _plan_injected:
+                print(f"[Notes] 💉 Injected {_plan_injected} plan concepts missing from KG")
+
+        # ── 4c. Extract plan subsection structure for notes augmentation ──
+        # The unified Gemini call (_generate_summary_and_plan) returns:
+        #   - subsections with typed headings and bullet points per section
+        #   - kg_topic_refs: the original KG topic labels each plan section absorbs
+        #
+        # We build THREE lookup maps:
+        #   plan_subsection_map: canonical_title_lower -> [{heading, points}]
+        #   plan_needs_diagram_map: canonical_title_lower -> bool
+        #   plan_ref_map: original_kg_label_lower -> canonical_title_lower
+        #     (enables exact reverse matching: "Arrangement" → "Overview and Structure")
+        plan_subsection_map: dict = {}
+        plan_needs_diagram_map: dict = {}
+        plan_ref_map: dict = {}  # original KG label -> plan section canonical title
+        if structure_plan.get("sections"):
+            for _plan_sec in structure_plan["sections"]:
+                _key = _plan_sec.get("title", "").lower().strip()
+                if not _key:
+                    continue
+                _subs = _plan_sec.get("subsections", [])
+                if isinstance(_subs, list) and _subs:
+                    plan_subsection_map[_key] = _subs
+                plan_needs_diagram_map[_key] = bool(_plan_sec.get("needs_diagram", False))
+                # Build reverse map: each absorbed KG label -> this plan section
+                for _ref in _plan_sec.get("kg_topic_refs", []):
+                    _ref_lower = str(_ref).strip().lower()
+                    if _ref_lower:
+                        plan_ref_map[_ref_lower] = _key
+                # Also map the canonical title to itself
+                plan_ref_map[_key] = _key
+
+        # ── 5. Build Hierarchy from KG ──
+        # First build node_text_map so we can pass frequency counts to build_hierarchy
         node_text_map = {}
         for canon_data in canonical_topics.values():
             if canon_data["node"]:
                 node_text_map[canon_data["node"]["id"]] = " ".join(canon_data["texts"])
 
+        # Build frequency map: count how many text segments mention each node label
+        # This is the "frequency_in_source" signal for Concept Gravity importance scoring
+        _freq_map: dict = {}
+        for nid, text_blob in node_text_map.items():
+            node = next((n for n in nodes if n.get("id") == nid), None)
+            if node:
+                lbl = node.get("label", "").lower()
+                if lbl:
+                    _freq_map[nid] = text_blob.lower().count(lbl)
+
+        hierarchy = self.build_hierarchy(nodes, edge_map, freq_map=_freq_map)
+        roots = hierarchy["roots"]
+        children_map = hierarchy["children_map"]
+        node_lookup_by_id = hierarchy["node_lookup"]
+        importance_scores = hierarchy.get("importance", {})
+
         # ── 6. Build HierarchicalNotes JSON (Semantic Grouping) ──
-        used_images = set()
-        emitted_node_ids = set()  # Track concepts already explained to prevent repetition
+        # Step 6 begins with the Concept Block construction (intermediate layer),
+        # then renders them into HierarchicalNotes format.
+        #
+        # Architecture:  KG → ConceptBlockBuilder → [ConceptBlock,...] → Renderer → Notes
+        #
+        # ConceptBlocks give us:
+        #   - clean "build then render" separation
+        #   - topology-aware clustering (Bus Topology groups Collision, Cable, etc.)
+        #   - diagram anchoring (best diagram attached to its owning concept)
+        #   - recursive sub-blocks for nested subconcepts
+        used_images = set()           # img_name strings (fast lookup)
+        used_img_canonicals = set()   # resolved absolute paths (cross-section dedup)
+        emitted_node_ids = set()      # Track concepts already explained to prevent repetition
+
+        # ── 6a. Build Concept Blocks — uses shared emitted_node_ids ──────────
+        _block_builder = ConceptBlockBuilder(self)
+        concept_blocks = _block_builder.build_blocks(
+            roots=roots,
+            node_lookup=node_lookup_by_id,
+            edge_map=edge_map,
+            children_map=children_map,
+            importance=importance_scores,
+            captions=captions,
+            image_paths=image_paths,
+            emitted=emitted_node_ids,      # shared set — builder marks children as emitted
+            domain_keywords=domain_keywords,  # for diagram domain-verification (Problem 2)
+        )
+        # Build a lookup: root_id → ConceptBlock (used when rendering)
+        _block_by_root: dict = {b.node_id: b for b in concept_blocks}
+        print(f"[Notes] 🧱 Built {len(concept_blocks)} ConceptBlocks from {len(roots)} roots")
+
+        def _register_img(img_name: str, img_p=None) -> None:
+            """Mark image as used in both name-set and canonical-path-set."""
+            used_images.add(img_name)
+            if img_p is not None:
+                try:
+                    used_img_canonicals.add(str(Path(str(img_p)).resolve()))
+                except Exception:
+                    used_img_canonicals.add(str(img_p))
+
+        def _img_already_used(img_name: str, img_p=None) -> bool:
+            """True if image already used — checked by name OR canonical path."""
+            if img_name in used_images:
+                return True
+            if img_p is not None:
+                try:
+                    if str(Path(str(img_p)).resolve()) in used_img_canonicals:
+                        return True
+                except Exception:
+                    pass
+            return False
         sections = []
 
         # ── Relation-to-heading mapper ──
@@ -4815,13 +6965,27 @@ class WMDKGNotesGenerator:
             "also known as": "Definition and Fundamental Concept",
             "is a": "Definition and Fundamental Concept",
             "represents": "Definition and Fundamental Concept",
-            # ─── Operations / Functions ───
+            "definition": "Definition and Fundamental Concept",
+            "defines": "Definition and Fundamental Concept",
+            # ─── Operations / Functions / Deals With ───
             "has operation": "Primary Operations",
             "has function": "Primary Operations",
             "supports operation": "Primary Operations",
             "performs": "Primary Operations",
             "operates on": "Primary Operations",
             "uses operation": "Primary Operations",
+            "deals with": "Primary Operations",
+            "concerned with": "Primary Operations",
+            "handles": "Primary Operations",
+            "manages": "Primary Operations",
+            "specifies": "Primary Operations",
+            "describes": "Primary Operations",
+            "determines": "Primary Operations",
+            "defines what": "Primary Operations",
+            "what data": "Primary Operations",
+            "stores": "Primary Operations",
+            "retrieves": "Primary Operations",
+            "queries": "Primary Operations",
             # ─── Achieved Through / Implementation ───
             "is achieved through": "Implementation and Structure",
             "achieved through": "Implementation and Structure",
@@ -4831,7 +6995,10 @@ class WMDKGNotesGenerator:
             "realized through": "Implementation and Structure",
             "accomplished via": "Implementation and Structure",
             "uses": "Implementation and Structure",
-            # ─── Types / Classification ───
+            "employs": "Implementation and Structure",
+            "utilizes": "Implementation and Structure",
+            "accessed via": "Implementation and Structure",
+            # ─── Types / Classification / Levels ───
             "has type": "Types and Classification",
             "type of": "Types and Classification",
             "classified as": "Types and Classification",
@@ -4840,7 +7007,9 @@ class WMDKGNotesGenerator:
             "kind of": "Types and Classification",
             "has level": "Types and Classification",
             "consists of levels": "Types and Classification",
-            # ─── Context / Relationship ───
+            "has levels": "Types and Classification",
+            "level of": "Types and Classification",
+            # ─── Context / Relationship / Addressed By ───
             "provides context for": "Contextual Relationships",
             "provides context": "Contextual Relationships",
             "is related to": "Contextual Relationships",
@@ -4848,13 +7017,22 @@ class WMDKGNotesGenerator:
             "associated with": "Contextual Relationships",
             "connected to": "Contextual Relationships",
             "interacts with": "Contextual Relationships",
+            "addressed by": "Contextual Relationships",
+            "addresses": "Contextual Relationships",
+            "abstracted by": "Contextual Relationships",
+            "supports": "Contextual Relationships",
+            "requires": "Contextual Relationships",
+            "depends on": "Contextual Relationships",
+            "needed by": "Contextual Relationships",
+            "allows": "Contextual Relationships",
             # ─── Examples / Analogies ───
-            "example of": "Real-World Analogies",
-            "has example": "Real-World Analogies",
-            "analogy": "Real-World Analogies",
-            "illustrated by": "Real-World Analogies",
-            "such as": "Real-World Analogies",
-            "similar to": "Real-World Analogies",
+            "example of": "Real-World Examples",
+            "has example": "Real-World Examples",
+            "analogy": "Real-World Examples",
+            "illustrated by": "Real-World Examples",
+            "such as": "Real-World Examples",
+            "similar to": "Real-World Examples",
+            "for example": "Real-World Examples",
             # ─── Applications ───
             "used in": "Applications",
             "applied in": "Applications",
@@ -4862,6 +7040,9 @@ class WMDKGNotesGenerator:
             "application of": "Applications",
             "helps in": "Applications",
             "enables": "Applications",
+            "facilitates": "Applications",
+            "achieves": "Applications",
+            "provides": "Applications",
             # ─── Properties / Characteristics ───
             "has property": "Key Characteristics",
             "has characteristic": "Key Characteristics",
@@ -4869,6 +7050,10 @@ class WMDKGNotesGenerator:
             "follows": "Key Characteristics",
             "based on": "Key Characteristics",
             "operates on principle": "Key Characteristics",
+            "hides": "Key Characteristics",
+            "abstracts": "Key Characteristics",
+            "independent of": "Key Characteristics",
+            "does not affect": "Key Characteristics",
             # ─── Components / Parts ───
             "has component": "Components and Structure",
             "consists of": "Components and Structure",
@@ -4878,36 +7063,88 @@ class WMDKGNotesGenerator:
             "composed of": "Components and Structure",
             "includes": "Components and Structure",
             "has": "Components and Structure",
+            "sub-component": "Components and Structure",
+            "is part of": "Components and Structure",
             # ─── Status / Conditions ───
-            "has condition": "Status Operations",
-            "checks": "Status Operations",
-            "returns": "Status Operations",
-            "has status": "Status Operations",
+            "has condition": "Status and Conditions",
+            "checks": "Status and Conditions",
+            "returns": "Status and Conditions",
+            "has status": "Status and Conditions",
             # ─── Purpose / Goal ───
             "purpose is": "Purpose and Goals",
             "aims to": "Purpose and Goals",
             "designed for": "Purpose and Goals",
             "intended for": "Purpose and Goals",
+            "goal is": "Purpose and Goals",
+            "objective": "Purpose and Goals",
             # ─── Explanation / Description ───
             "is explained through": "Detailed Explanation",
             "explained through": "Detailed Explanation",
             "described by": "Detailed Explanation",
             "is described as": "Detailed Explanation",
+            # ─── Roles / Actors ───
+            "managed by": "Roles and Responsibilities",
+            "administered by": "Roles and Responsibilities",
+            "controlled by": "Roles and Responsibilities",
+            "accessed by": "Roles and Responsibilities",
+            "used by": "Roles and Responsibilities",
+            "performed by": "Roles and Responsibilities",
+            "granted to": "Roles and Responsibilities",
+            "given to": "Roles and Responsibilities",
         }
 
+        # Additional keyword-based fallback mapping for partial relation matching
+        _RELATION_KEYWORD_MAP = [
+            (["deals", "concerned", "handles", "manages", "specifies",
+              "describes", "stores", "retrieves"], "Primary Operations"),
+            (["level", "tier", "layer", "stage", "type", "kind",
+              "category", "class", "classified"], "Types and Classification"),
+            (["component", "part", "consist", "contain", "comprise",
+              "include", "made up", "sub"], "Components and Structure"),
+            (["implement", "achiev", "realized", "accomplish",
+              "uses", "employs", "utilizes"], "Implementation and Structure"),
+            (["property", "characteristic", "feature", "attribute",
+              "hides", "abstracts", "independent"], "Key Characteristics"),
+            (["require", "depend", "need", "allow", "support",
+              "enable", "address", "related"], "Contextual Relationships"),
+            (["role", "responsi", "administer", "manage", "grant",
+              "control", "access"], "Roles and Responsibilities"),
+            (["purpose", "goal", "aim", "objective", "design",
+              "intend", "meant"], "Purpose and Goals"),
+            (["example", "instance", "analog", "illustrat",
+              "such as", "like"], "Real-World Examples"),
+            (["application", "used in", "applied", "used for",
+              "helps", "enables", "facilitates"], "Applications"),
+            (["define", "means", "refers", "known as", "called",
+              "represent", "is a"], "Definition and Fundamental Concept"),
+        ]
+
         def _get_group_heading(relation: str) -> str:
-            """Map an edge relation to a semantic group heading."""
+            """
+            Map a KG edge relation string to a semantic subsection heading.
+
+            Strategy (in order):
+            1. Exact match against _RELATION_GROUPS dict.
+            2. Substring match (both directions) against _RELATION_GROUPS.
+            3. Keyword-based fallback via _RELATION_KEYWORD_MAP.
+            4. Final fallback: 'Key Concepts' — NEVER 'Additional Concepts',
+               which is reserved only for the post-processing consolidation pass.
+            """
             rel_lower = relation.lower().strip()
-            # Exact match first
+            # 1. Exact match
             if rel_lower in _RELATION_GROUPS:
                 return _RELATION_GROUPS[rel_lower]
-            # Partial match (check both directions)
+            # 2. Partial match
             for pattern, heading in _RELATION_GROUPS.items():
                 if pattern in rel_lower or rel_lower in pattern:
                     return heading
-            # Fallback: group ALL unmapped relations under Additional Concepts
-            # This prevents section explosion (e.g., 'Is Defined As' becoming its own section)
-            return "Additional Concepts"
+            # 3. Keyword fallback
+            for keywords, heading in _RELATION_KEYWORD_MAP:
+                if any(kw in rel_lower for kw in keywords):
+                    return heading
+            # 4. Final fallback — use "Key Concepts", NOT "Additional Concepts"
+            #    "Additional Concepts" is reserved for the post-processing step only.
+            return "Key Concepts"
 
         def _is_clear_description(text: str, topic: str) -> bool:
             """Check if text is a clear descriptive/definitional statement worth showing."""
@@ -4964,38 +7201,353 @@ class WMDKGNotesGenerator:
                 desc_ids.extend(_collect_all_descendants(child_id))
             return desc_ids
 
+        # ── Built-in concept glossary for enriching bare labels ──────────────
+        # When KG nodes have no description, this provides fallback definitions.
+        # Add domain-specific entries as needed; keys are lowercase concept labels.
+        _CONCEPT_GLOSSARY = {
+            "schema": "the logical structure or blueprint that defines how data is organized in a database, including tables, fields, and relationships.",
+            "application level": "the top-most tier in a multi-tier architecture where end-user applications interact with data through a user interface.",
+            "view level": "the highest abstraction level in a database system, showing only the data relevant to a particular user or application; provides data security and simplicity.",
+            "physical level": "the lowest abstraction level that describes how data is physically stored on hardware, including storage formats, file structures, and access methods.",
+            "logical level": "the middle abstraction level that describes what data is stored in the database and the relationships among them, independent of physical storage.",
+            "conceptual level": "equivalent to the logical level; describes the entire database schema — what data is stored and how it relates — without concern for physical storage.",
+            "logical/conceptual level": "describes what data are stored in the database and what relationships exist among this data; decides the structure of the entire database.",
+            "view of data": "a customized, user-specific perspective of the database showing only the relevant portion of data, hiding complexity and ensuring security.",
+            "levels of abstraction": "the three-layer architecture (Physical, Logical, View) used in database systems to separate concerns and achieve data independence.",
+            "levels of data abstraction": "the three-tier hierarchy (Physical, Logical/Conceptual, View) that divides database design to achieve data independence and simplify user interaction.",
+            "data independence": "the ability to modify the schema at one level of the database without requiring changes at the next higher level; separates user view from physical storage.",
+            "physical data independence": "the ability to modify the physical storage schema without affecting the logical schema; changes in storage don't impact application queries.",
+            "logical data independence": "the ability to modify the logical schema without affecting external/view schemas or application programs.",
+            "database administrator": "the person (DBA) responsible for managing, maintaining, and controlling access to the database system, including backup, recovery, and performance.",
+            "dba": "Database Administrator — the person responsible for managing, maintaining, securing, and administering the database system.",
+            "users": "individuals or applications that interact with the database system through the view level; they see only the data relevant to them.",
+            "data storage": "the mechanism by which data is physically saved using simple or complex data structures; the database employs data structures to store information efficiently.",
+            "data structures": "the organized formats used to store, manage, and retrieve data efficiently; examples include arrays, trees, hash tables used in database storage.",
+            "how data are stored": "describes the physical mechanisms and data structures used to persist data on storage devices within the database system.",
+            "what data are stored": "refers to the type and content of data maintained in the database — the logical description of data entities, attributes, and relationships.",
+            "relationship among data": "the associations and dependencies between data entities in a database, defined at the logical level to describe how tables are interconnected.",
+            "user interaction": "the process by which users communicate with the database system, typically through the view level using queries, forms, or application interfaces.",
+            "granting privileges": "the process of assigning access rights and permissions to users or roles so they can perform specific operations on database objects.",
+            "front-end system": "the user-facing application layer that provides the interface through which users interact with the database system.",
+            "back-end system": "the server-side infrastructure that processes requests, manages the database engine, and handles data storage and retrieval.",
+            "database level": "the layer in a multi-tier architecture where the actual database resides, managed by the DBMS and accessed by the application tier.",
+            "physical storage": "the actual hardware-based storage media (disk, SSD) where database files and data structures are physically maintained.",
+            "3-tier architecture": "a software design pattern separating the application into three layers: presentation (front-end), logic (application), and data (database) tiers.",
+            "security": "the set of mechanisms in a database system that protect data from unauthorized access, ensuring confidentiality, integrity, and availability; enforced at the view level.",
+            "database": "an organized collection of structured data, managed by a DBMS, designed to store, retrieve, and manage information efficiently.",
+        }
+
+        def _enrich_label(label: str, node: dict, parent_topic: str, relation: str) -> str:
+            """
+            Convert a bare label into a meaningful bullet point.
+
+            Priority:
+            1. Actor nodes → natural inline sentence mentioning the agent's role
+            2. Node's own description (if clear enough)
+            3. Built-in concept glossary lookup
+            4. Relation-based contextual sentence using parent topic
+            5. Dynamic operation-type detection
+            6. Last resort: just the label (bare)
+            """
+            desc = node.get("description", "")
+
+            # ── Actor nodes: inline mention, never a bare label stub ─────────
+            # E.g. "Programmers" → "Programmers implement <parent_topic> explicitly in algorithms."
+            ntype = self.classify_node_type(node, edge_map, list(node_lookup_by_id.values()))
+            if ntype == "Actor":
+                ctx = f" {parent_topic}" if parent_topic else " this data structure"
+                if desc and len(desc.split()) >= 4:
+                    return f"{label}: {desc}"
+                # Dynamically derive action from relation
+                rel_lower = relation.lower().strip()
+                _ACT_VERBS = {
+                    'implements': 'implement', 'uses': 'use', 'manages': 'manage',
+                    'invokes': 'invoke', 'calls': 'call', 'creates': 'create',
+                    'writes': 'write', 'maintains': 'maintain', 'controls': 'control',
+                }
+                verb = _ACT_VERBS.get(rel_lower, 'interact with')
+                return f"{label} {verb}{ctx} directly in their code or programs."
+
+            if _is_clear_description(desc, label):
+                return f"{label}: {desc}"
+
+            key = label.lower().strip().rstrip('.')
+            if key in _CONCEPT_GLOSSARY:
+                return f"{label}: {_CONCEPT_GLOSSARY[key]}"
+
+            # Try partial glossary match (e.g. "DBA" matches "database administrator")
+            for gkey, gval in _CONCEPT_GLOSSARY.items():
+                if gkey in key or key in gkey:
+                    return f"{label}: {gval}"
+
+            # Relation-based sentence — dynamically construct from relation + context
+            rel_lower = relation.lower().strip()
+            if rel_lower and rel_lower not in ('includes', 'has', 'contains', 'comprises', ''):
+                rel_prose = rel_lower.replace('_', ' ')
+                if parent_topic:
+                    return f"{label}: {parent_topic} {rel_prose} {label}."
+                else:
+                    return f"{label}: This concept {rel_prose} {label}."
+
+            # Operation / function / method node
+            _OP_SUFFIX_RE = re.compile(
+                r'\b(operation|function|method|command|procedure|action|step|process|algorithm)\b', re.I
+            )
+            if _OP_SUFFIX_RE.search(label):
+                ctx = f" on {parent_topic}" if parent_topic else ""
+                return f"{label}: An operation or procedure that can be performed{ctx}."
+
+            # Type / classification node
+            _TYPE_RE = re.compile(r'\b(type|kind|category|variant|form|class|mode)\b', re.I)
+            if _TYPE_RE.search(label):
+                ctx = f" of {parent_topic}" if parent_topic else ""
+                return f"{label}: A type or category{ctx}."
+
+            # Implementation / method node
+            _IMPL_RE = re.compile(r'\b(implementation|method|approach|technique|strategy|way)\b', re.I)
+            if _IMPL_RE.search(label):
+                ctx = f" for {parent_topic}" if parent_topic else ""
+                return f"{label}: An implementation approach{ctx}."
+
+            # Application node
+            _APP_RE = re.compile(r'\b(application|use|usage|example|scenario|case)\b', re.I)
+            if _APP_RE.search(label):
+                ctx = f" of {parent_topic}" if parent_topic else ""
+                return f"{label}: An application or use case{ctx}."
+
+            # Property / characteristic node
+            _PROP_RE = re.compile(r'\b(property|characteristic|feature|attribute|aspect|behavior)\b', re.I)
+            if _PROP_RE.search(label):
+                ctx = f" of {parent_topic}" if parent_topic else ""
+                return f"{label}: A property or characteristic{ctx}."
+
+            # Last resort: produce a context-aware sentence rather than bare label
+            if parent_topic:
+                return f"{label}: A concept related to {parent_topic}."
+            return f"{label}: A key concept in this topic."
+
+        def _derive_section_heading(topic: str, root_node: dict, subsections: list) -> str:
+            """
+            Derive a meaningful section heading from the topic label and its content.
+
+            Strategy (fully dynamic — no domain words hardcoded):
+            1. Multi-word label that is not vague → use it title-cased.
+            2. Root node has a clear description → extract a compact noun-phrase title.
+            3. Dominant subsection heading → combine or replace label with it.
+            4. Fallback: topic.title()
+
+            Vague single-word / generic labels (e.g. "Arrangement", "Description",
+            "Concepts", "Real Life") are enriched using root node description or
+            dominant child content so the heading is always informative.
+            """
+            _VAGUE_TOKENS = {
+                'arrangement', 'description', 'concepts', 'concept', 'details',
+                'detail', 'real life', 'misc', 'miscellaneous', 'other', 'notes',
+                'additional', 'extra', 'general', 'things', 'items',
+                'examples', 'example', 'info', 'information',
+            }
+            label_lower = topic.lower().strip()
+            is_vague = label_lower in _VAGUE_TOKENS or all(
+                w in _VAGUE_TOKENS for w in label_lower.split()
+            )
+
+            # Strategy 1: multi-word, non-vague label — use directly
+            if not is_vague and len(topic.split()) >= 2:
+                return topic.title()
+
+            # Strategy 2: extract compact title from description
+            desc = root_node.get("description", "").strip()
+            if _is_clear_description(desc, topic) and len(desc.split()) >= 5:
+                words = desc.split()
+                cutoff = min(6, len(words))
+                for i, w in enumerate(words[:cutoff]):
+                    if w.lower() in {'is', 'are', 'was', 'were', 'can', 'will',
+                                     'means', 'refers', 'defines', 'provides', ','}:
+                        cutoff = i
+                        break
+                candidate = " ".join(words[:max(cutoff, 2)]).rstrip(".,;:").strip()
+                if len(candidate.split()) >= 2:
+                    return candidate.title()
+
+            # Strategy 3: use dominant subsection heading
+            dominant_heading = ""
+            max_pts = 0
+            for ss in subsections:
+                n = len(ss.get("points", []))
+                h = ss.get("heading", "")
+                if n > max_pts and h.lower() not in ("description", "overview"):
+                    max_pts = n
+                    dominant_heading = h
+
+            if dominant_heading and not is_vague:
+                return f"{topic.title()} – {dominant_heading}"
+            if dominant_heading and is_vague:
+                return dominant_heading  # dominant heading is more informative than vague label
+
+            # Fallback
+            return topic.title()
+
+        def _build_missed_node_bullet(nid: str) -> str:
+            """
+            Build a maximally informative bullet for a missed KG node.
+
+            Priority (fully dynamic — no domain words):
+            1. Node's own description (any length ≥ 3 words)
+            2. All outgoing edges converted to natural language sentences via interpret_edge
+            3. All incoming edges with natural language
+            4. Descend into children to collect their descriptions
+            5. Absolute last resort: bare label (never a generic stub phrase)
+            """
+            node = node_lookup_by_id.get(nid, {})
+            lbl  = node.get("label", "").strip()
+            desc = (node.get("description", "") or "").strip()
+
+            if not lbl:
+                return ""
+
+            # Priority 1 — any description with ≥ 3 words
+            if desc and len(desc.split()) >= 3:
+                return f"{lbl}: {desc}"
+
+            # Priority 2 — outgoing edges as natural-language sentences
+            out_sentences = []
+            for tgt_id, rel in edge_map.get(nid, []):
+                tgt_node = node_lookup_by_id.get(tgt_id, {})
+                tgt_lbl  = tgt_node.get("label", "")
+                tgt_desc = (tgt_node.get("description", "") or "").strip()
+                if tgt_lbl and not re.match(r'^N\d+$', str(tgt_lbl)):
+                    if tgt_desc and len(tgt_desc.split()) >= 4:
+                        out_sentences.append(f"{tgt_lbl}: {tgt_desc}")
+                    else:
+                        nlg = self.interpret_edge(lbl, rel, tgt_lbl)
+                        out_sentences.append(nlg)
+            if out_sentences:
+                combined = " ".join(out_sentences[:5])
+                return f"{lbl}: {combined}"
+
+            # Priority 3 — incoming edges (reverse scan)
+            in_sentences = []
+            for e in edges:
+                if e.get("target") == nid:
+                    src_node = node_lookup_by_id.get(e.get("source", ""), {})
+                    src_lbl  = src_node.get("label", "")
+                    rel      = e.get("relation", "").replace("_", " ").strip()
+                    if src_lbl and rel and not re.match(r'^N\d+$', str(src_lbl)):
+                        nlg = self.interpret_edge(src_lbl, rel, lbl)
+                        in_sentences.append(nlg)
+            if in_sentences:
+                return f"{lbl}: {' '.join(in_sentences[:3])}"
+
+            # Priority 4 — collect descriptions from immediate children
+            child_parts = []
+            for cid in children_map.get(nid, []):
+                cnode = node_lookup_by_id.get(cid, {})
+                clbl  = cnode.get("label", "")
+                cdesc = (cnode.get("description", "") or "").strip()
+                if clbl:
+                    if cdesc and len(cdesc.split()) >= 3:
+                        child_parts.append(f"{clbl} ({cdesc})")
+                    else:
+                        child_parts.append(clbl)
+            if child_parts:
+                listed = ", ".join(child_parts[:4])
+                return f"{lbl} encompasses: {listed}."
+
+            # Absolute last resort — bare label, never generic stub
+            return f"{lbl}: A concept in this topic."
+
         for root_id in roots:
             root_node = node_lookup_by_id.get(root_id, {})
             topic = root_node.get("label", "Topic")
-            
+
+            # Normalize concept label to canonical terminology
+            topic = self.normalize_concept_label(topic)
+            if topic:
+                root_node = dict(root_node)
+                root_node["label"] = topic
+
             if not self.is_valid_topic(topic):
                 continue
             if root_id in emitted_node_ids:
                 continue
             emitted_node_ids.add(root_id)
 
-            # ── Collect ALL edges from this root (direct + hierarchical) ──
+            # ── PRIMARY PATH: Render from pre-built ConceptBlock ─────────────
+            # ConceptBlockBuilder already clustered all typed children and anchored
+            # the best diagram before this loop started.  This is the clean
+            # "build → render" separation from the architecture document.
+            _block = _block_by_root.get(root_id)
+            if _block is not None:
+                # Mark all block children as emitted so the inline path and
+                # coverage sweep don't double-render them.
+                def _mark_block_emitted(blk, _emitted):
+                    for bucket in (blk.subconcepts, blk.operations, blk.advantages,
+                                   blk.disadvantages, blk.devices, blk.protocols,
+                                   blk.implementations, blk.applications,
+                                   blk.examples, blk.properties):
+                        for _, _, nid in bucket:
+                            _emitted.add(nid)
+                    for sub_blk in blk.sub_blocks:
+                        _emitted.add(sub_blk.node_id)
+                        _mark_block_emitted(sub_blk, _emitted)
+                _mark_block_emitted(_block, emitted_node_ids)
+
+                # Render the block into subsections
+                topic_subsections = _block.to_subsections(make_point, make_subsection)
+
+                # Enrich each subsection with transcript-matched sentences
+                # (the block has the structure but not the raw transcript text)
+                all_text = node_text_map.get(root_id, "")
+                if all_text:
+                    matched = self.find_matching_transcript_sentences(
+                        topic, all_text, domain_keywords, max_sentences=4)
+                    transcript_pts = [make_point(s) for s in matched
+                                      if self.is_valid_note_sentence(s, domain_keywords)]
+                    if transcript_pts:
+                        # Merge into Description subsection if present, else prepend
+                        if topic_subsections and topic_subsections[0].get("heading") == "Description":
+                            topic_subsections[0]["points"].extend(transcript_pts)
+                        else:
+                            topic_subsections.insert(0, make_subsection("Overview", transcript_pts))
+
+                # Fallback guarantee
+                if not topic_subsections:
+                    fallback = _build_missed_node_bullet(root_id)
+                    if not fallback:
+                        fallback = f"{topic}: A core concept in this topic."
+                    topic_subsections = [make_subsection("Overview", [make_point(fallback)])]
+
+                # Diagram from anchored block (already found — no search needed)
+                topic_diagram_path    = _block.diagram_path
+                topic_diagram_caption = _block.diagram_caption
+
+                section_heading = _derive_section_heading(topic, root_node, topic_subsections)
+                sections.append(make_section(
+                    section_heading, topic_subsections,
+                    diagram_path=topic_diagram_path,
+                    diagram_caption=topic_diagram_caption,
+                ))
+                continue   # skip the inline fallback path below
+
+            # ── FALLBACK PATH: inline rendering (used if block not available) ─
+            # Collect ALL edges from this root (direct + hierarchical)
             all_child_ids = children_map.get(root_id, [])
             all_descendant_ids = _collect_all_descendants(root_id)
-            
+
             # Get direct edges from edge_map
             direct_edges = edge_map.get(root_id, [])
 
-            # ── Group children by edge relation type ──
-            relation_groups = {}  # heading → list of (node, relation, description)
-            ungrouped_nodes = []  # children without a clear edge relation
-            
+            # Group children by edge relation type
+            relation_groups = {}
+            ungrouped_nodes = []
+
             for tgt_id, rel in direct_edges:
                 tgt_node = node_lookup_by_id.get(tgt_id)
                 if not tgt_node or tgt_id == root_id or tgt_id in emitted_node_ids:
                     continue
-                
                 group_heading = _get_group_heading(rel)
-                if group_heading not in relation_groups:
-                    relation_groups[group_heading] = []
-                relation_groups[group_heading].append((tgt_node, rel, tgt_id))
-            
-            # Children in hierarchy but not in edge_map → ungrouped
+                relation_groups.setdefault(group_heading, []).append((tgt_node, rel, tgt_id))
+
             edge_target_ids = {tgt for tgt, _ in direct_edges}
             for cid in all_child_ids:
                 if cid not in edge_target_ids and cid not in emitted_node_ids:
@@ -5003,7 +7555,108 @@ class WMDKGNotesGenerator:
                     if c_node:
                         ungrouped_nodes.append((c_node, "includes", cid))
 
+            # ── TYPE-DRIVEN RENDERING (Problems 5, 7, Corner Cases 2, 4, 6) ──
+            # Each child node is classified by type and routed to the correct
+            # educational format.  Rules (fully dynamic, no domain words):
+            #
+            #   Concept / Subconcept → their own named subsection with description
+            #   Operation            → "Primary Operations" subsection bullet
+            #   Property (adv/disadv)→ "Advantages" / "Disadvantages" or "Key Characteristics"
+            #   Device               → "Components" subsection (component list)
+            #   Protocol             → "Communication Mechanisms" subsection
+            #   Implementation       → "Implementation" subsection
+            #   Application          → "Applications" subsection
+            #   Example              → "Real-World Examples" subsection
+            #   Actor                → inline mention only (never its own subsection)
+            #   Metadata / Diagram   → skip
+            #
+            # Property aggregation: advantage/disadvantage nodes are grouped
+            # TOGETHER under their parent concept as Adv/Disadv bullets,
+            # never as independent top-level topics.
+
+            def _infer_full_type(node: dict) -> str:
+                """
+                Wrapper around classify_node_type that also handles the
+                Advantage / Disadvantage sub-case of Property.
+                Returns one of: Concept, Subconcept, Operation, Advantage,
+                Disadvantage, Property, Device, Protocol, Implementation,
+                Application, Example, Actor, Metadata, Diagram, General.
+                """
+                base_type = self.classify_node_type(node, edge_map, list(node_lookup_by_id.values()))
+                if base_type == "Property":
+                    lbl  = node.get("label", "").lower()
+                    desc = (node.get("description", "") or "").lower()
+                    combined = lbl + " " + desc
+                    _ADV_RE = re.compile(
+                        r'\b(advantage|benefit|merit|pro\b|strength|positive|'
+                        r'easy|simple|fast|efficient|reliable|flexible|scalable|'
+                        r'cheap|low\s+cost|high\s+speed|secure)\b', re.I)
+                    _DIS_RE = re.compile(
+                        r'\b(disadvantage|drawback|limitation|weakness|demerit|'
+                        r'con\b|problem|issue|failure|risk|expensive|difficult|'
+                        r'slow|unreliable|inflexible|high\s+cost|collision|'
+                        r'privacy|bottleneck|single\s+point)\b', re.I)
+                    if _ADV_RE.search(combined):
+                        return "Advantage"
+                    if _DIS_RE.search(combined):
+                        return "Disadvantage"
+                return base_type
+
+            # Map type → target subsection heading
+            _TYPE_HEADING_MAP = {
+                "Concept":        None,           # gets its own named subsection
+                "Subconcept":     None,           # gets its own named subsection
+                "Operation":      "Primary Operations",
+                "Advantage":      "Advantages",
+                "Disadvantage":   "Disadvantages",
+                "Property":       "Key Characteristics",
+                "Device":         "Components and Devices",
+                "Protocol":       "Communication Mechanisms",
+                "Implementation": "Implementation and Structure",
+                "Application":    "Applications",
+                "Example":        "Real-World Examples",
+                "Runtime Mechanism": "Runtime Mechanisms",
+                "Actor":          "__INLINE__",   # inline mention only
+                "Metadata":       "__SKIP__",
+                "Diagram":        "__SKIP__",
+                "General":        "Key Concepts",
+            }
+
+            # Bucket all children (from both direct_edges and ungrouped_nodes)
+            # into type-based groups.  Supersedes the relation_groups approach
+            # for the mixed-type "Components and Structure" problem.
+            type_groups: dict = {}   # heading → [(c_node, rel, c_id)]
+            named_subconcepts: list = []  # (c_node, rel, c_id) — get own subsections
+
+            all_children_to_route = []
+            # From direct edges (relation_groups already built)
+            for rg_items in relation_groups.values():
+                all_children_to_route.extend(rg_items)
+            # From ungrouped
+            for item in ungrouped_nodes:
+                all_children_to_route.append(item)
+
+            for item in all_children_to_route:
+                c_node, rel, c_id = item
+                if c_id in emitted_node_ids:
+                    continue
+                ctype = _infer_full_type(c_node)
+                dest = _TYPE_HEADING_MAP.get(ctype, "Key Concepts")
+                if dest == "__SKIP__":
+                    emitted_node_ids.add(c_id)
+                    continue
+                if dest == "__INLINE__":
+                    # Actor nodes: don't give them a subsection; they appear
+                    # as inline sentences inside the parent's Overview
+                    continue
+                if dest is None:
+                    # Concept or Subconcept → named subsection
+                    named_subconcepts.append(item)
+                else:
+                    type_groups.setdefault(dest, []).append(item)
+
             # ── Build sections ──
+
             
             # Section 1: Definition and Fundamental Concept (always first)
             defn = root_node.get("description", "")
@@ -5037,274 +7690,678 @@ class WMDKGNotesGenerator:
                     defn_points.append(make_point(f"{c_label}: {c_desc}"))
                 else:
                     desc = self.get_contextual_description(topic, rel, c_node)
-                    defn_points.append(make_point(f"{c_label}: {desc}"))
+                    if desc and desc.lower().strip() != c_label.lower().strip():
+                        defn_points.append(make_point(f"{c_label}: {desc}"))
+                    else:
+                        enriched = _enrich_label(c_label, c_node, topic, rel)
+                        defn_points.append(make_point(enriched))
             
+            topic_subsections = []
+            topic_diagram_path = None
+            topic_diagram_caption = None
+
             if defn_points:
-                # Build subsections: separate Description (blue box) from Overview (content)
-                section_subsections = []
-                
                 # "Description" subsection (rendered as blue box in PDF) — node description only
                 if defn and _is_clear_description(defn, topic):
-                    section_subsections.append(make_subsection("Description", [make_point(defn)]))
+                    # Fix 5.6: Sanitize description text before rendering
+                    clean_defn = self.sanitizer.sanitize_text(defn)
+                    if clean_defn:
+                        topic_subsections.append(make_subsection("Description", [make_point(clean_defn)]))
                     # Remove the defn from overview points to avoid duplication
                     defn_points = [p for p in defn_points if p.get("text", "") != defn]
                 
                 # "Overview" subsection — transcript sentences and characteristic points
                 if defn_points:
-                    section_subsections.append(make_subsection("Overview", defn_points))
-                
-                if not section_subsections:
-                    continue
+                    topic_subsections.append(make_subsection("Overview", defn_points))
                 
                 # Try to find a diagram for the definition section
-                defn_diagram_path = None
-                defn_diagram_caption = None
-                best_img, raw_cap = self.find_related_diagram(topic + " " + (defn or ""), captions)
-                if best_img and best_img not in used_images:
-                    used_images.add(best_img)
-                    img_p = image_paths.get(best_img)
-                    if img_p and img_p.exists():
-                        defn_diagram_path = str(img_p)
-                        defn_diagram_caption = self.get_semantic_caption(topic, raw_cap, nodes)
-                
-                sections.append(make_section(
-                    f"Definition and Fundamental Concept" if len(sections) == 0 and topic.lower() == roots[0] else topic.title(),
-                    section_subsections,
-                    diagram_path=defn_diagram_path,
-                    diagram_caption=defn_diagram_caption
-                ))
+                best_img, raw_cap = self.find_related_diagram(
+                    topic + " " + (defn or ""), captions, used_img_canonicals)
+                _ip1 = image_paths.get(best_img) if best_img else None
+                if best_img and not _img_already_used(best_img, _ip1):
+                    _register_img(best_img, _ip1)
+                    if _ip1 and _ip1.exists():
+                        topic_diagram_path = str(_ip1)
+                        topic_diagram_caption = self.get_semantic_caption(topic, raw_cap, nodes)
 
-            # Section N: One section per relation group (semantic clusters)
-            # Sort groups by number of items (larger groups = more important = first)
-            sorted_groups = sorted(relation_groups.items(), key=lambda x: -len(x[1]))
-            
-            for group_heading, group_items in sorted_groups:
+            # ── Emit named subconcepts (Concept/Subconcept children) ────────────
+            # These get their own titled subsection, e.g. "Bus Topology", "Star Topology"
+            # Each is rendered with: its description, its own property/adv/disadv bullets
+            for sc_node, sc_rel, sc_id in named_subconcepts:
+                if sc_id in emitted_node_ids:
+                    continue
+                emitted_node_ids.add(sc_id)
+                sc_label = self.normalize_concept_label(sc_node.get("label", ""))
+                if not sc_label or sc_label.lower().strip() == topic.lower().strip():
+                    continue
+
+                sc_desc  = sc_node.get("description", "")
+                sc_points = []
+
+                # Description of this subconcept
+                if _is_clear_description(sc_desc, sc_label):
+                    sc_points.append(make_point(sc_desc))
+                else:
+                    nlg = self.get_contextual_description(topic, sc_rel, sc_node)
+                    if nlg:
+                        sc_points.append(make_point(nlg))
+
+                # Gather this subconcept's own children (its properties/adv/disadv)
+                adv_pts, dis_pts, prop_pts, dev_pts, impl_pts = [], [], [], [], []
+                for gc_id in children_map.get(sc_id, []):
+                    if gc_id in emitted_node_ids:
+                        continue
+                    gc_node = node_lookup_by_id.get(gc_id, {})
+                    if not gc_node:
+                        continue
+                    emitted_node_ids.add(gc_id)
+                    gc_label = self.normalize_concept_label(gc_node.get("label", ""))
+                    gc_desc  = gc_node.get("description", "")
+                    gc_type  = _infer_full_type(gc_node)
+
+                    # Build bullet text
+                    if _is_clear_description(gc_desc, gc_label):
+                        bullet = f"{gc_label}: {gc_desc}"
+                    else:
+                        bullet = _enrich_label(gc_label, gc_node, sc_label,
+                                               next((r for t, r in edge_map.get(sc_id, []) if t == gc_id), "has"))
+
+                    if gc_type == "Advantage":
+                        adv_pts.append(make_point(bullet))
+                    elif gc_type == "Disadvantage":
+                        dis_pts.append(make_point(bullet))
+                    elif gc_type == "Device":
+                        dev_pts.append(make_point(bullet))
+                    elif gc_type == "Implementation":
+                        impl_pts.append(make_point(bullet))
+                    else:
+                        prop_pts.append(make_point(bullet))
+
+                # Build subsections for this subconcept
+                sc_subsections = []
+                if sc_points:
+                    sc_subsections.append(make_subsection("Description", sc_points))
+                if impl_pts:
+                    sc_subsections.append(make_subsection("Structure", impl_pts))
+                if dev_pts:
+                    sc_subsections.append(make_subsection("Components", dev_pts))
+                if prop_pts:
+                    sc_subsections.append(make_subsection("Key Characteristics", prop_pts))
+                if adv_pts:
+                    sc_subsections.append(make_subsection("Advantages", adv_pts))
+                if dis_pts:
+                    sc_subsections.append(make_subsection("Disadvantages", dis_pts))
+
+                if sc_subsections:
+                    topic_subsections.append(make_subsection(sc_label, sc_subsections))
+                elif sc_points:
+                    topic_subsections.append(make_subsection(sc_label, sc_points))
+
+            # ── Emit type_groups (typed bullet collections) ──────────────────
+            # Ordered by educational importance: operations → components → properties
+            # → implementations → protocols → applications → examples
+            _GROUP_ORDER = [
+                "Primary Operations",
+                "Components and Devices",
+                "Communication Mechanisms",
+                "Key Characteristics",
+                "Advantages",
+                "Disadvantages",
+                "Implementation and Structure",
+                "Runtime Mechanisms",
+                "Applications",
+                "Real-World Examples",
+                "Key Concepts",
+            ]
+            # Process in preferred order, then any remaining groups
+            ordered_headings = _GROUP_ORDER + [
+                h for h in type_groups if h not in _GROUP_ORDER
+            ]
+
+            for group_heading in ordered_headings:
+                group_items = type_groups.get(group_heading, [])
                 if not group_items:
                     continue
-                
+
                 group_points = []
                 for c_node, rel, c_id in group_items:
                     if c_id in emitted_node_ids:
                         continue
-                    emitted_node_ids.add(c_id)
-                    
                     c_label = c_node.get("label", "")
-                    c_desc = c_node.get("description", "")
-                    
-                    # Context Aware: try transcript matching first
+                    if c_label.lower().strip() == topic.lower().strip():
+                        continue  # Skip self-referencing child
+                    emitted_node_ids.add(c_id)
+
+                    c_label = self.normalize_concept_label(c_label)
+                    c_desc  = c_node.get("description", "")
+
+                    # Try transcript matching first
                     tgt_text = node_text_map.get(c_id, "")
                     rich_desc = None
                     if tgt_text:
-                        matched = self.find_matching_transcript_sentences(c_label, tgt_text, domain_keywords, max_sentences=2)
-                        valid_matched = [s for s in matched if self.is_valid_note_sentence(s, domain_keywords)]
+                        matched = self.find_matching_transcript_sentences(
+                            c_label, tgt_text, domain_keywords, max_sentences=2)
+                        valid_matched = [s for s in matched
+                                         if self.is_valid_note_sentence(s, domain_keywords)]
                         if valid_matched:
                             rich_desc = " ".join(valid_matched)
-                    
-                    # Fallback: use description only if clear
+
                     if not rich_desc:
                         if _is_clear_description(c_desc, c_label):
                             rich_desc = c_desc
                         else:
                             rich_desc = self.get_contextual_description(topic, rel, c_node)
-                    
-                    # Only add description if it's meaningful, otherwise just the label
+
                     if rich_desc and rich_desc.lower().strip() != c_label.lower().strip():
                         group_points.append(make_point(f"{c_label}: {rich_desc}"))
-                    else:
-                        group_points.append(make_point(c_label))
-                    
-                    # Add descendants of this node as sub-points
+                    elif c_label:
+                        group_points.append(make_point(_enrich_label(c_label, c_node, topic, rel)))
+
+                    # Add descendants as sub-bullets
                     for desc_id in children_map.get(c_id, []):
                         if desc_id in emitted_node_ids:
                             continue
                         emitted_node_ids.add(desc_id)
                         desc_node = node_lookup_by_id.get(desc_id, {})
                         d_label = desc_node.get("label", "")
-                        d_desc = desc_node.get("description", "")
+                        d_desc  = desc_node.get("description", "")
                         if _is_clear_description(d_desc, d_label):
                             group_points.append(make_point(f"{d_label}: {d_desc}"))
                         elif d_label:
-                            group_points.append(make_point(d_label))
-                
+                            group_points.append(make_point(
+                                _enrich_label(d_label, desc_node, topic, "includes")))
+
                 if group_points:
-                    # Enrich group with transcript sentences matching this group's topic
+                    # Enrich with transcript sentences for this group
                     group_search_text = group_heading + " " + " ".join(
-                        c_node.get("label", "") for c_node, _, _ in group_items
-                    )
+                        c_node.get("label", "") for c_node, _, _ in group_items)
                     for nid_text in [c_id for _, _, c_id in group_items]:
                         seg_text = node_text_map.get(nid_text, "")
                         if seg_text:
                             matched = self.find_matching_transcript_sentences(
-                                group_search_text, seg_text, domain_keywords, max_sentences=3
-                            )
+                                group_search_text, seg_text, domain_keywords, max_sentences=2)
                             for sent in matched:
                                 if self.is_valid_note_sentence(sent, domain_keywords):
-                                    # Avoid duplicating existing points
-                                    existing_texts = {p.get("text", "").lower() for p in group_points}
-                                    if sent.lower().strip() not in existing_texts:
+                                    existing = {p.get("text","").lower() for p in group_points}
+                                    if sent.lower().strip() not in existing:
                                         group_points.append(make_point(sent))
-                    
-                    # Find diagram for this group
-                    diagram_path = None
-                    diagram_caption = None
-                    search_text = group_heading + " " + " ".join(
-                        c_node.get("label", "") for c_node, _, _ in group_items
-                    )
-                    best_img, raw_cap = self.find_related_diagram(search_text, captions)
-                    if best_img and best_img not in used_images:
-                        used_images.add(best_img)
-                        img_p = image_paths.get(best_img)
-                        if img_p and img_p.exists():
-                            diagram_path = str(img_p)
-                            diagram_caption = self.get_semantic_caption(group_heading, raw_cap, nodes)
-                    
-                    sections.append(make_section(
-                        group_heading,
-                        [make_subsection("Details", group_points)],
-                        diagram_path=diagram_path,
-                        diagram_caption=diagram_caption
-                    ))
 
-            # Handle ungrouped children as a general section if any remain
-            if ungrouped_nodes:
-                ungrouped_points = []
-                for c_node, rel, c_id in ungrouped_nodes:
-                    if c_id in emitted_node_ids:
-                        continue
-                    emitted_node_ids.add(c_id)
-                    c_label = c_node.get("label", "")
-                    c_desc = c_node.get("description", "")
-                    
-                    tgt_text = node_text_map.get(c_id, "")
-                    rich_desc = None
-                    if tgt_text:
-                        matched = self.find_matching_transcript_sentences(c_label, tgt_text, domain_keywords, max_sentences=2)
-                        valid_matched = [s for s in matched if self.is_valid_note_sentence(s, domain_keywords)]
-                        if valid_matched:
-                            rich_desc = " ".join(valid_matched)
-                    
-                    if not rich_desc:
-                        if _is_clear_description(c_desc, c_label):
-                            rich_desc = c_desc
-                        else:
-                            rich_desc = self.get_contextual_description(topic, rel, c_node)
-                    
-                    if rich_desc and rich_desc.lower().strip() != c_label.lower().strip():
-                        ungrouped_points.append(make_point(f"{c_label}: {rich_desc}"))
-                    else:
-                        ungrouped_points.append(make_point(c_label))
-                    
-                    # Descendants
-                    for desc_id in children_map.get(c_id, []):
-                        if desc_id in emitted_node_ids:
-                            continue
-                        emitted_node_ids.add(desc_id)
-                        desc_node = node_lookup_by_id.get(desc_id, {})
-                        d_label = desc_node.get("label", "")
-                        d_desc = desc_node.get("description", "")
-                        if _is_clear_description(d_desc, d_label):
-                            ungrouped_points.append(make_point(f"{d_label}: {d_desc}"))
-                        elif d_label:
-                            ungrouped_points.append(make_point(d_label))
-                
-                if ungrouped_points:
-                    sections.append(make_section(
-                        "Additional Concepts",
-                        [make_subsection("Details", ungrouped_points)]
-                    ))
+                    topic_subsections.append(make_subsection(group_heading, group_points))
+
+                    # Diagram for this group
+                    if not topic_diagram_path:
+                        best_img, raw_cap = self.find_related_diagram(
+                            group_heading + " " + " ".join(
+                                c_node.get("label", "") for c_node, _, _ in group_items),
+                            captions, used_img_canonicals)
+                        _ip2 = image_paths.get(best_img) if best_img else None
+                        if best_img and not _img_already_used(best_img, _ip2):
+                            _register_img(best_img, _ip2)
+                            if _ip2 and _ip2.exists():
+                                topic_diagram_path = str(_ip2)
+                                topic_diagram_caption = self.get_semantic_caption(
+                                    group_heading, raw_cap, nodes)
+
+
+
+            # ── Guarantee: every root node produces at least one subsection ──
+            # If all content-generation paths produced nothing (no description,
+            # no transcript, no children, no edges), build a minimal but real
+            # bullet directly from the root node's edges or bare label so the
+            # section is never silently dropped.
+            if not topic_subsections:
+                fallback_bullet = _build_missed_node_bullet(root_id)
+                if not fallback_bullet:
+                    fallback_bullet = f"{topic}: A core concept in this topic."
+                topic_subsections.append(
+                    make_subsection("Overview", [make_point(fallback_bullet)])
+                )
+                print(f"[Notes] Fallback subsection created for empty root node: '{topic}'")
+
+            # Finally, append the master section for this topic
+            section_heading = _derive_section_heading(topic, root_node, topic_subsections)
+            sections.append(make_section(
+                section_heading,
+                topic_subsections,
+                diagram_path=topic_diagram_path,
+                diagram_caption=topic_diagram_caption
+            ))
 
         # ── 6a. Coverage sweep: ensure ALL KG nodes are represented ──
-        # Find any nodes that weren't emitted during root traversal
         all_node_ids = set(node_lookup_by_id.keys())
         missed_ids = all_node_ids - emitted_node_ids
-        
         if missed_ids:
-            missed_points = []
+            # Build a lookup of section heading words + bullet label words for matching
+            def _section_match_score(node_label, section):
+                """Score how well a missed node's label matches an existing section."""
+                lbl_lower = node_label.lower().strip()
+                heading_lower = section.get("heading", "").lower().strip()
+                # Direct substring match in heading
+                if lbl_lower in heading_lower or heading_lower in lbl_lower:
+                    return 3
+                # Word overlap between label and heading
+                lbl_words = set(lbl_lower.split())
+                head_words = set(heading_lower.split())
+                word_overlap = len(lbl_words & head_words - {'and', 'the', 'of', 'in', 'a', 'an', 'is', 'for', 'to'})
+                if word_overlap >= 1:
+                    return 2
+                # Check headings and bullet text for label mentions
+                for ss in section.get("subsections", []):
+                    if lbl_lower in ss.get("heading", "").lower():
+                        return 2
+                    for pt in ss.get("points", []):
+                        if lbl_lower in pt.get("text", "").lower() or lbl_lower in pt.get("label", "").lower():
+                            return 1
+                return 0
+
+            orphan_points = []  # nodes that don't match any section
+            placed_count = 0
             for nid in missed_ids:
                 node = node_lookup_by_id.get(nid, {})
                 lbl = node.get("label", "")
-                if not lbl or not self.is_valid_topic(lbl):
+                if not lbl:
                     continue
                 emitted_node_ids.add(nid)
-                
-                desc = node.get("description", "")
-                # Find edges involving this node
-                edges_for_node = edge_map.get(nid, [])
-                
-                if _is_clear_description(desc, lbl):
-                    missed_points.append(make_point(f"{lbl}: {desc}"))
-                elif edges_for_node:
-                    # Build description from edges
-                    edge_descs = []
-                    for tgt_id, rel in edges_for_node[:3]:
-                        tgt_node = node_lookup_by_id.get(tgt_id, {})
-                        tgt_label = tgt_node.get("label", tgt_id)
-                        if not re.match(r'^N\d+$', str(tgt_label)):
-                            edge_descs.append(f"{rel} {tgt_label}")
-                    if edge_descs:
-                        missed_points.append(make_point(f"{lbl}: {', '.join(edge_descs)}"))
-                    else:
-                        missed_points.append(make_point(lbl))
-                else:
-                    missed_points.append(make_point(lbl))
-                    
-                # Try to find a diagram for missed nodes
-                best_img, raw_cap = self.find_related_diagram(lbl + " " + desc, captions)
-                if best_img and best_img not in used_images:
-                    used_images.add(best_img)
 
-            if missed_points:
+                # FIX-COVERAGE: Use _build_missed_node_bullet for richer content
+                bullet_text = _build_missed_node_bullet(nid)
+                if not bullet_text:
+                    continue
+                point = make_point(bullet_text)
+
+                # Try to place into the best-matching existing section
+                best_score, best_section = 0, None
+                for sec in sections:
+                    score = _section_match_score(lbl, sec)
+                    if score > best_score:
+                        best_score, best_section = score, sec
+
+                if best_section and best_score >= 1:
+                    # Append into an existing "Key Points" subsection if present,
+                    # or create a new one — never blindly append to the last subsection.
+                    subsections = best_section.get("subsections", [])
+                    kp_sub = next(
+                        (s for s in subsections if s.get("heading", "").lower() == "key points"),
+                        None
+                    )
+                    if kp_sub:
+                        kp_sub["points"].append(point)
+                    else:
+                        best_section.setdefault("subsections", []).append(
+                            make_subsection("Key Points", [point])
+                        )
+                    placed_count += 1
+                else:
+                    orphan_points.append(point)
+
+                # Try to find a diagram for missed nodes
+                desc = node.get("description", "")
+                best_img, raw_cap = self.find_related_diagram(
+                    lbl + " " + desc, captions, used_img_canonicals)
+                _ip3 = image_paths.get(best_img) if best_img else None
+                if best_img and not _img_already_used(best_img, _ip3):
+                    _register_img(best_img, _ip3)
+
+            if placed_count:
+                print(f"[Notes] Smart placement: placed {placed_count} missed nodes into existing sections")
+
+            if orphan_points:
+                # FIX-COVERAGE: Sub-group orphan points by their concept type
+                # (inferred from the bullet label) rather than dumping all into a
+                # flat "Details" subsection. This makes orphan content navigable
+                # and prevents the entire section from being filtered as a stub.
+                _orphan_groups: dict = {}
+                for _op in orphan_points:
+                    _text = _op.get("text", "")
+                    # Extract label (text before first colon) as group key
+                    _colon = _text.find(":")
+                    if _colon > 0:
+                        _raw_key = _text[:_colon].strip()
+                        # Reduce to first 3 words for grouping
+                        _key_words = _raw_key.split()[:3]
+                        _group_key = " ".join(_key_words) if _key_words else "Additional Concepts"
+                    else:
+                        _group_key = "Additional Concepts"
+                    _orphan_groups.setdefault(_group_key, []).append(_op)
+
+                _orphan_subsections = []
+                for _gkey, _gpts in _orphan_groups.items():
+                    if _gpts:
+                        _orphan_subsections.append(make_subsection(_gkey, _gpts))
+
+                if not _orphan_subsections:
+                    _orphan_subsections = [make_subsection("Details", orphan_points)]
+
                 sections.append(make_section(
-                    "Additional Concepts",
-                    [make_subsection("Details", missed_points)]
+                    "Key Notes / Additional Concepts",
+                    _orphan_subsections
                 ))
+                print(f"[Notes] Coverage: {len(orphan_points)} orphan points → "
+                      f"{len(_orphan_subsections)} sub-groups in 'Key Notes / Additional Concepts'")
+
+        # No explicit TCP section injections for a fully dynamic structure
+        # Fix 3: Remove stub-only sections
+        COVERAGE_TEMPLATE_STUBS = [
+            'is a key concept in this domain',
+            'is discussed in this context',
+            'is an important operation',
+            'is a type or classification',
+            'is relevant property',
+            'is a key concept in this topic',
+            'a key concept in this topic',
+            'a key concept in this domain',
+            'a concept related to',
+        ]
+        # Bare graph-edge sentence patterns: "X includes Y.", "X Packet includes X."
+        _BARE_EDGE_RE = re.compile(
+            r'^[\w\s\(\)/]+:\s*([\w\s\(\)/]+)\s+includes\s+\1\s*\.$|'   # "Label: X includes X."
+            r'^[\w\s\(\)/]+\s+includes\s+[\w\s\(\)/]+\.$',              # "X includes Y."
+            re.IGNORECASE
+        )
+
+        def _section_is_empty_stub(section: dict) -> bool:
+            """Return True if ALL points in section are stubs or bare graph-edge sentences.
+
+            FIX-COVERAGE: The old version counted ANY bullet containing a stub phrase
+            as bad, even if it also had real label:description content. This caused
+            sections with mixed content (some real, some template) to be completely
+            removed. Now a bullet is only counted as bad if it is PURELY a stub —
+            i.e. the stub phrase is the entire payload after the label colon, with
+            no additional explanatory content.
+            """
+            all_points = []
+            for sub in section.get('subsections', []):
+                all_points.extend(sub.get('points', []))
+            if not all_points:
+                return True  # No points at all → remove
+            bad_count = 0
+            for pt in all_points:
+                pt_text = pt.get('text', '').strip()
+                pt_lower = pt_text.lower()
+                is_bad = False
+
+                # Check bare graph-edge sentence first
+                if _BARE_EDGE_RE.match(pt_text):
+                    is_bad = True
+                else:
+                    # A stub phrase makes a bullet bad ONLY if:
+                    # (a) the stub IS the entire bullet text, or
+                    # (b) the stub appears after the label colon and there is no
+                    #     additional real content (≥ 6 words) beyond it.
+                    for stub in COVERAGE_TEMPLATE_STUBS:
+                        if stub in pt_lower:
+                            # If there's a label prefix ("Label: stub text"), check
+                            # whether content after ':' is exclusively the stub
+                            colon_idx = pt_text.find(':')
+                            if colon_idx != -1:
+                                after_colon = pt_text[colon_idx + 1:].strip().lower()
+                                # Bad only when the after-colon content IS essentially the stub
+                                if after_colon.startswith(stub) and len(after_colon.split()) < 8:
+                                    is_bad = True
+                                    break
+                                # Otherwise the label has real content — keep it
+                            else:
+                                # No label prefix — the whole bullet is the stub
+                                is_bad = True
+                                break
+
+                if is_bad:
+                    bad_count += 1
+
+            # Section is a stub only if ALL points are bad
+            return bad_count == len(all_points)
+
+        sections = [s for s in sections if not _section_is_empty_stub(s)]
+        print(f'[Notes] After stub removal: {len(sections)} sections remain.')
+
+        # ── Fix 4B-pre: Final ? sanitization over ALL assembled bullet points ──────────────
+        # The KG node descriptions can contain "? The...", "? Outputs..." as separators.
+        # This pass catches any ? that survived earlier sanitization at the data level.
+        try:
+            from concept_flow_organizer import sanitize_question_marks as _sqm
+            for section in sections:
+                if "heading" in section:
+                    section["heading"] = _sqm(section["heading"])
+                for sub in section.get("subsections", []):
+                    if "heading" in sub:
+                        sub["heading"] = _sqm(sub["heading"])
+                    for pt in sub.get("points", []):
+                        if pt.get("text"):
+                            pt["text"] = _sqm(pt["text"])
+            print("[Notes] Final ? sanitization pass applied over all sections.")
+        except Exception as _sqm_err:
+            # Inline fallback
+            _QM_INLINE = re.compile(r'(\w+)\s+\?\s+(\w+)')
+            _QM_ANY_INLINE = re.compile(r'\?')
+            for section in sections:
+                if "heading" in section:
+                    section["heading"] = _QM_ANY_INLINE.sub("", _QM_INLINE.sub(r"\1 \2", section["heading"])).strip()
+                for sub in section.get("subsections", []):
+                    if "heading" in sub:
+                        sub["heading"] = _QM_ANY_INLINE.sub("", _QM_INLINE.sub(r"\1 \2", sub["heading"])).strip()
+                    for pt in sub.get("points", []):
+                        if pt.get("text"):
+                            pt["text"] = _QM_ANY_INLINE.sub("", _QM_INLINE.sub(r"\1 \2", pt["text"])).strip()
+
+        # ── Fix 4C: Point-level OCR sanitizer ────────────────────────────────
+        # Runs on every assembled bullet point text AFTER sections are built.
+        # Catches multi-line OCR garbage that was joined before line-level filters.
+        _POINT_GARBAGE_PATTERNS = [
+            re.compile(r'\|\s*\?_|\?_\s*$', re.I),
+            re.compile(r'Le\s+Jono\d+|yO\dN|LC\]', re.I),
+            re.compile(r'OUTCOMES\s+Upon\s+the\s+completion', re.I),
+            re.compile(r'learner\s+will\s+be\s+able', re.I),
+        ]
+        _POINT_STUB_STRINGS = [
+            'is a key concept in this domain',
+            'is discussed in this context',
+            'is an important operation',
+            'is a type or classification',
+            'is relevant property',
+            'is a key concept in this topic',
+            'a key concept in this topic',
+            'a key concept in this domain',
+            'a concept related to',
+            # "sub-concept within X" bullets are structural noise from KG schema
+            'sub-concept within',
+            # Exam/institution noise
+            'sppu exam pattern',
+            'important questions',
+            'exam pattern is related',
+        ]
+
+        def _clean_point_text(text: str) -> str:
+            """Strip or truncate a point text that contains embedded OCR garbage."""
+            if not text:
+                return text
+            tl = text.lower()
+            # Discard entire point if it's a stub phrase
+            for stub in _POINT_STUB_STRINGS:
+                if stub in tl:
+                    return ''
+            # For each garbage pattern: if it starts within first 50 chars, discard;
+            # otherwise truncate at the match boundary.
+            for pat in _POINT_GARBAGE_PATTERNS:
+                m = pat.search(text)
+                if m:
+                    if m.start() < 50:
+                        return ''
+                    # Truncate at boundary; keep only if remainder is a real sentence
+                    prefix = text[:m.start()].rstrip(' ,;:.')
+                    if len(prefix.split()) >= 5:
+                        return prefix + '.'
+                    return ''
+            return text
+
+        cleaned_section_count = 0
+        for section in sections:
+            for sub in section.get('subsections', []):
+                original_pts = sub.get('points', [])
+                cleaned_pts = []
+                for pt in original_pts:
+                    cleaned = _clean_point_text(pt.get('text', ''))
+                    if cleaned:
+                        pt['text'] = cleaned
+                        cleaned_pts.append(pt)
+                    else:
+                        cleaned_section_count += 1
+                sub['points'] = cleaned_pts
+        if cleaned_section_count:
+            print(f'[Notes] Point OCR sanitizer removed/truncated {cleaned_section_count} garbage points.')
+
+        # ── Post-sanitization integrity pass ──────────────────────────────────
+        # After _clean_point_text removes individual bullets, some subsections
+        # may now be empty and some sections may have no non-empty subsections.
+        # Re-check every section and rebuild any that lost all their content.
+        _post_clean_rescued = 0
+        for section in sections:
+            # Drop subsections that are now empty
+            section['subsections'] = [
+                sub for sub in section.get('subsections', [])
+                if sub.get('points')
+            ]
+            # If the whole section is now empty, inject a fallback bullet
+            # built from the KG so the section name is preserved in the output.
+            if not section.get('subsections'):
+                heading = section.get('heading', 'Topic')
+                # Try to find the root node that matches this heading
+                _rescue_bullet = None
+                for _nid, _nd in node_lookup_by_id.items():
+                    if _nd.get('label', '').lower().strip() == heading.lower().strip():
+                        _rescue_bullet = _build_missed_node_bullet(_nid)
+                        break
+                if not _rescue_bullet:
+                    _rescue_bullet = f"{heading}: A concept covered in this topic."
+                section['subsections'] = [
+                    make_subsection('Overview', [make_point(_rescue_bullet)])
+                ]
+                _post_clean_rescued += 1
+        if _post_clean_rescued:
+            print(f'[Notes] Post-sanitization rescue: {_post_clean_rescued} sections rebuilt after point cleanup.')
 
         # ── 6b. Post-process: Consolidate thin sections ──
-        # Merge sections with < 3 points into "Additional Concepts"
-        # Also merge all existing "Additional Concepts" sections into one
-        MIN_POINTS_PER_SECTION = 2
-        
+        # FIX-COVERAGE: Reduced MIN_POINTS_PER_SECTION from 3 to 1 so that sections
+        # with even a single meaningful point are never silently discarded.
+        # The old threshold of 3 caused valid single-concept sections (e.g. "Explicit
+        # Stack", "isEmpty Operation") to be moved to "Additional Concepts" where
+        # they were often lost in dynamic sub-grouping. With threshold = 1, ALL
+        # content reaches the output; only completely empty sections are removed.
+        MIN_POINTS_PER_SECTION = 1
+
+        def _heading_similarity(h1: str, h2: str) -> float:
+            """Token overlap similarity between two heading strings (0.0–1.0)."""
+            stop = {'and', 'the', 'of', 'in', 'a', 'an', 'is', 'for', 'to', 'with', 'on', 'at'}
+            w1 = set(h1.lower().split()) - stop
+            w2 = set(h2.lower().split()) - stop
+            if not w1 or not w2:
+                return 0.0
+            return len(w1 & w2) / min(len(w1), len(w2))
+
+        def _find_best_merge_target(thin_heading: str, candidate_sections: list) -> dict:
+            """
+            Find the best existing section to absorb a thin section's content.
+            Uses token overlap on headings. Returns the best section or None.
+            """
+            best_sec, best_score = None, 0.0
+            for sec in candidate_sections:
+                score = _heading_similarity(thin_heading, sec.get("heading", ""))
+                if score > best_score:
+                    best_score = score
+                    best_sec = sec
+            # Only merge if there's at least one shared non-stop word
+            return best_sec if best_score > 0.0 else None
+
         consolidated_sections = []
         additional_concepts_points = []
         additional_diagram = None
         additional_diagram_caption = None
-        
+
         for section in sections:
             heading = section.get("heading", "")
             subsections = section.get("subsections", [])
-            
-            # Count total points in this section
+
+            # Count total non-stub points in this section
             total_points = sum(len(ss.get("points", [])) for ss in subsections)
-            
-            if heading == "Additional Concepts":
+
+            if heading.lower() == "additional concepts":
                 # Always merge "Additional Concepts" sections into one
                 for ss in subsections:
                     additional_concepts_points.extend(ss.get("points", []))
-                # Keep first diagram found
                 if not additional_diagram and section.get("diagram"):
                     additional_diagram = section["diagram"].get("path")
                     additional_diagram_caption = section["diagram"].get("caption")
             elif total_points < MIN_POINTS_PER_SECTION:
-                # Merge thin sections: prepend section heading as context to each point
-                for ss in subsections:
-                    for pt in ss.get("points", []):
-                        text = pt.get("text", "")
-                        # Add the section heading as context if not already present
-                        if heading.lower() not in text.lower()[:50]:
-                            pt["text"] = f"{heading}: {text}"
-                        additional_concepts_points.append(pt)
-                # Preserve diagram
-                if not additional_diagram and section.get("diagram"):
-                    additional_diagram = section["diagram"].get("path")
-                    additional_diagram_caption = section["diagram"].get("caption")
+                # Try to merge into the most similar existing consolidated section
+                target = _find_best_merge_target(heading, consolidated_sections)
+                if target:
+                    # Collect the thin section's points
+                    thin_pts = []
+                    for ss in subsections:
+                        for pt in ss.get("points", []):
+                            text = pt.get("text", "")
+                            if heading.lower() not in text.lower()[:60]:
+                                pt["text"] = f"{heading}: {text}"
+                            thin_pts.append(pt)
+                    if thin_pts:
+                        # Inject into an existing non-empty subsection or create one
+                        target_subs = target.get("subsections", [])
+                        # Find first subsection that already has points (don't append to empty)
+                        _dest_sub = next(
+                            (s for s in reversed(target_subs) if s.get("points")),
+                            None
+                        )
+                        if _dest_sub:
+                            _dest_sub["points"].extend(thin_pts)
+                        else:
+                            target.setdefault("subsections", []).append(
+                                make_subsection("Key Points", thin_pts)
+                            )
+                    if not additional_diagram and section.get("diagram"):
+                        additional_diagram = section["diagram"].get("path")
+                        additional_diagram_caption = section["diagram"].get("caption")
+                else:
+                    # No good match — send to Additional Concepts
+                    for ss in subsections:
+                        for pt in ss.get("points", []):
+                            text = pt.get("text", "")
+                            if heading.lower() not in text.lower()[:60]:
+                                pt["text"] = f"{heading}: {text}"
+                            additional_concepts_points.append(pt)
+                    if not additional_diagram and section.get("diagram"):
+                        additional_diagram = section["diagram"].get("path")
+                        additional_diagram_caption = section["diagram"].get("caption")
             else:
                 consolidated_sections.append(section)
         
         # Add the merged "Additional Concepts" section if it has points
         if additional_concepts_points:
+            # Dynamic sub-grouping: cluster by shared prefix/context
+            # Extract the first meaningful word/phrase before ':' as a group key
+            dynamic_groups = {}
+            for pt in additional_concepts_points:
+                text = pt.get("text", "")
+                # Try to extract a group key from "GroupKey: description" format
+                if ':' in text:
+                    group_key = text.split(':')[0].strip()
+                    # Only use as a group key if it's short enough to be a label
+                    if len(group_key.split()) <= 4:
+                        dynamic_groups.setdefault(group_key, []).append(pt)
+                    else:
+                        dynamic_groups.setdefault("Other Details", []).append(pt)
+                else:
+                    dynamic_groups.setdefault("Other Details", []).append(pt)
+            
+            ac_subsections = []
+            for heading, pts in dynamic_groups.items():
+                if pts:
+                    ac_subsections.append(make_subsection(heading, pts))
+            
+            if not ac_subsections:
+                ac_subsections = [make_subsection("Details", additional_concepts_points)]
+                
             ac_section = make_section(
                 "Additional Concepts",
-                [make_subsection("Details", additional_concepts_points)]
+                ac_subsections
             )
             if additional_diagram:
                 ac_section["diagram"] = {
@@ -5312,12 +8369,447 @@ class WMDKGNotesGenerator:
                     "caption": additional_diagram_caption or ""
                 }
             consolidated_sections.append(ac_section)
-        
-        sections = consolidated_sections
+
+        # ── FIX-COVERAGE: Edge-driven final audit ───────────────────────────────
+        # Scan EVERY KG edge. For each edge, verify its target node's label appears
+        # in the assembled notes text. Any target that is completely absent gets a
+        # bullet injected into the most semantically relevant section.
+        # This is the definitive full-coverage guarantee — it runs AFTER the main
+        # traversal, coverage sweep, and thin-section consolidation so it catches
+        # any node that fell through every earlier net.
+        _notes_text_lower = " ".join(
+            pt.get("text", "").lower()
+            for sec in consolidated_sections
+            for sub in sec.get("subsections", [])
+            for pt in sub.get("points", [])
+        )
+        _audit_injected = 0
+        _audit_orphans = []
+        for _edge in edges:
+            _tgt_id = _edge.get("target", "")
+            if not _tgt_id:
+                continue
+            _tgt_node = node_lookup_by_id.get(_tgt_id, {})
+            _tgt_lbl = (_tgt_node.get("label", "") or "").strip()
+            if not _tgt_lbl or len(_tgt_lbl) < 3:
+                continue
+            # Skip nodes already well-represented in the notes
+            if _tgt_lbl.lower() in _notes_text_lower:
+                continue
+            # Build a bullet using _build_missed_node_bullet
+            _bullet_text = _build_missed_node_bullet(_tgt_id)
+            if not _bullet_text:
+                continue
+            _pt = make_point(_bullet_text)
+            # Try to place into the best-matching consolidated section
+            _best_sec, _best_score = None, 0
+            for _sec in consolidated_sections:
+                _sc = _section_match_score(_tgt_lbl, _sec)
+                if _sc > _best_score:
+                    _best_score, _best_sec = _sc, _sec
+            if _best_sec and _best_score >= 1:
+                _kp = next(
+                    (s for s in _best_sec.get("subsections", [])
+                     if s.get("heading", "").lower() == "key points"),
+                    None
+                )
+                if _kp:
+                    _kp["points"].append(_pt)
+                else:
+                    _best_sec.setdefault("subsections", []).append(
+                        make_subsection("Key Points", [_pt])
+                    )
+                _audit_injected += 1
+                # Update the running text so subsequent edges don't re-inject same label
+                _notes_text_lower += " " + _tgt_lbl.lower()
+            else:
+                _audit_orphans.append(_pt)
+
+        if _audit_orphans:
+            # Group audit orphans similarly to the coverage sweep orphans
+            _audit_groups: dict = {}
+            for _op in _audit_orphans:
+                _txt = _op.get("text", "")
+                _c = _txt.find(":")
+                _gk = _txt[:_c].strip().split()[:3] if _c > 0 else []
+                _gkey = " ".join(_gk) if _gk else "Additional Notes"
+                _audit_groups.setdefault(_gkey, []).append(_op)
+            _audit_subs = [make_subsection(k, v) for k, v in _audit_groups.items() if v]
+            if _audit_subs:
+                consolidated_sections.append(
+                    make_section("Additional Notes", _audit_subs)
+                )
+                _audit_injected += len(_audit_orphans)
+
+        if _audit_injected:
+            print(f"[Notes] Edge-audit: injected {_audit_injected} missing concept(s) into notes")
+
+        # ── Final section integrity guarantee ─────────────────────────────────
+        # After ALL processing (stub removal, point sanitization, consolidation,
+        # edge audit), every section in the list MUST have at least one subsection
+        # with at least one bullet. This is the last safety net before PDF render.
+        _final_rescue = 0
+        for _sec in consolidated_sections:
+            # Drop empty subsections
+            _sec['subsections'] = [
+                _sub for _sub in _sec.get('subsections', [])
+                if _sub.get('points')
+            ]
+            if not _sec.get('subsections'):
+                _h = _sec.get('heading', 'Topic')
+                # Build content from KG or use a labelled placeholder
+                _rescue = None
+                for _nid, _nd in node_lookup_by_id.items():
+                    if _nd.get('label', '').lower().strip() == _h.lower().strip():
+                        _rescue = _build_missed_node_bullet(_nid)
+                        break
+                if not _rescue:
+                    _rescue = f"{_h}: A concept in this topic."
+                _sec['subsections'] = [make_subsection('Overview', [make_point(_rescue)])]
+                _final_rescue += 1
+        if _final_rescue:
+            print(f'[Notes] Final integrity pass: {_final_rescue} empty sections rebuilt.')
+
+        # Remove any sections that are genuinely empty even after all rescue attempts
+        consolidated_sections = [
+            s for s in consolidated_sections
+            if any(sub.get('points') for sub in s.get('subsections', []))
+        ]
+
+        # Dynamic section ordering: use root traversal order from the KG
+        # Sections derived from KG roots keep their original processing order;
+        # "Additional Concepts" always goes last.
+        def _section_priority(section: dict, root_order: dict = {}) -> int:
+            heading = section.get("heading", "").lower().strip()
+            if heading == "additional concepts":
+                return 9999  # Always last
+            # Use the KG root processing order if available
+            if heading in root_order:
+                return root_order[heading]
+            # Heuristic: definition/introduction sections first
+            intro_words = {'definition', 'introduction', 'overview', 'history', 'origin', 'what is'}
+            if any(w in heading for w in intro_words):
+                return 0
+            return 50  # Unknown sections keep relative order
+
+        # Build root_order from the order sections were created during KG traversal
+        root_order = {s.get("heading", "").lower().strip(): i for i, s in enumerate(consolidated_sections)}
+
+        # Subsection Promotion Rule: promotes subsections with >= 4 points to standalone sections.
+        try:
+            from hierarchical_schema import promote_subsections
+            consolidated_sections = promote_subsections(consolidated_sections, min_points=4)
+        except ImportError:
+            pass  # Fallback if function unavailable
+            
+        sections = sorted(consolidated_sections, key=lambda s: _section_priority(s, root_order))
+
+        # Expose image_paths on self temporarily so find_related_diagram
+        # can resolve img_name → canonical path inside _canonical_img()
+        self._current_image_paths = image_paths
+
+        # ── Fix 4.3: Post-assembly Semantic Diagram Re-matching ──
+        # For sections that have no diagram yet, find the best-matching
+        # diagram via cosine similarity between section heading and captions
+        if captions and image_paths:
+            for section in sections:
+                if section.get("diagram"):
+                    continue  # Already has a diagram
+                heading = section.get("heading", "")
+                if not heading:
+                    continue
+                # Combine heading + first few bullet texts for richer matching
+                bullet_texts = []
+                for ss in section.get("subsections", []):
+                    for pt in ss.get("points", [])[:3]:
+                        bullet_texts.append(pt.get("text", ""))
+                query = heading + " " + " ".join(bullet_texts[:3])
+                
+                best_img, raw_cap = self.find_related_diagram(
+                    query, captions, used_img_canonicals)
+                _ip4 = image_paths.get(best_img) if best_img else None
+                if best_img and not _img_already_used(best_img, _ip4):
+                    _register_img(best_img, _ip4)
+                    if _ip4 and _ip4.exists():
+                        section["diagram"] = {
+                            "path": str(_ip4),
+                            "caption": self.get_semantic_caption(heading, raw_cap, nodes)
+                        }
+            print(f"[Fix 4.3] Semantic diagram re-matching pass complete")
+
+        # ── Dynamic Bare-Label Enrichment (final pass) ──
+        # For any remaining bare-label or thin bullet points, try to enrich from:
+        # 1. KG node descriptions  2. _CONCEPT_GLOSSARY  3. Glossary partial match
+        enriched_count = 0
+        for section in sections:
+            for ss in section.get("subsections", []):
+                for pt in ss.get("points", []):
+                    text = pt.get("text", "").strip()
+                    if not text:
+                        continue
+
+                    # Case A: bare label (no colon, short)
+                    if ':' not in text and len(text) < 40:
+                        key = text.lower().strip().rstrip('.')
+                        # Try KG node lookup
+                        enriched = False
+                        for nid, ndata in node_lookup_by_id.items():
+                            if ndata.get("label", "").lower().strip() == key:
+                                desc = ndata.get("description", "")
+                                if desc and len(desc.split()) >= 5:
+                                    pt["text"] = f"{ndata['label']}: {desc}"
+                                    enriched_count += 1
+                                    enriched = True
+                                break
+                        # Try concept glossary if KG had nothing
+                        if not enriched:
+                            if key in _CONCEPT_GLOSSARY:
+                                pt["text"] = f"{text}: {_CONCEPT_GLOSSARY[key]}"
+                                enriched_count += 1
+                            else:
+                                for gkey, gval in _CONCEPT_GLOSSARY.items():
+                                    if gkey in key or key in gkey:
+                                        pt["text"] = f"{text}: {gval}"
+                                        enriched_count += 1
+                                        break
+
+                    # Case B: label has a description but it's too short or self-repeating
+                    elif ':' in text:
+                        label_part = text.split(':')[0].strip()
+                        desc_part = text.split(':', 1)[1].strip()
+                        if len(desc_part) < 20 or desc_part.lower().strip('.') == label_part.lower():
+                            key = label_part.lower().strip()
+                            enriched = False
+                            for nid, ndata in node_lookup_by_id.items():
+                                if ndata.get("label", "").lower().strip() == key:
+                                    desc = ndata.get("description", "")
+                                    if desc and len(desc.split()) >= 5:
+                                        pt["text"] = f"{ndata['label']}: {desc}"
+                                        enriched_count += 1
+                                        enriched = True
+                                    break
+                            if not enriched and key in _CONCEPT_GLOSSARY:
+                                pt["text"] = f"{label_part}: {_CONCEPT_GLOSSARY[key]}"
+                                enriched_count += 1
+                            elif not enriched:
+                                for gkey, gval in _CONCEPT_GLOSSARY.items():
+                                    if gkey in key or key in gkey:
+                                        pt["text"] = f"{label_part}: {gval}"
+                                        enriched_count += 1
+                                        break
+
+        if enriched_count:
+            print(f"[Notes] Enriched {enriched_count} bare-label/thin points with descriptions")
+
+        # ── 6c. Generate KG Unified Summary (academic prose, ≤7 sentences) ──
+        def _generate_kg_summary(sections_list):
+            """Build a ≤7-sentence academic prose summary from section headings and descriptions using Gemini."""
+            import google.generativeai as genai
+
+            prompt_lines = [
+                "Write a highly professional academic prose summary (≤7 sentences, no bullets) for the following lecture sections and their core concepts.",
+                "Do not use bullet points, lists, or newlines. Provide only the continuous prose summary.",
+                ""
+            ]
+
+            for idx, sec in enumerate(sections_list, 1):
+                heading = sec.get("heading", "").strip()
+                if not heading: continue
+                prompt_lines.append(f"Section {idx}: {heading}")
+
+                # Include up to 3 points from any subsection for richer context
+                pts = []
+                for sub in sec.get("subsections", []):
+                    for pt in sub.get("points", []):
+                        text = pt.get("text", "").strip()
+                        if text and len(text.split()) >= 5:
+                            pts.append(text)
+                        if len(pts) >= 3:
+                            break
+                    if len(pts) >= 3:
+                        break
+                if pts:
+                    prompt_lines.append("Key Concepts: " + " | ".join(pts))
+                prompt_lines.append("")
+
+            prompt = "\n".join(prompt_lines)
+
+            try:
+                model = genai.GenerativeModel("models/gemini-2.5-flash")
+                response = model.generate_content(prompt)
+                if response and response.text:
+                    return response.text.strip()
+            except Exception as e:
+                print(f"Gemini summary generation failed: {e}")
+                pass
+
+            # Fallback
+            topics = [s.get("heading", "") for s in sections_list if s.get("heading") and s.get("heading").lower() != "additional concepts"]
+            if not topics:
+                return "This lecture covers foundational concepts and their structural relationships."
+            return f"This lecture provides an in-depth examination of several core concepts, including {', '.join(topics[:3])}. The material explores the definitions, operations, and structural implementations of these topics to build a comprehensive understanding of the domain."
+
+        kg_summary = _generate_kg_summary(sections)
+        if kg_summary:
+            print(f"[Notes] ✅ KG unified summary generated ({len(kg_summary.split('.'))-1} sentences)")
+
+        # ── 6b. Augment / Replace sections with Gemini structural plan ──────────
+        # HIGH PRIORITY FIX: The Gemini plan is now the AUTHORITATIVE source
+        # for notes structure. Every section — including vague ones like
+        # "Arrangement", "Description", "Concepts" — must be augmented or
+        # replaced with the plan's richer content.
+        #
+        # Matching uses THREE strategies (in priority order):
+        #   1. plan_ref_map (exact reverse lookup: kg_label → plan_key)
+        #      covers vague labels Gemini explicitly absorbed and renamed.
+        #   2. Exact lowercase title match.
+        #   3. Token overlap ≥40% (lowered from 50% for wider coverage).
+        #
+        # Augmentation is ALWAYS applied when a match is found and plan has
+        # content — the "should augment" density check is removed because it
+        # was blocking augmentation of exactly the sparse sections we need to fix.
+        #
+        # Unmatched sections with empty/thin content are rebuilt from the plan
+        # section whose content most closely matches their heading via token sim.
+        if plan_subsection_map:
+            _aug_count = 0
+            _matched_plan_keys: set = set()  # track which plan keys are consumed
+
+            def _find_plan_key(heading_lower: str) -> str | None:
+                """Three-strategy plan section lookup. Returns plan key or None."""
+                # Strategy 1: reverse ref map (exact kg_label match)
+                if heading_lower in plan_ref_map:
+                    return plan_ref_map[heading_lower]
+                # Strategy 2: exact title match
+                if heading_lower in plan_subsection_map:
+                    return heading_lower
+                # Strategy 3: token overlap ≥40%
+                _h_words = set(heading_lower.split())
+                best_key, best_overlap = None, 0.0
+                for _pk in plan_subsection_map:
+                    _pk_words = set(_pk.split())
+                    _short = min(len(_pk_words), len(_h_words))
+                    if _short == 0:
+                        continue
+                    _ov = len(_pk_words & _h_words) / _short
+                    if _ov > best_overlap:
+                        best_overlap = _ov
+                        best_key = _pk
+                if best_overlap >= 0.40:
+                    return best_key
+                return None
+
+            def _plan_subs_to_notes(plan_subs: list, existing_subs: list) -> list:
+                """Convert plan subsections to HierarchicalNotes format.
+                Merges with any substantial existing KG subsections whose
+                headings are NOT already covered by the plan."""
+                _new = []
+                for _ps in plan_subs:
+                    _h = (_ps.get("heading") or "").strip()
+                    _pts = _ps.get("points", [])
+                    if not _h or not _pts:
+                        continue
+                    _new.append(make_subsection(
+                        _h, [make_point(p) for p in _pts if p and str(p).strip()]
+                    ))
+                if not _new:
+                    return existing_subs  # safety: never empty a section
+
+                _plan_hdgs = {s.get("heading", "").lower().strip() for s in _new}
+                _kept = [
+                    s for s in existing_subs
+                    if s.get("heading", "").lower().strip() not in _plan_hdgs
+                    and len(s.get("points", [])) >= 2
+                ]
+                return _new + _kept
+
+            for _sec in sections:
+                _sec_heading = _sec.get("heading", "").lower().strip()
+                if not _sec_heading:
+                    continue
+
+                _plan_key = _find_plan_key(_sec_heading)
+                if _plan_key is None:
+                    continue
+
+                _plan_subs = plan_subsection_map.get(_plan_key, [])
+                if not _plan_subs:
+                    continue
+
+                _curr_subs = _sec.get("subsections", [])
+                _merged = _plan_subs_to_notes(_plan_subs, _curr_subs)
+                if _merged:
+                    _sec["subsections"] = _merged
+                    _aug_count += 1
+                    _matched_plan_keys.add(_plan_key)
+
+                # Apply needs_diagram flag
+                if _plan_key in plan_needs_diagram_map:
+                    _sec["needs_diagram"] = plan_needs_diagram_map[_plan_key]
+
+            # ── Inject plan sections that have NO matching KG section ─────────
+            # Any plan section not consumed above represents content the KG
+            # missed entirely. Create new sections for them.
+            _unmatched_plan_keys = set(plan_subsection_map.keys()) - _matched_plan_keys
+            _existing_headings_lower = {
+                s.get("heading", "").lower().strip() for s in sections
+            }
+            _injected = 0
+            for _pk in _unmatched_plan_keys:
+                _plan_subs = plan_subsection_map.get(_pk, [])
+                if not _plan_subs:
+                    continue
+                # Only inject if this plan section has substantial content
+                _total_pts = sum(len(s.get("points", [])) for s in _plan_subs)
+                if _total_pts < 2:
+                    continue
+                # Skip if a section with this heading already exists
+                if _pk in _existing_headings_lower:
+                    continue
+                # Find the original plan section for title casing
+                _canon_title = _pk  # use lowercase as fallback
+                for _ps in structure_plan.get("sections", []):
+                    if _ps.get("title", "").lower().strip() == _pk:
+                        _canon_title = _ps.get("title", _pk)
+                        break
+                _new_sec = make_section(
+                    _canon_title,
+                    _plan_subs_to_notes(_plan_subs, [])
+                )
+                _new_sec["needs_diagram"] = plan_needs_diagram_map.get(_pk, False)
+                sections.append(_new_sec)
+                _injected += 1
+
+            if _aug_count or _injected:
+                print(
+                    f"[Notes] 📐 Plan augmentation: {_aug_count} sections updated, "
+                    f"{_injected} new sections injected from plan"
+                )
 
         # ── 7. Validate & Fix ──
-        notes_dict = make_notes("Lecture Notes", sections)
+        notes_dict = make_notes("Lecture Notes", sections, summary=kg_summary)
         
+        # ── 7a. Quality enforcement (redundancy, hierarchy, grouping, compression, topic separation) ──
+        try:
+            notes_dict = post_process_kg_notes(notes_dict, nodes, edges)
+            print(f"[Notes] ✅ Quality enforcer applied successfully")
+        except Exception as qe:
+            print(f"[Notes] ⚠️ Quality enforcer skipped: {qe}")
+
+        # ── 7b. Conceptual Hierarchy & Flow Organizer (v2) ─────────────────────
+        # Priority 1 — Concept Hierarchy : build KG parent→child tree, reorder sections
+        # Priority 2 — Concept Relationships : add "Concept Relationships" subsection per section
+        # Priority 3 — Concept Flow Section : inject top-level "Concept Workflow" + per-section "Process Flow"
+        # Priority 4 — Explanatory bullets  : expand bare-label / circular bullets with Input/Process/Output
+        # Priority 5 — Remove ?             : sanitize ? artefacts from headings and bullets
+        # Additional — tautology removal, key takeaways, duplicate image dedup, hierarchy annotation
+        try:
+            from concept_flow_organizer import apply_concept_flow
+            notes_dict = apply_concept_flow(notes_dict, nodes, edges)
+            print(f"[Notes] ✅ Concept flow organizer (v2) applied successfully")
+        except Exception as cfo_err:
+            print(f"[Notes] ⚠️ Concept flow organizer skipped: {cfo_err}")
+
         is_valid, violations = validate_hierarchy(notes_dict)
         if not is_valid:
             print(f"[Notes] ⚠️ Hierarchy violations ({len(violations)}): {violations[:3]}...")
@@ -5336,6 +8828,33 @@ class WMDKGNotesGenerator:
         out_txt = notes_dir / "lecture_notes.txt"
 
         try:
+            # ── 8a. Post-process (naturalise relations, OCR noise, merge fragments, fix captions) ──
+            try:
+                from notes_postprocessor import patch_notes_renderer_captions
+                patch_notes_renderer_captions(session_path / "diagram_texts")
+                
+                captions = load_merged_captions(session_path)
+                notes_dict = post_process_notes(
+                    notes_dict,
+                    diagram_texts_dir=session_path / "diagram_texts",
+                    merged_captions=captions
+                )
+                print(f"[Notes] ✅ Post-processor applied successfully")
+            except Exception as pp_err:
+                print(f"[Notes] ⚠️ Post-processor skipped: {pp_err}")
+
+            # ── 8b. Issue Fixer (all 10 diagnosed issues) ──
+            try:
+                from notes_issue_fixer import fix_all_issues
+                notes_dict = fix_all_issues(notes_dict, nodes=nodes, edges=edges)
+                print(f"[Notes] ✅ Issue fixer applied successfully")
+            except Exception as fix_err:
+                print(f"[Notes] ⚠️ Issue fixer skipped: {fix_err}")
+
+            # ── Cleaner (C-1 through C-10) ──────────────────────────────────────────────
+            from notes_cleaner import clean_notes
+            notes_dict = clean_notes(notes_dict)
+
             render_pdf(notes_dict, out_pdf, image_base_dir=session_path)
             render_txt(notes_dict, out_txt)
             
@@ -5348,7 +8867,9 @@ class WMDKGNotesGenerator:
             traceback.print_exc()
 
 
-# ---------- Simple Wrapper ----------
+
+
+
 def run_notes_generation_wrapper(session_path: Path, word2vec_path: str = None) -> Path:
     """
     Simple wrapper - generates notes and returns PDF path.

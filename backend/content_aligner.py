@@ -42,6 +42,10 @@ except ImportError:
     HAS_FIXES = False
     print("[ContentAligner] Warning: Fix components not found. Using basic pipeline.")
 
+from hierarchical_schema import make_section, make_subsection, make_point
+
+# Builders previously hardcoded to TCP/IP have been removed to ensure the pipeline is completely dynamic.
+
 
 class ContentAligner:
     """
@@ -383,12 +387,14 @@ class ContentAligner:
         matches = re.findall(cap_pattern, text)
         phrases.extend([m.lower() for m in matches if len(m) > 3])
         
-        # Pattern 2: Technical compound terms (e.g., "linked list", "binary tree")
+        # Pattern 2: Technical compound terms (multi-word phrases from any domain)
         compound_pattern = r'\b([a-z]+(?:\s+[a-z]+){1,3})\b'
         matches = re.findall(compound_pattern, text.lower())
+        stopword_set = self._stopwords()
         for m in matches:
-            if any(kw in m for kw in ['structure', 'list', 'tree', 'node', 'pointer', 'array', 
-                                       'stack', 'queue', 'graph', 'data', 'memory', 'algorithm']):
+            words = m.split()
+            # Keep compound terms where at least one word is not a stopword
+            if any(w not in stopword_set and len(w) > 3 for w in words):
                 phrases.append(m)
         
         # Pattern 3: Hyphenated terms
@@ -423,46 +429,37 @@ class ContentAligner:
             return []
     
     def _extract_technical_terms(self, text: str) -> List[str]:
-        """Extract domain-specific technical terms."""
+        """Extract domain-specific technical terms dynamically from the text.
+        
+        Uses frequency analysis and pattern matching to identify important
+        terms without hardcoding any domain-specific vocabulary.
+        """
         terms = []
         
-        # Common CS/DS technical term patterns
-        patterns = [
-            r'\b(data\s+structure[s]?)\b',
-            r'\b(linked\s+list[s]?)\b',
-            r'\b(binary\s+tree[s]?)\b',
-            r'\b(hash\s+table[s]?)\b',
-            r'\b(stack[s]?)\b',
-            r'\b(queue[s]?)\b',
-            r'\b(array[s]?)\b',
-            r'\b(graph[s]?)\b',
-            r'\b(node[s]?)\b',
-            r'\b(pointer[s]?)\b',
-            r'\b(algorithm[s]?)\b',
-            r'\b(complexity)\b',
-            r'\b(traversal)\b',
-            r'\b(insertion)\b',
-            r'\b(deletion)\b',
-            r'\b(search(?:ing)?)\b',
-            r'\b(sort(?:ing)?)\b',
-            r'\b(memory)\b',
-            r'\b(dynamic)\b',
-            r'\b(sequential)\b',
-            r'\b(random\s+access)\b',
-            r'\b(head)\b',
-            r'\b(null)\b',
-            r'\b(singly)\b',
-            r'\b(doubly)\b',
-            r'\b(circular)\b',
-            r'\b(primitive)\b',
-            r'\b(non-primitive)\b',
-            r'\b(linear)\b',
-            r'\b(non-linear)\b',
-        ]
+        # Pattern 1: Acronyms and abbreviations (e.g., TCP, HTTP, DNA, API)
+        acronym_pattern = r'\b([A-Z]{2,6})\b'
+        matches = re.findall(acronym_pattern, text)
+        terms.extend([m.lower() for m in matches if len(m) >= 2])
         
-        for pattern in patterns:
-            matches = re.findall(pattern, text, re.IGNORECASE)
-            terms.extend([m.lower() if isinstance(m, str) else m[0].lower() for m in matches])
+        # Pattern 2: Hyphenated terms (e.g., "real-time", "non-linear")
+        hyphen_pattern = r'\b([a-z]+-[a-z]+)\b'
+        matches = re.findall(hyphen_pattern, text.lower())
+        terms.extend(matches)
+        
+        # Pattern 3: Capitalized multi-word terms (e.g., "Binary Search Tree")
+        cap_multi = r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\b'
+        matches = re.findall(cap_multi, text)
+        terms.extend([m.lower() for m in matches])
+        
+        # Pattern 4: Terms introduced with definitional markers
+        # e.g., "X is defined as", "known as X", "called X"
+        def_patterns = [
+            r'(?:called|known\s+as|referred\s+to\s+as|termed)\s+["\']?([A-Za-z][A-Za-z\s]{2,30}?)["\']?[.,]',
+            r'([A-Za-z][A-Za-z\s]{2,30}?)\s+(?:is\s+defined\s+as|refers\s+to|means)',
+        ]
+        for pat in def_patterns:
+            matches = re.findall(pat, text, re.IGNORECASE)
+            terms.extend([m.strip().lower() for m in matches if len(m.strip()) > 2])
         
         return terms
     

@@ -15,6 +15,9 @@ from pydantic import BaseModel
 from pathlib import Path
 from ex import fuse_two_knowledge_graphs, OUTPUTS_DIR, run_notes_generation_wrapper, generate_non_kg_unified_summary, generate_non_kg_notes
 from kg_summarizer import StructuralKGSummarizer, KnowledgeGraph, Node, Edge
+from hierarchical_schema import generate_section_heading, classify_bullet, SubsectionType
+from semantic_clusterer import deduplicate_across_sections
+from summary_postprocessor import HallucinationDetector, kg_informativeness_score
 
 app = FastAPI(title="Lecture Video Processing API")
 
@@ -184,19 +187,52 @@ def generate_fused_summary(req: dict):
 
         kg = KnowledgeGraph(nodes, edges)
 
-        # Run Summarizer
+        # Change 21: Load transcript text for TF-IDF centrality weighting
+        transcript_text = ""
+        # Try to find transcript in either original session directory
+        parts = session_id.rsplit("_fused", 1)[0]
+        if len(parts) > 73:
+            s1_id = parts[:36]
+            s2_id = parts[37:73]
+        else:
+            mid = len(parts) // 2
+            s1_id = parts[:mid]
+            s2_id = parts[mid+1:]
+        
+        for sid in [s1_id, s2_id]:
+            transcript_candidates = [
+                OUTPUTS_DIR / sid / "transcripts" / "full_transcript.txt",
+                OUTPUTS_DIR / sid / "combined" / "all_fused_text.txt",
+            ]
+            for tp in transcript_candidates:
+                if tp.exists():
+                    try:
+                        transcript_text += " " + tp.read_text(encoding="utf-8")
+                    except:
+                        pass
+        
+        transcript_text = transcript_text.strip()
+        print(f"[Fused Summary] Loaded {len(transcript_text)} chars of transcript for TF-IDF")
+
+        # Run Summarizer — returns (summary, topic_labels)
         print(f"[Fused Summary] Starting structural summarization for {session_id}...")
         summarizer = StructuralKGSummarizer()
-        summary_text = summarizer.summarize(kg)
+        summary_text, topic_labels = summarizer.summarize(kg, transcript_text=transcript_text)
 
-        # Save
+        # Save summary
         summary_path.write_text(summary_text, encoding="utf-8")
         print(f"[Fused Summary] Saved to {summary_path}")
+
+        # Save topic_labels for notes generation
+        topic_labels_path = fused_dir / "topic_labels.json"
+        topic_labels_path.write_text(json.dumps(topic_labels, indent=2), encoding="utf-8")
+        print(f"[Fused Summary] Saved {len(topic_labels)} topic labels")
 
         return {
             "status": "success",
             "session_id": session_id,
-            "fused_summary": summary_text
+            "fused_summary": summary_text,
+            "topic_labels": topic_labels
         }
 
     except Exception as e:

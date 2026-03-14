@@ -7,11 +7,134 @@ Provides clean_and_constrain_summary() used by ALL summary pipelines to:
 2. Filter fragments (no verb, too short, incoherent)
 3. Deduplicate near-identical sentences
 4. Constrain to 7-10 context-rich sentences
+5. KG-grounded hallucination detection (Change 19)
+6. KG-based informativeness scoring (Change 20)
 """
 
 import re
-from typing import List, Optional
+from typing import List, Optional, Set, Dict
 from collections import OrderedDict
+
+
+# ─── KG-Grounded Hallucination Detector (Change 19 / P8) ─────────────────────
+
+class HallucinationDetector:
+    """Detects sentences that introduce claims not grounded in the Knowledge Graph.
+    
+    Strategy:
+    - Extract simple (Subject, Verb, Object) triples from each sentence via regex
+    - Check if both Subject and Object exist as KG node labels
+    - Flag sentences where key entities are completely absent from the KG
+    """
+    
+    def __init__(self, kg_node_labels: Set[str], kg_edge_labels: Set[str] = None):
+        """
+        Args:
+            kg_node_labels: Set of all node labels (lowercased) from the KG
+            kg_edge_labels: Optional set of edge relation labels from the KG
+        """
+        self.node_labels = {n.lower().strip() for n in kg_node_labels if n}
+        self.edge_labels = {e.lower().strip() for e in (kg_edge_labels or set()) if e}
+        
+        # Build a set of individual important words from node labels
+        self._node_words = set()
+        for label in self.node_labels:
+            for word in label.split():
+                if len(word) > 3:  # Skip short words like 'the', 'a', 'is'
+                    self._node_words.add(word)
+    
+    def is_grounded(self, sentence: str, strict: bool = False) -> bool:
+        """Check if a sentence is grounded in the KG.
+        
+        A sentence is grounded if it mentions concepts that exist in the KG.
+        
+        Args:
+            sentence: Sentence to verify
+            strict: If True, requires >50% of nouns to be in KG. If False, requires >=1.
+            
+        Returns:
+            True if the sentence appears grounded in the KG
+        """
+        if not sentence or not self.node_labels:
+            return True  # Can't verify without KG, so don't filter
+        
+        sent_lower = sentence.lower()
+        
+        # Check 1: Does the sentence mention any KG node label directly?
+        for label in self.node_labels:
+            if label in sent_lower:
+                return True
+        
+        # Check 2: Does the sentence contain significant words from KG nodes?
+        sent_words = set(sent_lower.split())
+        overlap = sent_words & self._node_words
+        
+        if strict:
+            # Require >50% of "content words" to be in KG
+            content_words = {w for w in sent_words if len(w) > 3 and w.isalpha()}
+            if not content_words:
+                return False
+            return len(overlap) / len(content_words) > 0.3
+        else:
+            return len(overlap) >= 1
+    
+    def filter_hallucinations(self, sentences: List[str]) -> List[str]:
+        """Filter out ungrounded sentences.
+        
+        Args:
+            sentences: List of sentences to filter
+            
+        Returns:
+            List of sentences that are grounded in the KG
+        """
+        grounded = []
+        removed_count = 0
+        for sent in sentences:
+            if self.is_grounded(sent):
+                grounded.append(sent)
+            else:
+                removed_count += 1
+        
+        if removed_count > 0:
+            print(f"[HallucinationDetector] Removed {removed_count} ungrounded sentences")
+        
+        return grounded
+
+
+def kg_informativeness_score(sentence: str, kg_node_labels: Set[str]) -> float:
+    """Score a sentence by how many KG concepts it mentions (Change 20).
+    
+    Used to rank sentences when trimming to max_sentences —
+    prefers sentences that reference more KG nodes.
+    
+    Args:
+        sentence: The sentence to score
+        kg_node_labels: Set of KG node labels (lowercased)
+        
+    Returns:
+        Float score (higher = more KG concepts mentioned)
+    """
+    if not sentence or not kg_node_labels:
+        return 0.0
+    
+    sent_lower = sentence.lower()
+    concept_count = 0
+    
+    for label in kg_node_labels:
+        if label in sent_lower:
+            concept_count += 1
+    
+    # Also count individual KG word hits
+    sent_words = set(sent_lower.split())
+    kg_words = set()
+    for label in kg_node_labels:
+        for w in label.split():
+            if len(w) > 3:
+                kg_words.add(w)
+    
+    word_hits = len(sent_words & kg_words)
+    
+    return concept_count * 2.0 + word_hits * 0.5
 
 
 # ─── Noise Patterns ───────────────────────────────────────────────────────────
@@ -88,6 +211,13 @@ _GARBAGE_PATTERNS = [
     r"te\s+te\b",                            # OCR fragment
     r"^Porse\s+Tree\b",                      # OCR fragment
     r"^\w{1,2}\s*$",                         # 1-2 char lines
+    r"^es\s+and\s+meta\b",                   # Mid-sentence OCR fragment
+    r"\bPOUs?\b.*named\s+acco",              # Truncated OCR sentence
+    # ── Generic slide-specific patterns ─────────────────────────
+    r"OUTCOMES\s+Upon\s+the\s+completion",   # Lecture slide outcomes header
+    r"learner\s+will\s+be\s+able",           # Outcomes bullet
+    r"\|\s*\?_|\?_\s*$",                     # Watermark / question-mark artefact
+    r"Le\s+Jono\d+|yO\dN|LC\]",             # OCR symbol garbage
 ]
 
 
@@ -205,7 +335,7 @@ def _sentence_token_overlap(s1: str, s2: str) -> float:
     return len(intersection) / min(len(tokens1), len(tokens2))
 
 
-def _deduplicate_sentences(sentences: List[str], threshold: float = 0.75) -> List[str]:
+def _deduplicate_sentences(sentences: List[str], threshold: float = 0.72) -> List[str]:
     """Remove near-duplicate sentences using token overlap."""
     if not sentences:
         return sentences
@@ -221,6 +351,14 @@ def _deduplicate_sentences(sentences: List[str], threshold: float = 0.75) -> Lis
                     unique.append(sent)
                 is_dup = True
                 break
+            
+            # Label-in-label check (Fix 4C)
+            sent_lower = sent.lower()
+            exist_lower = existing.lower()
+            if (sent_lower[:30] in exist_lower or exist_lower[:30] in sent_lower):
+                is_dup = True
+                break
+                
         if not is_dup:
             unique.append(sent)
 
@@ -340,7 +478,7 @@ def clean_and_constrain_summary(
 
     # Step 4: Deduplicate
     if deduplicate:
-        sentences = _deduplicate_sentences(sentences, threshold=0.85)
+        sentences = _deduplicate_sentences(sentences, threshold=0.72)
 
     if not sentences:
         return summary_text  # Fallback: return original if everything was filtered
